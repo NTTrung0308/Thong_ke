@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -30,7 +30,6 @@ Route::middleware(['auth'])->group(function () {
         return view('backend.index');
     })->name('dashboard');
 
-    // Users routes for Datatables
-    Route::get('/users', [UserController::class, 'index'])->name('users.index');
-    Route::get('/users/{id}', [UserController::class, 'show'])->name('users.show');
+    // Users Management - Chỉ dành cho Chỉ huy
+    Route::resource('users', UserController::class)->middleware('check.role:chi-huy');
 });
