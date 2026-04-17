@@ -3,9 +3,9 @@
     <div class="sidebar-logo">
         <!-- Logo Header -->
         <div class="logo-header" data-background-color="dark">
-            <a href="index.html" class="logo">
-                <img src="backend/assets/img/kaiadmin/logo_light.svg" alt="navbar brand" class="navbar-brand"
-                    height="20" />
+            <a href="{{ route('dashboard') }}" class="logo">
+                <img src="{{ asset('backend/assets/img/kaiadmin/logo_light.svg') }}" alt="navbar brand"
+                    class="navbar-brand" height="20" />
             </a>
             <div class="nav-toggle">
                 <button class="btn btn-toggle toggle-sidebar">
@@ -39,6 +39,18 @@
                             </li>
                         </ul>
                     </div>
+                </li>
+                <li class="nav-section">
+                    <span class="sidebar-mini-icon">
+                        <i class="fa fa-ellipsis-h"></i>
+                    </span>
+                    <h4 class="text-section">Quản lý Nghiệp vụ</h4>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('soldiers.index') }}">
+                        <i class="fas fa-users"></i>
+                        <p>Quản lý quân nhân</p>
+                    </a>
                 </li>
                 <li class="nav-section">
                     <span class="sidebar-mini-icon">

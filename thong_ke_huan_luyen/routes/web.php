@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\SoldierController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -32,4 +33,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Users Management - Chỉ dành cho Chỉ huy
     Route::resource('users', UserController::class)->middleware('check.role:chi-huy');
+
+    // Soldiers Management
+    Route::resource('soldiers', SoldierController::class);
 });

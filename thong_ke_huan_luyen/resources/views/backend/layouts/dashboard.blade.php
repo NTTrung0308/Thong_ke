@@ -1,21 +1,17 @@
 @extends('backend.layouts.master')
 
 @section('content')
-    <div class="wrapper">
-        @include('backend.include.sidebar')
+    <div class="main-panel">
+        @include('backend.include.navbar')
 
-        <div class="main-panel">
-            @include('backend.include.navbar')
-
-            <div class="container">
-                <div class="page-inner">
-                    @yield('dashboard_content')
-                </div>
+        <div class="container">
+            <div class="page-inner">
+                @yield('dashboard_content')
             </div>
-
-            @include('backend.include.footer')
         </div>
 
-        @include('backend.include.custom_template')
+        @include('backend.include.footer')
     </div>
+
+    @include('backend.include.custom_template')
 @endsection
