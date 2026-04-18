@@ -23,21 +23,8 @@ class SoldierController extends Controller
         $query = Soldier::with('unit');
 
         // Phân quyền xem theo cấp đơn vị
-        if ($user->hasRole('trung-doi')) {
-            // Trung đội chỉ xem được quân nhân trong trung đội của mình
-            $unitIds = $user->unit->children()->pluck('id')->push($user->unit_id);
-            $query->whereIn('unit_id', $unitIds);
-        } elseif ($user->hasRole('dai-doi')) {
-            // Đại đội xem được các trung đội trực thuộc
-            $unitIds = $user->unit->children()->pluck('id')->push($user->unit_id);
-            $query->whereIn('unit_id', $unitIds);
-        } elseif ($user->hasRole('tieu-doan')) {
-            // Tiểu đoàn xem được các đại đội, trung đội trực thuộc
-            $unitIds = $user->unit->children()->with('children')->get()->pluck('id')->push($user->unit_id);
-            $query->whereIn('unit_id', $unitIds);
-        } elseif ($user->hasRole('trung-doan')) {
-            // Trung đoàn xem được toàn bộ đơn vị trực thuộc
-            $unitIds = $user->unit->children()->with('children.children')->get()->pluck('id')->push($user->unit_id);
+        if (!$user->hasRole('chi-huy') && $user->unit) {
+            $unitIds = $user->unit->getAllDescendantIds();
             $query->whereIn('unit_id', $unitIds);
         }
         // Chỉ huy xem được tất cả
@@ -166,18 +153,11 @@ class SoldierController extends Controller
             return Unit::all();
         }
 
-        if ($user->hasRole('trung-doan')) {
-            return Unit::where('level', 'trung-doan')
-                ->orWhere('parent_id', $user->unit_id)
-                ->get();
+        if ($user->unit) {
+            $unitIds = $user->unit->getAllDescendantIds();
+            return Unit::whereIn('id', $unitIds)->get();
         }
 
-        if ($user->hasRole('tieu-doan')) {
-            return Unit::where('level', 'tieu-doan')
-                ->orWhere('parent_id', $user->unit_id)
-                ->get();
-        }
-
-        return Unit::where('id', $user->unit_id)->get();
+        return collect();
     }
 }

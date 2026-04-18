@@ -53,6 +53,7 @@
                                     <th>ID</th>
                                     <th>Tên</th>
                                     <th>Email</th>
+                                    <th>Đơn vị</th>
                                     <th>Vai trò</th>
                                     <th>Hành động</th>
                                 </tr>
@@ -63,6 +64,7 @@
                                         <td>{{ $user->id }}</td>
                                         <td>{{ $user->name }}</td>
                                         <td>{{ $user->email }}</td>
+                                        <td>{{ $user->unit ? $user->unit->name : 'N/A' }}</td>
                                         <td>
                                             @foreach ($user->roles as $role)
                                                 <span class="badge badge-info">{{ $role->name }}</span>

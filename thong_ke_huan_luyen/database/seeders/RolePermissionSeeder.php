@@ -77,12 +77,19 @@ class RolePermissionSeeder extends Seeder
         // ========== 3. TẠO TÀI KHOẢN MẪU CHO MỖI CẤP ==========
         // Mật khẩu mặc định: 12345678 (nên đổi sau khi chạy seeder)
         $defaultPassword = bcrypt('12345678');
+        
+        // Lấy một số đơn vị mẫu
+        $unitTrungDoan = \App\Models\Unit::where('level', 'trung-doan')->first();
+        $unitTieuDoan = \App\Models\Unit::where('level', 'tieu-doan')->first();
+        $unitDaiDoi = \App\Models\Unit::where('level', 'dai-doi')->first();
+        $unitTrungDoi = \App\Models\Unit::where('level', 'trung-doi')->first();
 
-        // Chỉ huy
+        // Chỉ huy (Không cần unit_id để xem tất cả)
         $user = User::create([
             'name' => 'Chỉ huy trưởng',
             'email' => 'chihuy@example.com',
             'password' => $defaultPassword,
+            'unit_id' => null,
         ]);
         $user->assignRole('chi-huy');
 
@@ -91,6 +98,7 @@ class RolePermissionSeeder extends Seeder
             'name' => 'Trung đoàn trưởng',
             'email' => 'trungdoan@example.com',
             'password' => $defaultPassword,
+            'unit_id' => $unitTrungDoan ? $unitTrungDoan->id : null,
         ]);
         $user->assignRole('trung-doan');
 
@@ -99,6 +107,7 @@ class RolePermissionSeeder extends Seeder
             'name' => 'Tiểu đoàn trưởng',
             'email' => 'tieudoan@example.com',
             'password' => $defaultPassword,
+            'unit_id' => $unitTieuDoan ? $unitTieuDoan->id : null,
         ]);
         $user->assignRole('tieu-doan');
 
@@ -107,6 +116,7 @@ class RolePermissionSeeder extends Seeder
             'name' => 'Đại đội trưởng',
             'email' => 'daidoi@example.com',
             'password' => $defaultPassword,
+            'unit_id' => $unitDaiDoi ? $unitDaiDoi->id : null,
         ]);
         $user->assignRole('dai-doi');
 
@@ -115,6 +125,7 @@ class RolePermissionSeeder extends Seeder
             'name' => 'Trung đội trưởng',
             'email' => 'trungdoi@example.com',
             'password' => $defaultPassword,
+            'unit_id' => $unitTrungDoi ? $unitTrungDoi->id : null,
         ]);
         $user->assignRole('trung-doi');
 

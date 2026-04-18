@@ -31,4 +31,13 @@ class Unit extends Model
     {
         return $query->where('level', $level);
     }
+
+    public function getAllDescendantIds()
+    {
+        $ids = [$this->id];
+        foreach ($this->children as $child) {
+            $ids = array_merge($ids, $child->getAllDescendantIds());
+        }
+        return $ids;
+    }
 }

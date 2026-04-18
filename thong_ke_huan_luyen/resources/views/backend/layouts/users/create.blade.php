@@ -50,6 +50,20 @@
                                         <small class="form-text text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
+                                <div class="form-group @error('unit_id') has-error @enderror">
+                                    <label for="unit_id">Đơn vị</label>
+                                    <select class="form-control" id="unit_id" name="unit_id">
+                                        <option value="">-- Chọn đơn vị --</option>
+                                        @foreach($units as $unit)
+                                            <option value="{{ $unit->id }}" {{ old('unit_id') == $unit->id ? 'selected' : '' }}>
+                                                {{ $unit->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('unit_id')
+                                        <small class="form-text text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group @error('password') has-error @enderror">
