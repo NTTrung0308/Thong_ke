@@ -78,15 +78,15 @@
                                                     <i class="fa fa-edit"></i>
                                                 </a>
                                                 <form action="{{ route('users.destroy', $user->id) }}" method="POST"
-                                                    onsubmit="return confirm('Bạn có chắc chắn muốn xóa?')"
-                                                    style="display:inline-block">
+                                                    id="delete-form-{{ $user->id }}" style="display:inline-block">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-link btn-danger"
-                                                        data-bs-toggle="tooltip" title="Xóa">
-                                                        <i class="fa fa-times"></i>
-                                                    </button>
                                                 </form>
+                                                <button type="button" class="btn btn-link btn-danger"
+                                                    data-bs-toggle="tooltip" title="Xóa"
+                                                    onclick="confirmDelete({{ $user->id }})">
+                                                    <i class="fa fa-times"></i>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -101,6 +101,7 @@
 @endsection
 
 @section('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function() {
             $('#basic-datatables').DataTable({
@@ -109,5 +110,22 @@
                 }
             });
         });
+
+        function confirmDelete(userId) {
+            Swal.fire({
+                title: 'Bạn có chắc chắn?',
+                text: "Bạn sẽ không thể hoàn tác hành động này!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Có, xóa nó!',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('delete-form-' + userId).submit();
+                }
+            });
+        }
     </script>
 @endsection

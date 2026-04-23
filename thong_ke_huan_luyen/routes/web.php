@@ -3,6 +3,9 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SoldierController;
+use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\UnitController;
+use App\Http\Controllers\Admin\WeaponEquipmentController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -36,4 +39,15 @@ Route::middleware(['auth'])->group(function () {
 
     // Soldiers Management
     Route::resource('soldiers', SoldierController::class);
+
+    // Units Management
+    Route::resource('units', UnitController::class);
+
+    // Weapon & Equipment Management
+    Route::resource('weapon-equipments', WeaponEquipmentController::class);
+
+    // Profile & Settings
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::put('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 });
