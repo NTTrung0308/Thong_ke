@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\Reward;
 use App\Models\Unit;
 use App\Models\Soldier;
@@ -57,7 +58,7 @@ class RewardController extends Controller
             });
         }
 
-        $rewards = $query->orderBy('decision_date', 'desc')->paginate(20);
+        $rewards = $query->orderBy('decision_date', 'desc')->get();
 
         // Lấy danh sách đơn vị để lọc
         $units = $this->getAccessibleUnits($user);
@@ -69,9 +70,9 @@ class RewardController extends Controller
             ->pluck('year');
 
         // Các cấp quyết định
-        $decisionLevels = ['Đại đội', 'Tiểu đoàn', 'Trung đoàn', 'Sư đoàn', 'Quân khu', 'Bộ Quốc phòng'];
+        $decisionLevels = ['Cấp thường', 'Đại đội', 'Tiểu đoàn', 'Trung đoàn', 'Sư đoàn', 'Quân khu', 'Bộ Quốc phòng'];
 
-        return view('rewards.index', compact('rewards', 'units', 'years', 'decisionLevels'));
+        return view('backend.rewards.index', compact('rewards', 'units', 'years', 'decisionLevels'));
     }
 
     // Form thêm mới
@@ -83,8 +84,9 @@ class RewardController extends Controller
         $units = $this->getAccessibleUnits($user);
         $soldiers = Soldier::whereIn('unit_id', $this->getAccessibleUnitIds($user))->get();
 
-        $decisionLevels = ['Đại đội', 'Tiểu đoàn', 'Trung đoàn', 'Sư đoàn', 'Quân khu', 'Bộ Quốc phòng'];
+        $decisionLevels = ['Cấp thường', 'Đại đội', 'Tiểu đoàn', 'Trung đoàn', 'Sư đoàn', 'Quân khu', 'Bộ Quốc phòng'];
         $rewardForms = [
+            'Biểu dương',
             'Giấy khen',
             'Bằng khen',
             'Huân chương',
@@ -94,7 +96,7 @@ class RewardController extends Controller
             'Nâng lương trước thời hạn'
         ];
 
-        return view('rewards.create', compact('units', 'soldiers', 'decisionLevels', 'rewardForms'));
+        return view('backend.rewards.create', compact('units', 'soldiers', 'decisionLevels', 'rewardForms'));
     }
 
     // Lưu khen thưởng mới
@@ -153,7 +155,7 @@ class RewardController extends Controller
     public function show(Reward $reward)
     {
         $this->authorize('view', $reward);
-        return view('rewards.show', compact('reward'));
+        return view('backend.rewards.show', compact('reward'));
     }
 
     // Form sửa
@@ -165,7 +167,7 @@ class RewardController extends Controller
         $units = $this->getAccessibleUnits($user);
         $soldiers = Soldier::whereIn('unit_id', $this->getAccessibleUnitIds($user))->get();
 
-        $decisionLevels = ['Đại đội', 'Tiểu đoàn', 'Trung đoàn', 'Sư đoàn', 'Quân khu', 'Bộ Quốc phòng'];
+        $decisionLevels = ['Cấp thường', 'Đại đội', 'Tiểu đoàn', 'Trung đoàn', 'Sư đoàn', 'Quân khu', 'Bộ Quốc phòng'];
         $rewardForms = [
             'Biểu dương',
             'Giấy khen',
@@ -177,7 +179,7 @@ class RewardController extends Controller
             'Nâng lương trước thời hạn'
         ];
 
-        return view('rewards.edit', compact('reward', 'units', 'soldiers', 'decisionLevels', 'rewardForms'));
+        return view('backend.rewards.edit', compact('reward', 'units', 'soldiers', 'decisionLevels', 'rewardForms'));
     }
 
     // Cập nhật
@@ -290,7 +292,7 @@ class RewardController extends Controller
             ->orderBy('year', 'desc')
             ->pluck('year');
 
-        return view('reports.rewards', compact(
+        return view('backend.reports.rewards', compact(
             'statsByUnit',
             'statsByLevel',
             'statsByForm',
@@ -307,25 +309,8 @@ class RewardController extends Controller
             return Unit::pluck('id')->toArray();
         }
 
-        if ($user->hasRole('trung-doan')) {
-            return Unit::where('level', 'trung-doan')
-                ->orWhere('parent_id', $user->unit_id)
-                ->pluck('id')
-                ->toArray();
-        }
-
-        if ($user->hasRole('tieu-doan')) {
-            return Unit::where('level', 'tieu-doan')
-                ->orWhere('parent_id', $user->unit_id)
-                ->pluck('id')
-                ->toArray();
-        }
-
-        if ($user->hasRole('dai-doi')) {
-            return Unit::where('level', 'dai-doi')
-                ->orWhere('parent_id', $user->unit_id)
-                ->pluck('id')
-                ->toArray();
+        if ($user->unit) {
+            return $user->unit->getAllDescendantIds();
         }
 
         return [$user->unit_id];
