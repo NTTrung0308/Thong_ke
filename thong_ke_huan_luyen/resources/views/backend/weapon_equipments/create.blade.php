@@ -115,14 +115,32 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
+                                    <label>Thông nòng</label>
+                                    <input type="text" class="form-control" name="cleaning_rod" value="{{ old('cleaning_rod') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Phụ tùng</label>
+                                    <input type="text" class="form-control" name="spare_parts" value="{{ old('spare_parts') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Dây súng</label>
+                                    <input type="text" class="form-control" name="gun_strap" value="{{ old('gun_strap') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
                                     <label>Hộp tiếp đạn (Số lượng)</label>
                                     <input type="number" class="form-control" name="magazine_box" value="{{ old('magazine_box') }}">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Thông nòng, phụ kiện khác</label>
-                                    <input type="text" class="form-control" name="gun_accessories" value="{{ old('gun_accessories') }}">
+                                    <label>Vịt dầu</label>
+                                    <input type="number" class="form-control" name="oil_can" value="{{ old('oil_can', 0) }}">
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -152,6 +170,24 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
+                                    <label>Bao đồ</label>
+                                    <input type="text" class="form-control" name="bag" value="{{ old('bag') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Áo súng</label>
+                                    <input type="text" class="form-control" name="gun_cover" value="{{ old('gun_cover') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Bịt nòng</label>
+                                    <input type="text" class="form-control" name="muzzle_cover" value="{{ old('muzzle_cover') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
                                     <label>Xẻng bộ binh</label>
                                     <input type="number" class="form-control" name="infantry_shovel" value="{{ old('infantry_shovel', 0) }}">
                                 </div>
@@ -160,18 +196,6 @@
                                 <div class="form-group">
                                     <label>Cuốc bộ binh</label>
                                     <input type="number" class="form-control" name="infantry_pickaxe" value="{{ old('infantry_pickaxe', 0) }}">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Túi đựng, bao súng...</label>
-                                    <input type="text" class="form-control" name="bag" value="{{ old('bag') }}" placeholder="Túi, bao xe...">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Ống dầu</label>
-                                    <input type="number" class="form-control" name="oil_can" value="{{ old('oil_can', 0) }}">
                                 </div>
                             </div>
                         </div>
@@ -201,7 +225,7 @@
                             </div>
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <label>Ghi chú thêm</label>
+                                    <label>Ghi chú thêm (Thay đổi trang bị)</label>
                                     <textarea class="form-control" name="notes" rows="3">{{ old('notes') }}</textarea>
                                 </div>
                             </div>

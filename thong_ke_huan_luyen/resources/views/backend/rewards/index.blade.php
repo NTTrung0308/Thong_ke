@@ -1,6 +1,15 @@
 @extends('backend.layouts.dashboard')
 
 @section('dashboard_content')
+    <style>
+        .table-responsive {
+            cursor: grab;
+        }
+        .table-responsive.dragging {
+            cursor: grabbing;
+            user-select: none;
+        }
+    </style>
     <div class="page-header">
         <h3 class="fw-bold mb-3">Quản lý khen thưởng</h3>
         <ul class="breadcrumbs mb-3">
@@ -112,37 +121,25 @@
                         <table id="rewards-datatables" class="display table table-striped table-hover">
                             <thead>
                                 <tr>
-                                    <th>Ngày QĐ</th>
-                                    <th>Số QĐ</th>
-                                    <th>Loại</th>
-                                    <th>Đơn vị/Quân nhân</th>
-                                    <th>Hình thức</th>
-                                    <th>Cấp QĐ</th>
-                                    <th>Lý do</th>
+                                    <th>STT</th>
+                                    <th>Nội dung khen thưởng (Lý do)</th>
+                                    <th>Hình thức khen thưởng (Ngày, tháng, cấp quyết định)</th>
                                     <th style="width: 10%">Hành động</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($rewards as $reward)
+                                @foreach ($rewards as $index => $reward)
                                     <tr>
-                                        <td>{{ $reward->formatted_decision_date }}</td>
-                                        <td>{{ $reward->decision_number }}</td>
+                                        <td>{{ $index + 1 }}</td>
                                         <td>
-                                            <span class="badge {{ $reward->type == 'unit' ? 'badge-primary' : 'badge-success' }}">
-                                                {{ $reward->type_name }}
-                                            </span>
+                                            <strong>{{ $reward->type == 'unit' ? $reward->unit_name_at_time : $reward->soldier_name_at_time }}</strong><br>
+                                            {{ $reward->reason }}
                                         </td>
                                         <td>
-                                            @if($reward->type == 'unit')
-                                                <strong>{{ $reward->unit_name_at_time }}</strong>
-                                            @else
-                                                <strong>{{ $reward->soldier_name_at_time }}</strong><br>
-                                                <small>{{ $reward->unit_name_at_time }}</small>
-                                            @endif
+                                            - Hình thức: {{ $reward->reward_form }}<br>
+                                            - Ngày: {{ $reward->decision_date ? $reward->decision_date->format('d/m/Y') : ($reward->decision_month ?: '...') }}<br>
+                                            - Cấp quyết định: {{ $reward->decision_level }} (Số: {{ $reward->decision_number }})
                                         </td>
-                                        <td>{{ $reward->reward_form }}</td>
-                                        <td>{{ $reward->decision_level }}</td>
-                                        <td>{{ Str::limit($reward->reason, 50) }}</td>
                                         <td>
                                             <div class="form-button-action">
                                                 <a href="{{ route('rewards.show', $reward->id) }}"
@@ -184,10 +181,40 @@
         $(document).ready(function() {
             $('#rewards-datatables').DataTable({
                 "pageLength": 10,
-                "order": [[0, "desc"]],
                 "language": {
                     "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Vietnamese.json"
-                }
+                },
+                "columnDefs": [
+                    { "orderable": false, "targets": 3 }
+                ]
+            });
+
+            // Kéo bảng sang ngang bằng chuột
+            const slider = document.querySelector('.table-responsive');
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+
+            slider.addEventListener('mousedown', (e) => {
+                isDown = true;
+                slider.classList.add('dragging');
+                startX = e.pageX - slider.offsetLeft;
+                scrollLeft = slider.scrollLeft;
+            });
+            slider.addEventListener('mouseleave', () => {
+                isDown = false;
+                slider.classList.remove('dragging');
+            });
+            slider.addEventListener('mouseup', () => {
+                isDown = false;
+                slider.classList.remove('dragging');
+            });
+            slider.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - slider.offsetLeft;
+                const walk = (x - startX) * 2;
+                slider.scrollLeft = scrollLeft - walk;
             });
         });
 

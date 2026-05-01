@@ -1,6 +1,15 @@
 @extends('backend.layouts.dashboard')
 
 @section('dashboard_content')
+    <style>
+        .table-responsive {
+            cursor: grab;
+        }
+        .table-responsive.dragging {
+            cursor: grabbing;
+            user-select: none;
+        }
+    </style>
     <div class="page-header">
         <h3 class="fw-bold mb-3">Quản lý Quân nhân</h3>
         <ul class="breadcrumbs mb-3">
@@ -61,11 +70,18 @@
                             <thead>
                                 <tr>
                                     <th>STT</th>
-                                    <th>Số hiệu</th>
                                     <th>Họ và tên</th>
                                     <th>Cấp bậc</th>
                                     <th>Chức vụ</th>
-                                    <th>Đơn vị</th>
+                                    <th>Ngày tháng năm sinh</th>
+                                    <th>Tháng nhập ngũ</th>
+                                    <th>Số hiệu quân nhân</th>
+                                    <th>Ngày vào Đảng đoàn</th>
+                                    <th>Học vấn Ngoại ngữ</th>
+                                    <th>Nghề nghiệp bậc chuyên môn</th>
+                                    <th>Hộ khẩu thường trú</th>
+                                    <th>Khi cần báo tin cho ai? Ở đâu?</th>
+                                    <th>Ghi chú (thay đổi)</th>
                                     <th style="width: 10%">Thao tác</th>
                                 </tr>
                             </thead>
@@ -73,11 +89,18 @@
                                 @foreach($soldiers as $index => $soldier)
                                     <tr>
                                         <td>{{ $index + 1 }}</td>
-                                        <td>{{ $soldier->code }}</td>
                                         <td>{{ $soldier->full_name }}</td>
                                         <td>{{ $soldier->rank }}</td>
                                         <td>{{ $soldier->position }}</td>
-                                        <td>{{ $soldier->unit->name ?? 'N/A' }}</td>
+                                        <td>{{ $soldier->birth_date ? $soldier->birth_date->format('d/m/Y') : '' }}</td>
+                                        <td>{{ $soldier->enlistment_date ? $soldier->enlistment_date->format('m/Y') : '' }}</td>
+                                        <td>{{ $soldier->code }}</td>
+                                        <td>{{ $soldier->party_join_date ? $soldier->party_join_date->format('d/m/Y') : '' }}</td>
+                                        <td>{{ $soldier->education }} / {{ $soldier->foreign_language }}</td>
+                                        <td>{{ $soldier->professional_level }}</td>
+                                        <td>{{ $soldier->permanent_residence }}</td>
+                                        <td>{{ $soldier->emergency_contact_name }} - {{ $soldier->emergency_contact_address }}</td>
+                                        <td>{{ $soldier->notes }}</td>
                                         <td>
                                             <div class="form-button-action">
                                                 <a href="{{ route('soldiers.show', $soldier->id) }}" class="btn btn-link btn-info btn-lg" data-bs-toggle="tooltip" title="Xem chi tiết">
@@ -115,8 +138,36 @@
                     "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Vietnamese.json"
                 },
                 "columnDefs": [
-                    { "orderable": false, "targets": 6 } // Vô hiệu hóa sắp xếp cho cột Thao tác
+                    { "orderable": false, "targets": 13 } // Vô hiệu hóa sắp xếp cho cột Thao tác (cột thứ 14)
                 ]
+            });
+
+            // Kéo bảng sang ngang bằng chuột
+            const slider = document.querySelector('.table-responsive');
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+
+            slider.addEventListener('mousedown', (e) => {
+                isDown = true;
+                slider.classList.add('dragging');
+                startX = e.pageX - slider.offsetLeft;
+                scrollLeft = slider.scrollLeft;
+            });
+            slider.addEventListener('mouseleave', () => {
+                isDown = false;
+                slider.classList.remove('dragging');
+            });
+            slider.addEventListener('mouseup', () => {
+                isDown = false;
+                slider.classList.remove('dragging');
+            });
+            slider.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - slider.offsetLeft;
+                const walk = (x - startX) * 2; // Tốc độ kéo
+                slider.scrollLeft = scrollLeft - walk;
             });
         });
     </script>

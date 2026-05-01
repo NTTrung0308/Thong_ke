@@ -1,6 +1,15 @@
 @extends('backend.layouts.dashboard')
 
 @section('dashboard_content')
+    <style>
+        .table-responsive {
+            cursor: grab;
+        }
+        .table-responsive.dragging {
+            cursor: grabbing;
+            user-select: none;
+        }
+    </style>
     <div class="page-header">
         <h3 class="fw-bold mb-3">Quản lý kỷ luật</h3>
         <ul class="breadcrumbs mb-3">
@@ -115,30 +124,25 @@
                         <table id="disciplines-datatables" class="display table table-striped table-hover">
                             <thead>
                                 <tr>
-                                    <th>Ngày QĐ</th>
-                                    <th>Số QĐ</th>
-                                    <th>Quân nhân</th>
-                                    <th>Đơn vị</th>
-                                    <th>Hình thức</th>
-                                    <th>Trạng thái</th>
+                                    <th>STT</th>
+                                    <th>Nội dung vụ việc</th>
+                                    <th>Hình thức kỷ luật (Ngày, tháng, cấp quyết định)</th>
                                     <th style="width: 10%">Hành động</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($disciplines as $discipline)
+                                @foreach ($disciplines as $index => $discipline)
                                     <tr>
-                                        <td>{{ $discipline->formatted_decision_date }}</td>
-                                        <td>{{ $discipline->decision_number }}</td>
+                                        <td>{{ $index + 1 }}</td>
                                         <td>
                                             <strong>{{ $discipline->soldier_name_at_time }}</strong><br>
-                                            <small>{{ $discipline->soldier_rank_at_time }}</small>
+                                            <small>{{ $discipline->soldier_rank_at_time }} - {{ $discipline->unit_name_at_time }}</small><br>
+                                            {{ $discipline->reason }}
                                         </td>
-                                        <td>{{ $discipline->unit_name_at_time }}</td>
-                                        <td>{{ $discipline->discipline_form }}</td>
                                         <td>
-                                            <span class="badge {{ $discipline->status_badge }}">
-                                                {{ $discipline->status_name }}
-                                            </span>
+                                            - Hình thức: {{ $discipline->discipline_form }}<br>
+                                            - Ngày: {{ $discipline->decision_date ? $discipline->decision_date->format('d/m/Y') : ($discipline->decision_month ?: '...') }}<br>
+                                            - Cấp quyết định: {{ $discipline->decision_level }} (Số: {{ $discipline->decision_number }})
                                         </td>
                                         <td>
                                             <div class="form-button-action">
@@ -181,10 +185,40 @@
         $(document).ready(function() {
             $('#disciplines-datatables').DataTable({
                 "pageLength": 10,
-                "order": [[0, "desc"]],
                 "language": {
                     "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Vietnamese.json"
-                }
+                },
+                "columnDefs": [
+                    { "orderable": false, "targets": 3 }
+                ]
+            });
+
+            // Kéo bảng sang ngang bằng chuột
+            const slider = document.querySelector('.table-responsive');
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+
+            slider.addEventListener('mousedown', (e) => {
+                isDown = true;
+                slider.classList.add('dragging');
+                startX = e.pageX - slider.offsetLeft;
+                scrollLeft = slider.scrollLeft;
+            });
+            slider.addEventListener('mouseleave', () => {
+                isDown = false;
+                slider.classList.remove('dragging');
+            });
+            slider.addEventListener('mouseup', () => {
+                isDown = false;
+                slider.classList.remove('dragging');
+            });
+            slider.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - slider.offsetLeft;
+                const walk = (x - startX) * 2;
+                slider.scrollLeft = scrollLeft - walk;
             });
         });
 

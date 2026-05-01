@@ -14,8 +14,8 @@ class WeaponEquipment extends Model
 
     protected $fillable = [
         'soldier_id', 'unit_id',
-        'ak', 'rpd', 'b41', 'm79', 'gun_accessories',
-        'magazine_box', 'oil_can', 'bag', 'gun_cover',
+        'ak', 'rpd', 'b41', 'm79', 'cleaning_rod', 'spare_parts', 'gun_strap',
+        'gun_accessories', 'magazine_box', 'oil_can', 'bag', 'gun_cover',
         'muzzle_cover', 'sight', 'grenade',
         'infantry_shovel', 'infantry_pickaxe',
         'receive_date', 'return_date',
