@@ -10,6 +10,7 @@ class TrainingResult extends Model
 {
     use HasFactory, SoftDeletes;
 
+    // Tên bảng
     protected $fillable = [
         'unit_id', 'unit_name_at_time',
         'training_date', 'training_month', 'content',
@@ -20,7 +21,8 @@ class TrainingResult extends Model
         'instructor', 'supervisor',
         'attachment', 'created_by', 'updated_by'
     ];
-
+    
+    // Định dạng ngày giờ và kiểu dữ liệu
     protected $casts = [
         'training_date' => 'date',
         'start_time' => 'datetime:H:i',

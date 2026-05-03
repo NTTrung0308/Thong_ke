@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\UnitController;
 use App\Http\Controllers\Admin\WeaponEquipmentController;
 use App\Http\Controllers\Admin\RewardController;
 use App\Http\Controllers\Admin\DisciplineController;
+use App\Http\Controllers\Admin\TrainingResultController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -55,6 +56,10 @@ Route::middleware(['auth'])->group(function () {
     // Discipline Management
     Route::get('disciplines/report', [DisciplineController::class, 'report'])->name('disciplines.report');
     Route::resource('disciplines', DisciplineController::class);
+
+    // Training Results Management
+    Route::get('training-results/report', [TrainingResultController::class, 'report'])->name('training-results.report');
+    Route::resource('training-results', TrainingResultController::class);
 
     // Profile & Settings
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');

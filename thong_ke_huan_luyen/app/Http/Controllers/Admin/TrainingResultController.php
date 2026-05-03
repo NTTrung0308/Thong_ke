@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\TrainingResult;
 use App\Models\Unit;
 use Illuminate\Http\Request;
@@ -57,7 +58,7 @@ class TrainingResultController extends Controller
             });
         }
 
-        $trainingResults = $query->orderBy('training_date', 'desc')->paginate(20);
+        $trainingResults = $query->orderBy('training_date', 'desc')->get();
 
         // Dữ liệu cho filter
         $units = $this->getAccessibleUnits($user);
@@ -80,7 +81,7 @@ class TrainingResultController extends Controller
             'yếu' => 'Yếu'
         ];
 
-        return view('training-results.index', compact(
+        return view('backend.training_results.index', compact(
             'trainingResults', 'units', 'years', 'months', 'results'
         ));
     }
@@ -93,7 +94,7 @@ class TrainingResultController extends Controller
         $user = Auth::user();
         $units = $this->getAccessibleUnits($user);
 
-        return view('training-results.create', compact('units'));
+        return view('backend.training_results.create', compact('units'));
     }
 
     // Lưu kết quả tập huấn mới
@@ -125,7 +126,7 @@ class TrainingResultController extends Controller
         // Tính số giờ
         $start = Carbon::parse($validated['start_time']);
         $end = Carbon::parse($validated['end_time']);
-        $validated['duration_hours'] = $end->diffInHours($start);
+        $validated['duration_hours'] = round($end->diffInMinutes($start) / 60, 2);
 
         // Lấy tên đơn vị
         $unit = Unit::find($validated['unit_id']);
@@ -151,7 +152,7 @@ class TrainingResultController extends Controller
     public function show(TrainingResult $trainingResult)
     {
         $this->authorize('view', $trainingResult);
-        return view('training-results.show', compact('trainingResult'));
+        return view('backend.training_results.show', compact('trainingResult'));
     }
 
     // Form sửa
@@ -162,7 +163,7 @@ class TrainingResultController extends Controller
         $user = Auth::user();
         $units = $this->getAccessibleUnits($user);
 
-        return view('training-results.edit', compact('trainingResult', 'units'));
+        return view('backend.training_results.edit', compact('trainingResult', 'units'));
     }
 
     // Cập nhật
@@ -194,7 +195,7 @@ class TrainingResultController extends Controller
         // Tính số giờ
         $start = Carbon::parse($validated['start_time']);
         $end = Carbon::parse($validated['end_time']);
-        $validated['duration_hours'] = $end->diffInHours($start);
+        $validated['duration_hours'] = round($end->diffInMinutes($start) / 60, 2);
 
         // Cập nhật tên đơn vị
         $unit = Unit::find($validated['unit_id']);

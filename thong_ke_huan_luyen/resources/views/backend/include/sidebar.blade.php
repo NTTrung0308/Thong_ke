@@ -70,6 +70,12 @@
                         <p>Kỷ luật</p>
                     </a>
                 </li>
+                <li class="nav-item {{ Request::is('training-results*') ? 'active' : '' }}">
+                    <a href="{{ route('training-results.index') }}">
+                        <i class="fas fa-graduation-cap"></i>
+                        <p>Kết quả tập huấn</p>
+                    </a>
+                </li>
                 <li class="nav-section">
                     <span class="sidebar-mini-icon">
                         <i class="fa fa-ellipsis-h"></i>

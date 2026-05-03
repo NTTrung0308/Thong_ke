@@ -20,6 +20,8 @@ class AuthServiceProvider extends ServiceProvider
         Reward::class => RewardPolicy::class,
         Discipline::class => DisciplinePolicy::class,
         TrainingResult::class => TrainingResultPolicy::class,
+        Training::class => TrainingPolicy::class,
+        TrainingLog::class => TrainingLogPolicy::class,
     ];
 
     /**
