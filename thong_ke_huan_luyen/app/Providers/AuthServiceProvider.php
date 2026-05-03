@@ -19,6 +19,7 @@ class AuthServiceProvider extends ServiceProvider
         WeaponEquipment::class => WeaponEquipmentPolicy::class,
         Reward::class => RewardPolicy::class,
         Discipline::class => DisciplinePolicy::class,
+        TrainingResult::class => TrainingResultPolicy::class,
     ];
 
     /**
