@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\TrainingLog;
 use App\Models\Unit;
 use Illuminate\Http\Request;
@@ -54,7 +55,7 @@ class TrainingLogController extends Controller
             });
         }
 
-        $trainingLogs = $query->orderBy('training_date', 'desc')->paginate(20);
+        $trainingLogs = $query->orderBy('training_date', 'desc')->get();
 
         // Dữ liệu cho filter
         $units = $this->getAccessibleUnits($user);
@@ -66,14 +67,12 @@ class TrainingLogController extends Controller
             'yếu' => 'Yếu'
         ];
 
-        return view('training-logs.index', compact('trainingLogs', 'units', 'ratings'));
+        return view('backend.training_logs.index', compact('trainingLogs', 'units', 'ratings'));
     }
 
     // Form thêm mới
     public function create()
     {
-        $this->authorize('create', TrainingLog::class);
-
         $user = Auth::user();
         $units = $this->getAccessibleUnits($user);
 
@@ -81,14 +80,12 @@ class TrainingLogController extends Controller
         $today = Carbon::now();
         $dayOfWeek = $this->getVietnameseDayOfWeek($today);
 
-        return view('training-logs.create', compact('units', 'today', 'dayOfWeek'));
+        return view('backend.training_logs.create', compact('units', 'today', 'dayOfWeek'));
     }
 
     // Lưu nhật ký mới
     public function store(Request $request)
     {
-        $this->authorize('create', TrainingLog::class);
-
         $validated = $request->validate([
             'unit_id' => 'required|exists:units,id',
             'training_date' => 'required|date',
@@ -149,28 +146,26 @@ class TrainingLogController extends Controller
     }
 
     // Xem chi tiết
-    public function show(TrainingLog $trainingLog)
+    public function show($id)
     {
-        $this->authorize('view', $trainingLog);
-        return view('training-logs.show', compact('trainingLog'));
+        $trainingLog = TrainingLog::findOrFail($id);
+        return view('backend.training_logs.show', compact('trainingLog'));
     }
 
     // Form sửa
-    public function edit(TrainingLog $trainingLog)
+    public function edit($id)
     {
-        $this->authorize('update', $trainingLog);
-
+        $trainingLog = TrainingLog::findOrFail($id);
         $user = Auth::user();
         $units = $this->getAccessibleUnits($user);
 
-        return view('training-logs.edit', compact('trainingLog', 'units'));
+        return view('backend.training_logs.edit', compact('trainingLog', 'units'));
     }
 
     // Cập nhật
-    public function update(Request $request, TrainingLog $trainingLog)
+    public function update(Request $request, $id)
     {
-        $this->authorize('update', $trainingLog);
-
+        $trainingLog = TrainingLog::findOrFail($id);
         $validated = $request->validate([
             'unit_id' => 'required|exists:units,id',
             'training_date' => 'required|date',
@@ -233,10 +228,9 @@ class TrainingLogController extends Controller
     }
 
     // Xóa
-    public function destroy(TrainingLog $trainingLog)
+    public function destroy($id)
     {
-        $this->authorize('delete', $trainingLog);
-
+        $trainingLog = TrainingLog::findOrFail($id);
         if ($trainingLog->attachment) {
             Storage::disk('public')->delete($trainingLog->attachment);
         }
@@ -315,7 +309,7 @@ class TrainingLogController extends Controller
             ->orderBy('year', 'desc')
             ->pluck('year');
 
-        return view('reports.training-log', compact(
+        return view('backend.reports.training_log', compact(
             'logs', 'summary', 'dailyStats', 'units', 'months', 'years'
         ) + [
             'currentMonth' => $month,
@@ -343,26 +337,25 @@ class TrainingLogController extends Controller
         if ($user->hasRole('chi-huy')) {
             return Unit::pluck('id')->toArray();
         }
-        if ($user->hasRole('trung-doan')) {
-            return Unit::where('level', 'trung-doan')
-                ->orWhere('parent_id', $user->unit_id)
-                ->pluck('id')->toArray();
+        
+        if ($user->unit) {
+            return $user->unit->getAllDescendantIds();
         }
-        if ($user->hasRole('tieu-doan')) {
-            return Unit::where('level', 'tieu-doan')
-                ->orWhere('parent_id', $user->unit_id)
-                ->pluck('id')->toArray();
-        }
-        if ($user->hasRole('dai-doi')) {
-            return Unit::where('level', 'dai-doi')
-                ->orWhere('parent_id', $user->unit_id)
-                ->pluck('id')->toArray();
-        }
+        
         return [$user->unit_id];
     }
 
     private function getAccessibleUnits($user)
     {
-        return Unit::whereIn('id', $this->getAccessibleUnitIds($user))->get();
+        if ($user->hasRole('chi-huy')) {
+            return Unit::all();
+        }
+
+        if ($user->unit) {
+            $unitIds = $user->unit->getAllDescendantIds();
+            return Unit::whereIn('id', $unitIds)->get();
+        }
+
+        return collect();
     }
 }

@@ -38,7 +38,7 @@
                                     <label>Đơn vị <span class="text-danger">*</span></label>
                                     <select name="unit_id" id="unit_id" class="form-control" required>
                                         <option value="">-- Chọn đơn vị --</option>
-                                        @foreach($units as $unit)
+                                        @foreach ($units as $unit)
                                             <option value="{{ $unit->id }}">{{ $unit->name }}</option>
                                         @endforeach
                                     </select>
@@ -49,7 +49,7 @@
                                     <label>Quân nhân <span class="text-danger">*</span></label>
                                     <select name="soldier_id" id="soldier_id" class="form-control select2" required>
                                         <option value="">-- Trước tiên hãy chọn đơn vị --</option>
-                                        @foreach($soldiers as $soldier)
+                                        @foreach ($soldiers as $soldier)
                                             <option value="{{ $soldier->id }}" data-unit="{{ $soldier->unit_id }}">
                                                 {{ $soldier->full_name }} ({{ $soldier->code }})
                                             </option>
@@ -65,7 +65,7 @@
                                     <label>Hình thức kỷ luật <span class="text-danger">*</span></label>
                                     <select name="discipline_form" class="form-control" required>
                                         <option value="">-- Chọn hình thức --</option>
-                                        @foreach($disciplineForms as $form)
+                                        @foreach ($disciplineForms as $form)
                                             <option value="{{ $form }}">{{ $form }}</option>
                                         @endforeach
                                     </select>
@@ -76,7 +76,7 @@
                                     <label>Cấp quyết định <span class="text-danger">*</span></label>
                                     <select name="decision_level" class="form-control" required>
                                         <option value="">-- Chọn cấp quyết định --</option>
-                                        @foreach($decisionLevels as $level)
+                                        @foreach ($decisionLevels as $level)
                                             <option value="{{ $level }}">{{ $level }}</option>
                                         @endforeach
                                     </select>
@@ -88,13 +88,15 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label>Số quyết định</label>
-                                    <input type="text" name="decision_number" class="form-control" placeholder="Ví dụ: 45/QĐ-KL">
+                                    <input type="text" name="decision_number" class="form-control"
+                                        placeholder="Ví dụ: 45/QĐ-KL">
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label>Ngày quyết định <span class="text-danger">*</span></label>
-                                    <input type="date" name="decision_date" class="form-control" required value="{{ date('Y-m-d') }}">
+                                    <input type="date" name="decision_date" class="form-control" required
+                                        value="{{ date('Y-m-d') }}">
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -128,30 +130,35 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>Người ký</label>
-                                    <input type="text" name="signer_name" class="form-control" placeholder="Họ tên người ký">
+                                    <input type="text" name="signer_name" class="form-control"
+                                        placeholder="Họ tên người ký">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>Chức vụ người ký</label>
-                                    <input type="text" name="signer_position" class="form-control" placeholder="Ví dụ: Trung đoàn trưởng">
+                                    <input type="text" name="signer_position" class="form-control"
+                                        placeholder="Ví dụ: Trung đoàn trưởng">
                                 </div>
                             </div>
                         </div>
 
                         <div class="form-group">
                             <label>Nội dung công việc/Sai phạm <span class="text-danger">*</span></label>
-                            <input type="text" name="work_content" class="form-control" required placeholder="Tóm tắt sai phạm...">
+                            <input type="text" name="work_content" class="form-control" required
+                                placeholder="Tóm tắt sai phạm...">
                         </div>
 
                         <div class="form-group">
                             <label>Chi tiết sai phạm <span class="text-danger">*</span></label>
-                            <textarea name="violation_details" class="form-control" rows="4" required placeholder="Mô tả chi tiết hành vi vi phạm..."></textarea>
+                            <textarea name="violation_details" id="violation_details" class="form-control" rows="4" required
+                                placeholder="Mô tả chi tiết hành vi vi phạm..."></textarea>
                         </div>
 
                         <div class="form-group">
                             <label>Biện pháp khắc phục</label>
-                            <textarea name="improvement_measures" class="form-control" rows="2" placeholder="Các biện pháp đã hoặc đang thực hiện để khắc phục..."></textarea>
+                            <textarea name="improvement_measures" class="form-control" rows="2"
+                                placeholder="Các biện pháp đã hoặc đang thực hiện để khắc phục..."></textarea>
                         </div>
 
                         <div class="row">
@@ -180,24 +187,36 @@
 @endsection
 
 @section('scripts')
-<script>
-    $(document).ready(function() {
-        // Lọc quân nhân theo đơn vị
-        $('#unit_id').change(function() {
-            var unitId = $(this).val();
-            if (unitId) {
-                $('#soldier_id option').each(function() {
-                    if ($(this).data('unit') == unitId || $(this).val() == "") {
-                        $(this).show();
-                    } else {
-                        $(this).hide();
-                    }
-                });
-            } else {
-                $('#soldier_id option').show();
-            }
-            $('#soldier_id').val('');
+    <script src="https://cdn.tiny.cloud/1/8s4hqaa7an28jigjhd5vzvhjwyiid21n0lczimuwgobsmr8m/tinymce/8/tinymce.min.js" referrerpolicy="origin"
+        crossorigin="anonymous"></script>
+    <script>
+        $(document).ready(function() {
+            // TinyMCE initialization
+            tinymce.init({
+                selector: '#violation_details',
+                plugins: 'advlist autolink lists link image charmap preview anchor searchreplace vertical-align visualblocks code fullscreen insertdatetime media table help wordcount',
+                toolbar: 'undo redo | blocks | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+                language: 'vi',
+                promotion: false,
+                branding: false,
+                height: 300
+            });
+            // Lọc quân nhân theo đơn vị
+            $('#unit_id').change(function() {
+                var unitId = $(this).val();
+                if (unitId) {
+                    $('#soldier_id option').each(function() {
+                        if ($(this).data('unit') == unitId || $(this).val() == "") {
+                            $(this).show();
+                        } else {
+                            $(this).hide();
+                        }
+                    });
+                } else {
+                    $('#soldier_id option').show();
+                }
+                $('#soldier_id').val('');
+            });
         });
-    });
-</script>
+    </script>
 @endsection

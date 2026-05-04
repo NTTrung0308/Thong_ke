@@ -125,7 +125,7 @@
                         <div class="p-3 bg-light rounded border-start border-danger border-4">
                             <p class="fw-bold mb-1">{{ $discipline->work_content }}</p>
                             <hr>
-                            {!! nl2br(e($discipline->violation_details)) !!}
+                            {!! $discipline->violation_details !!}
                         </div>
                     </div>
 
@@ -133,7 +133,7 @@
                     <div class="mt-4">
                         <h5 class="fw-bold text-primary">Biện pháp khắc phục:</h5>
                         <div class="p-3 bg-light rounded border-start border-success border-4">
-                            {!! nl2br(e($discipline->improvement_measures)) !!}
+                            {!! $discipline->improvement_measures !!}
                         </div>
                     </div>
                     @endif
@@ -142,7 +142,7 @@
                     <div class="mt-4">
                         <h5 class="fw-bold text-primary">Ghi chú kết quả:</h5>
                         <div class="p-3 bg-light rounded">
-                            {!! nl2br(e($discipline->result)) !!}
+                            {!! $discipline->result !!}
                         </div>
                     </div>
                     @endif

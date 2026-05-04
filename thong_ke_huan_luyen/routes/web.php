@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\WeaponEquipmentController;
 use App\Http\Controllers\Admin\RewardController;
 use App\Http\Controllers\Admin\DisciplineController;
 use App\Http\Controllers\Admin\TrainingResultController;
+use App\Http\Controllers\Admin\TrainingLogController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -60,6 +61,10 @@ Route::middleware(['auth'])->group(function () {
     // Training Results Management
     Route::get('training-results/report', [TrainingResultController::class, 'report'])->name('training-results.report');
     Route::resource('training-results', TrainingResultController::class);
+
+    // Training Logs Management
+    Route::get('training-logs/report', [TrainingLogController::class, 'report'])->name('training-logs.report');
+    Route::resource('training-logs', TrainingLogController::class);
 
     // Profile & Settings
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');

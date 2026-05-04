@@ -76,6 +76,12 @@
                         <p>Kết quả tập huấn</p>
                     </a>
                 </li>
+                <li class="nav-item {{ Request::is('training-logs*') ? 'active' : '' }}">
+                    <a href="{{ route('training-logs.index') }}">
+                        <i class="fas fa-book"></i>
+                        <p>Nhật ký huấn luyện</p>
+                    </a>
+                </li>
                 <li class="nav-section">
                     <span class="sidebar-mini-icon">
                         <i class="fa fa-ellipsis-h"></i>
