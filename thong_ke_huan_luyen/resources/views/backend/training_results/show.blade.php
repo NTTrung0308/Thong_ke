@@ -100,7 +100,7 @@
                                         Nội dung tập huấn
                                     </div>
                                     <div class="annoucement-desc">
-                                        {{ $trainingResult->content }}
+                                        {!! $trainingResult->content !!}
                                     </div>
                                 </div>
                             </div>

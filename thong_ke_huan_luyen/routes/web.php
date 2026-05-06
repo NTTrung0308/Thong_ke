@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('dashboard');
 });
 
 // Auth Routes
@@ -35,8 +35,11 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // Dashboard (Bảo vệ bằng middleware auth)
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
-        return view('backend.index');
+        return view('backend.dashboard');
     })->name('dashboard');
+
+    // Search function
+    Route::get('/search', [SoldierController::class, 'search'])->name('search.index');
 
     // Users Management - Chỉ dành cho Chỉ huy
     Route::resource('users', UserController::class)->middleware('check.role:chi-huy');
@@ -45,7 +48,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('soldiers', SoldierController::class);
 
     // Units Management
-    Route::resource('units', UnitController::class);
+    Route::resource('units', UnitController::class)->middleware('check.role:chi-huy');
 
     // Weapon & Equipment Management
     Route::resource('weapon-equipments', WeaponEquipmentController::class);

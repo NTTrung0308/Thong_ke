@@ -37,4 +37,9 @@ class Soldier extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
+    public function weapons()
+    {
+        return $this->hasMany(WeaponEquipment::class, 'soldier_id');
+    }
 }

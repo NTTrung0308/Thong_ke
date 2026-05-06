@@ -43,8 +43,15 @@ class SoldierController extends Controller
             $query->where('unit_id', $request->unit_id);
         }
 
+        // Lọc theo cấp đơn vị
+        if ($request->filled('level')) {
+            $query->whereHas('unit', function($q) use ($request) {
+                $q->where('level', $request->level);
+            });
+        }
+
         $soldiers = $query->orderBy('unit_id')->orderBy('full_name')->get();
-        $units = Unit::all();
+        $units = $this->getAccessibleUnits();
 
         return view('backend.soldiers.index', compact('soldiers', 'units'));
     }
@@ -159,5 +166,80 @@ class SoldierController extends Controller
         }
 
         return collect();
+    }
+
+    public function search(Request $request)
+    {
+        $units = $this->getAccessibleUnits();
+        $query = Soldier::query();
+
+        if ($request->filled('q')) {
+            $q = $request->q;
+            $query->where(function($sub) use ($q) {
+                // Tìm kiếm thông tin quân nhân (tất cả các trường văn bản)
+                $sub->where('full_name', 'like', "%$q%")
+                    ->orWhere('code', 'like', "%$q%")
+                    ->orWhere('rank', 'like', "%$q%")
+                    ->orWhere('position', 'like', "%$q%")
+                    ->orWhere('education', 'like', "%$q%")
+                    ->orWhere('foreign_language', 'like', "%$q%")
+                    ->orWhere('professional_level', 'like', "%$q%")
+                    ->orWhere('permanent_residence', 'like', "%$q%")
+                    ->orWhere('emergency_contact_name', 'like', "%$q%")
+                    ->orWhere('emergency_contact_address', 'like', "%$q%")
+                    ->orWhere('notes', 'like', "%$q%")
+                    // Tìm kiếm theo số hiệu vũ khí hoặc loại vũ khí
+                    ->orWhereHas('weapons', function($w) use ($q) {
+                        $w->where('status', 'dang-su-dung')
+                          ->where(function($query) use ($q) {
+                              $weaponFields = [
+                                  'ak', 'rpd', 'b41', 'm79', 'cleaning_rod', 'spare_parts', 
+                                  'gun_strap', 'gun_accessories', 'magazine_box', 'oil_can', 
+                                  'bag', 'gun_cover', 'muzzle_cover', 'sight', 'grenade', 
+                                  'infantry_shovel', 'infantry_pickaxe'
+                              ];
+                              
+                              $lowerQ = mb_strtolower($q);
+                              
+                              // 1. Tìm theo số hiệu (like %q%)
+                              foreach ($weaponFields as $field) {
+                                  $query->orWhere($field, 'like', "%$q%");
+                              }
+                              
+                              // 2. Nếu từ khóa là tên loại vũ khí (ak, rpd...), tìm tất cả ai có biên chế loại đó
+                              if (in_array($lowerQ, ['ak', 'rpd', 'b41', 'm79'])) {
+                                  $query->orWhereNotNull($lowerQ)->where($lowerQ, '!=', '');
+                              }
+                              
+                              // 3. Hỗ trợ từ khóa tiếng Việt hoặc có dấu
+                              if (str_contains($lowerQ, 'súng ak') || str_contains($lowerQ, 'sung ak')) {
+                                  $query->orWhereNotNull('ak')->where('ak', '!=', '');
+                              }
+                              if (str_contains($lowerQ, 'súng rpd') || str_contains($lowerQ, 'sung rpd')) {
+                                  $query->orWhereNotNull('rpd')->where('rpd', '!=', '');
+                              }
+                              if (str_contains($lowerQ, 'súng b41') || str_contains($lowerQ, 'sung b41')) {
+                                  $query->orWhereNotNull('b41')->where('b41', '!=', '');
+                              }
+                              if (str_contains($lowerQ, 'xẻng') || str_contains($lowerQ, 'xeng')) {
+                                  $query->orWhereNotNull('infantry_shovel')->where('infantry_shovel', '!=', '');
+                              }
+                              if (str_contains($lowerQ, 'cuốc') || str_contains($lowerQ, 'cuoc')) {
+                                  $query->orWhereNotNull('infantry_pickaxe')->where('infantry_pickaxe', '!=', '');
+                              }
+                          });
+                    });
+            });
+        }
+
+        if ($request->filled('unit_id')) {
+            $query->where('unit_id', $request->unit_id);
+        }
+
+        $soldiers = $query->with(['unit', 'weapons' => function($q) {
+            $q->where('status', 'dang-su-dung');
+        }])->paginate(20);
+
+        return view('backend.search.index', compact('soldiers', 'units'));
     }
 }

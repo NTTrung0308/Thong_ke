@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Hệ thống Thống kê Huấn luyện</title>
+    <title>Dashboard - Hệ thống Thống kê Huấn luyện Chiến Đấu</title>
     {{-- <script src="https://cdn.tailwindcss.com"></script> --}}
     <link rel="icon" href="{{ asset('backend/assets/img/kaiadmin/favicon.ico') }}" type="image/x-icon" />
 

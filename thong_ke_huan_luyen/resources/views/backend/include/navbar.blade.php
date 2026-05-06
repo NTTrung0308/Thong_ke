@@ -23,7 +23,7 @@
     <!-- Navbar Header -->
     <nav class="navbar navbar-header navbar-header-transparent navbar-expand-lg border-bottom">
         <div class="container-fluid">
-            <nav class="navbar navbar-header-left navbar-expand-lg navbar-form nav-search p-0 d-none d-lg-flex">
+            {{-- <nav class="navbar navbar-header-left navbar-expand-lg navbar-form nav-search p-0 d-none d-lg-flex">
                 <div class="input-group">
                     <div class="input-group-prepend">
                         <button type="submit" class="btn btn-search pe-1">
@@ -32,10 +32,10 @@
                     </div>
                     <input type="text" placeholder="Search ..." class="form-control" />
                 </div>
-            </nav>
+            </nav> --}}
 
             <ul class="navbar-nav topbar-nav ms-md-auto align-items-center">
-                <li class="nav-item topbar-icon dropdown hidden-caret d-flex d-lg-none">
+                {{-- <li class="nav-item topbar-icon dropdown hidden-caret d-flex d-lg-none">
                     <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button"
                         aria-expanded="false" aria-haspopup="true">
                         <i class="fa fa-search"></i>
@@ -47,8 +47,8 @@
                             </div>
                         </form>
                     </ul>
-                </li>
-                <li class="nav-item topbar-icon dropdown hidden-caret">
+                </li> --}}
+                {{-- <li class="nav-item topbar-icon dropdown hidden-caret">
                     <a class="nav-link dropdown-toggle" href="#" id="messageDropdown" role="button"
                         data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <i class="fa fa-envelope"></i>
@@ -244,13 +244,13 @@
                             </div>
                         </div>
                     </div>
-                </li>
+                </li> --}}
 
                 <li class="nav-item topbar-user dropdown hidden-caret">
                     <a class="dropdown-toggle profile-pic" data-bs-toggle="dropdown" href="#"
                         aria-expanded="false">
                         <div class="avatar-sm">
-                            <img src="{{ asset('backend/assets/img/profile.jpg') }}" alt="..." class="avatar-img rounded-circle" />
+                            <img src="{{ asset('backend/assets/img/avatar-default.svg') }}" alt="..." class="avatar-img rounded-circle" />
                         </div>
                         <span class="profile-username">
                             <span class="op-7">Hi,</span>
@@ -262,7 +262,7 @@
                             <li>
                                 <div class="user-box">
                                     <div class="avatar-lg">
-                                        <img src="{{ asset('backend/assets/img/profile.jpg') }}" alt="image profile"
+                                        <img src="{{ asset('backend/assets/img/avatar-default.svg') }}" alt="image profile"
                                             class="avatar-img rounded" />
                                     </div>
                                     <div class="u-text">

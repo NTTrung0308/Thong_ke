@@ -101,7 +101,7 @@
                                     <tr>
                                         <td class="text-center">{{ $index + 1 }}</td>
                                         <td class="text-center">{{ $result->formatted_training_date }}</td>
-                                        <td>{{ Str::limit($result->content, 100) }}</td>
+                                        <td>{!! Str::limit($result->content, 100) !!}</td>
                                         <td class="text-center">{{ sprintf('%02s', str_replace('.', ',', (float)$result->duration_hours)) }}</td>
                                         <td class="text-center">{{ sprintf('%02d', $result->trung_doi_count) }}</td>
                                         <td class="text-center">{{ sprintf('%02d', $result->at_count + $result->kdt_count) }}</td>

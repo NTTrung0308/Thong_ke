@@ -47,6 +47,7 @@
                 </div>
                 <div class="card-body">
                     <!-- Lọc theo đơn vị (Server-side trigger) -->
+                    @if($units->count() > 1)
                     <form action="{{ route('soldiers.index') }}" method="GET" class="mb-4">
                         <div class="row">
                             <div class="col-md-3">
@@ -64,6 +65,7 @@
                             </div>
                         </div>
                     </form>
+                    @endif
 
                     <div class="table-responsive">
                         <table id="soldiers-datatables" class="display table table-striped table-hover">
