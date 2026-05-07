@@ -17,16 +17,19 @@ class RewardController extends Controller
         $this->middleware('auth');
     }
 
-    // Hiển thị danh sách khen thưởng
     public function index(Request $request)
     {
         $user = Auth::user();
+
+        // Tự động đồng bộ danh sách khen thưởng theo quân nhân
+        $this->syncWithSoldiers($user);
+
         $query = Reward::with(['unit', 'soldier', 'creator']);
 
         // Phân quyền xem theo cấp đơn vị
         if (!$user->hasRole('chi-huy')) {
             $unitIds = $this->getAccessibleUnitIds($user);
-            $query->whereIn('unit_id', $unitIds);
+            $query->whereIn('rewards.unit_id', $unitIds);
         }
 
         // Lọc theo loại khen thưởng
@@ -36,7 +39,7 @@ class RewardController extends Controller
 
         // Lọc theo đơn vị
         if ($request->filled('unit_id')) {
-            $query->where('unit_id', $request->unit_id);
+            $query->where('rewards.unit_id', $request->unit_id);
         }
 
         // Lọc theo năm
@@ -58,13 +61,26 @@ class RewardController extends Controller
             });
         }
 
-        $rewards = $query->orderBy('decision_date', 'desc')->get();
+        // Sắp xếp theo đơn vị và tên quân nhân
+        $rewards = $query->leftJoin('soldiers', 'rewards.soldier_id', '=', 'soldiers.id')
+            ->orderBy('rewards.unit_id')
+            ->orderBy('soldiers.full_name')
+            ->select('rewards.*')
+            ->get();
+
+        // Tính toán thống kê
+        $stats = [
+            'total_soldiers' => Soldier::count(), // Tổng số quân nhân
+            'total_rewards' => $rewards->whereNotNull('reward_form')->count(),
+            'unit_rewards' => $rewards->where('type', 'unit')->whereNotNull('reward_form')->count(),
+            'superior_rewards' => $rewards->where('type', 'superior')->whereNotNull('reward_form')->count(),
+        ];
 
         // Lấy danh sách đơn vị để lọc
         $units = $this->getAccessibleUnits($user);
 
         // Lấy danh sách năm có dữ liệu
-        $years = Reward::selectRaw('YEAR(decision_date) as year')
+        $years = Reward::whereNotNull('decision_date')->selectRaw('YEAR(decision_date) as year')
             ->distinct()
             ->orderBy('year', 'desc')
             ->pluck('year');
@@ -72,7 +88,35 @@ class RewardController extends Controller
         // Các cấp quyết định
         $decisionLevels = ['Cấp thường', 'Đại đội', 'Tiểu đoàn', 'Trung đoàn', 'Sư đoàn', 'Quân khu', 'Bộ Quốc phòng'];
 
-        return view('backend.rewards.index', compact('rewards', 'units', 'years', 'decisionLevels'));
+        return view('backend.rewards.index', compact('rewards', 'units', 'years', 'decisionLevels', 'stats'));
+    }
+
+    private function syncWithSoldiers($user)
+    {
+        $soldierQuery = Soldier::query();
+        
+        // Chỉ đồng bộ quân nhân thuộc quyền quản lý
+        if (!$user->hasRole('chi-huy') && $user->unit) {
+            $unitIds = $user->unit->getAllDescendantIds();
+            $soldierQuery->whereIn('unit_id', $unitIds);
+        }
+
+        $soldiers = $soldierQuery->get();
+        $existingSoldierIds = Reward::pluck('soldier_id')->toArray();
+
+        foreach ($soldiers as $soldier) {
+            if (!in_array($soldier->id, $existingSoldierIds)) {
+                Reward::create([
+                    'type' => 'unit',
+                    'soldier_id' => $soldier->id,
+                    'soldier_name_at_time' => $soldier->full_name,
+                    'unit_id' => $soldier->unit_id,
+                    'unit_name_at_time' => $soldier->unit->name ?? 'N/A',
+                    'created_by' => $user->id,
+                    'updated_by' => $user->id,
+                ]);
+            }
+        }
     }
 
     // Form thêm mới

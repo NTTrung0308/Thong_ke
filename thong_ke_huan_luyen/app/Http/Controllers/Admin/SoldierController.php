@@ -90,7 +90,52 @@ class SoldierController extends Controller
         $validated['created_by'] = Auth::id();
         $validated['updated_by'] = Auth::id();
 
-        Soldier::create($validated);
+        $soldier = Soldier::create($validated);
+
+        // Tự động tạo bản ghi vũ khí trang bị cho quân nhân mới
+        \App\Models\WeaponEquipment::create([
+            'soldier_id' => $soldier->id,
+            'unit_id' => $soldier->unit_id,
+            'status' => 'dang-su-dung',
+            'receive_date' => now(),
+            'created_by' => Auth::id(),
+            'updated_by' => Auth::id(),
+        ]);
+
+        // Tự động tạo bản ghi khen thưởng cho quân nhân mới
+        \App\Models\Reward::create([
+            'type' => 'unit',
+            'soldier_id' => $soldier->id,
+            'soldier_name_at_time' => $soldier->full_name,
+            'unit_id' => $soldier->unit_id,
+            'unit_name_at_time' => $soldier->unit->name ?? 'N/A',
+            'created_by' => Auth::id(),
+            'updated_by' => Auth::id(),
+        ]);
+
+        // Tự động tạo bản ghi nhật ký huấn luyện cho quân nhân mới
+        \App\Models\TrainingLog::create([
+            'soldier_id' => $soldier->id,
+            'soldier_name_at_time' => $soldier->full_name,
+            'unit_id' => $soldier->unit_id,
+            'unit_name_at_time' => $soldier->unit->name ?? 'N/A',
+            'training_date' => now(),
+            'day_of_week' => $this->getVietnameseDayOfWeek(now()),
+            'created_by' => Auth::id(),
+            'updated_by' => Auth::id(),
+        ]);
+
+        // Tự động tạo bản ghi kỷ luật cho quân nhân mới
+        \App\Models\Discipline::create([
+            'soldier_id' => $soldier->id,
+            'soldier_name_at_time' => $soldier->full_name,
+            'soldier_rank_at_time' => $soldier->rank,
+            'unit_id' => $soldier->unit_id,
+            'unit_name_at_time' => $soldier->unit->name ?? 'N/A',
+            'status' => 'da-thi-hanh-xong',
+            'created_by' => Auth::id(),
+            'updated_by' => Auth::id(),
+        ]);
 
         return redirect()->route('soldiers.index')
             ->with('success', 'Thêm quân nhân thành công!');
@@ -141,7 +186,7 @@ class SoldierController extends Controller
             ->with('success', 'Cập nhật quân nhân thành công!');
     }
 
-    // Xóa
+    // Xóa quân nhân
     public function destroy(Soldier $soldier)
     {
         $this->authorize('delete', $soldier);
@@ -151,7 +196,22 @@ class SoldierController extends Controller
             ->with('success', 'Xóa quân nhân thành công!');
     }
 
-    // Lấy danh sách đơn vị mà user có quyền truy cập
+    private function getVietnameseDayOfWeek($date)
+    {
+        $days = [
+            'Monday' => 'Thứ 2',
+            'Tuesday' => 'Thứ 3',
+            'Wednesday' => 'Thứ 4',
+            'Thursday' => 'Thứ 5',
+            'Friday' => 'Thứ 6',
+            'Saturday' => 'Thứ 7',
+            'Sunday' => 'Chủ nhật'
+        ];
+        return $days[$date->format('l')];
+    }
+
+    // Lấy danh sách đơn vị người dùng có quyền tiếp cận
+
     private function getAccessibleUnits()
     {
         $user = Auth::user();

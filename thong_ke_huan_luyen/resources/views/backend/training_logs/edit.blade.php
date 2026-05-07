@@ -31,7 +31,13 @@
             @method('PUT')
             <div class="card">
                 <div class="card-header">
-                    <h4 class="card-title">Thông tin chung</h4>
+                    <h4 class="card-title">Thông tin chung: 
+                        @if($trainingLog->soldier)
+                            <span class="text-primary">{{ $trainingLog->soldier->full_name }}</span>
+                        @else
+                            {{ $trainingLog->unit_name_at_time }}
+                        @endif
+                    </h4>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -53,8 +59,8 @@
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label for="training_date">Ngày huấn luyện <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" id="training_date" name="training_date" value="{{ old('training_date', $trainingLog->training_date->format('Y-m-d')) }}" required>
+                                <label for="training_date">Ngày huấn luyện</label>
+                                <input type="date" class="form-control" id="training_date" name="training_date" value="{{ old('training_date', $trainingLog->training_date ? $trainingLog->training_date->format('Y-m-d') : '') }}">
                                 @error('training_date')
                                     <small class="text-danger">{{ $message }}</small>
                                 @enderror
@@ -62,7 +68,7 @@
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label for="day_of_week">Thứ <span class="text-danger">*</span></label>
+                                <label for="day_of_week">Thứ</label>
                                 <input type="text" class="form-control" id="day_of_week" name="day_of_week" value="{{ old('day_of_week', $trainingLog->day_of_week) }}" readonly>
                             </div>
                         </div>
@@ -95,33 +101,33 @@
                 </div>
                 <div class="card-body">
                     <div class="form-group">
-                        <label for="training_content">Nội dung huấn luyện <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="training_content" name="training_content" rows="3" required>{{ old('training_content', $trainingLog->training_content) }}</textarea>
+                        <label for="training_content">Nội dung huấn luyện</label>
+                        <textarea class="form-control" id="training_content" name="training_content" rows="3">{{ old('training_content', $trainingLog->training_content) }}</textarea>
                     </div>
 
                     <div class="row mt-3">
                         <div class="col-md-3">
                             <div class="form-group">
-                                <label for="required_quanso">Quân số tổng <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="required_quanso" name="required_quanso" value="{{ old('required_quanso', $trainingLog->required_quanso) }}" min="0" required>
+                                <label for="required_quanso">Quân số tổng</label>
+                                <input type="number" class="form-control" id="required_quanso" name="required_quanso" value="{{ old('required_quanso', $trainingLog->required_quanso) }}" min="0">
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="form-group">
-                                <label for="actual_quanso">Quân số tham gia <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="actual_quanso" name="actual_quanso" value="{{ old('actual_quanso', $trainingLog->actual_quanso) }}" min="0" required>
+                                <label for="actual_quanso">Quân số tham gia</label>
+                                <input type="number" class="form-control" id="actual_quanso" name="actual_quanso" value="{{ old('actual_quanso', $trainingLog->actual_quanso) }}" min="0">
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="form-group">
-                                <label for="required_hours">Thời gian quy định (giờ) <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="required_hours" name="required_hours" value="{{ old('required_hours', $trainingLog->required_hours) }}" min="0" required>
+                                <label for="required_hours">Thời gian quy định (giờ)</label>
+                                <input type="number" class="form-control" id="required_hours" name="required_hours" value="{{ old('required_hours', $trainingLog->required_hours) }}" min="0">
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="form-group">
-                                <label for="actual_hours">Thời gian thực tế (giờ) <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="actual_hours" name="actual_hours" value="{{ old('actual_hours', $trainingLog->actual_hours) }}" min="0" required>
+                                <label for="actual_hours">Thời gian thực tế (giờ)</label>
+                                <input type="number" class="form-control" id="actual_hours" name="actual_hours" value="{{ old('actual_hours', $trainingLog->actual_hours) }}" min="0">
                             </div>
                         </div>
                     </div>
@@ -166,8 +172,9 @@
                         </div>
                         <div class="col-md-2">
                             <div class="form-group">
-                                <label for="rating">Xếp loại chung <span class="text-danger">*</span></label>
-                                <select class="form-control" id="rating" name="rating" required>
+                                <label for="rating">Xếp loại chung</label>
+                                <select class="form-control" id="rating" name="rating">
+                                    <option value="">-- Chọn xếp loại --</option>
                                     <option value="xuất_sắc" {{ old('rating', $trainingLog->rating) == 'xuất_sắc' ? 'selected' : '' }}>Xuất sắc</option>
                                     <option value="giỏi" {{ old('rating', $trainingLog->rating) == 'giỏi' ? 'selected' : '' }}>Giỏi</option>
                                     <option value="khá" {{ old('rating', $trainingLog->rating) == 'khá' ? 'selected' : '' }}>Khá</option>

@@ -31,24 +31,103 @@
                 <a href="#">Danh sách</a>
             </li>
         </ul>
+        <div class="ms-md-auto py-2 py-md-0">
+            {{-- <span class="text-muted me-3">Danh sách được tự động cập nhật theo quân nhân</span> --}}
+            <a href="{{ route('rewards.report') }}" class="btn btn-info btn-round me-2">
+                <i class="fa fa-chart-bar"></i>
+                Báo cáo thống kê
+            </a>
+            <a href="{{ route('rewards.create') }}" class="btn btn-primary btn-round">
+                <i class="fa fa-plus"></i>
+                Thêm khen thưởng bổ sung
+            </a>
+        </div>
     </div>
+
+    <div class="row">
+        <div class="col-sm-6 col-md-3">
+            <div class="card card-stats card-round">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-icon">
+                            <div class="icon-big text-center icon-primary bubble-shadow-small">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </div>
+                        <div class="col col-stats ms-3 ms-sm-0">
+                            <div class="numbers">
+                                <p class="card-category">Tổng quân nhân</p>
+                                <h4 class="card-title">{{ $stats['total_soldiers'] }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="card card-stats card-round">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-icon">
+                            <div class="icon-big text-center icon-info bubble-shadow-small">
+                                <i class="fas fa-medal"></i>
+                            </div>
+                        </div>
+                        <div class="col col-stats ms-3 ms-sm-0">
+                            <div class="numbers">
+                                <p class="card-category">Tổng khen thưởng</p>
+                                <h4 class="card-title">{{ $stats['total_rewards'] }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="card card-stats card-round">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-icon">
+                            <div class="icon-big text-center icon-success bubble-shadow-small">
+                                <i class="fas fa-award"></i>
+                            </div>
+                        </div>
+                        <div class="col col-stats ms-3 ms-sm-0">
+                            <div class="numbers">
+                                <p class="card-category">Cấp đơn vị</p>
+                                <h4 class="card-title">{{ $stats['unit_rewards'] }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="card card-stats card-round">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-icon">
+                            <div class="icon-big text-center icon-secondary bubble-shadow-small">
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                        <div class="col col-stats ms-3 ms-sm-0">
+                            <div class="numbers">
+                                <p class="card-category">Cấp trên</p>
+                                <h4 class="card-title">{{ $stats['superior_rewards'] }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
-                    <div class="d-flex align-items-center">
-                        <h4 class="card-title">Danh sách khen thưởng</h4>
-                        <div class="ms-auto">
-                            <a href="{{ route('rewards.report') }}" class="btn btn-info btn-round me-2">
-                                <i class="fa fa-chart-bar"></i>
-                                Báo cáo thống kê
-                            </a>
-                            <a href="{{ route('rewards.create') }}" class="btn btn-primary btn-round">
-                                <i class="fa fa-plus"></i>
-                                Thêm khen thưởng
-                            </a>
-                        </div>
-                    </div>
+                    <div class="card-title">DANH SÁCH THEO DÕI KHEN THƯỞNG</div>
                 </div>
                 <div class="card-body">
                     @if (session('success'))
@@ -122,8 +201,9 @@
                             <thead>
                                 <tr>
                                     <th>STT</th>
-                                    <th>Nội dung khen thưởng (Lý do)</th>
-                                    <th>Hình thức khen thưởng (Ngày, tháng, cấp quyết định)</th>
+                                    <th>Họ và tên / Đơn vị</th>
+                                    <th>Lý do khen thưởng</th>
+                                    <th>Hình thức & Quyết định</th>
                                     <th style="width: 10%">Hành động</th>
                                 </tr>
                             </thead>
@@ -132,13 +212,25 @@
                                     <tr>
                                         <td>{{ $index + 1 }}</td>
                                         <td>
-                                            <strong>{{ $reward->type == 'unit' ? $reward->unit_name_at_time : $reward->soldier_name_at_time }}</strong><br>
-                                            {{ $reward->reason }}
+                                            @if($reward->soldier)
+                                                <strong>{{ $reward->soldier->full_name }}</strong><br>
+                                                <small class="text-muted">{{ $reward->soldier->unit->name ?? 'N/A' }}</small>
+                                            @else
+                                                <strong>{{ $reward->unit_name_at_time }}</strong><br>
+                                                <small class="text-muted">(Khen thưởng đơn vị)</small>
+                                            @endif
                                         </td>
+                                        <td>{{ $reward->reason ?? '-' }}</td>
                                         <td>
-                                            - Hình thức: {{ $reward->reward_form }}<br>
-                                            - Ngày: {{ $reward->decision_date ? $reward->decision_date->format('d/m/Y') : ($reward->decision_month ?: '...') }}<br>
-                                            - Cấp quyết định: {{ $reward->decision_level }} (Số: {{ $reward->decision_number }})
+                                            @if($reward->reward_form)
+                                                <strong>{{ $reward->reward_form }}</strong><br>
+                                                <small>
+                                                    Ngày: {{ $reward->decision_date ? $reward->decision_date->format('d/m/Y') : '...' }}<br>
+                                                    Cấp: {{ $reward->decision_level }} (Số: {{ $reward->decision_number ?? '...' }})
+                                                </small>
+                                            @else
+                                                <span class="text-muted">Chưa cập nhật</span>
+                                            @endif
                                         </td>
                                         <td>
                                             <div class="form-button-action">
@@ -185,7 +277,7 @@
                     "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Vietnamese.json"
                 },
                 "columnDefs": [
-                    { "orderable": false, "targets": 3 }
+                    { "orderable": false, "targets": 4 }
                 ]
             });
 

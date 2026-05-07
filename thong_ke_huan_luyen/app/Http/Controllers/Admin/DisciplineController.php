@@ -17,21 +17,24 @@ class DisciplineController extends Controller
         $this->middleware('auth');
     }
 
-    // Hiển thị danh sách kỷ luật
     public function index(Request $request)
     {
         $user = Auth::user();
+
+        // Tự động đồng bộ danh sách kỷ luật theo quân nhân
+        $this->syncWithSoldiers($user);
+
         $query = Discipline::with(['unit', 'soldier', 'creator']);
 
         // Phân quyền xem theo cấp đơn vị
         if (!$user->hasRole('chi-huy')) {
             $unitIds = $this->getAccessibleUnitIds($user);
-            $query->whereIn('unit_id', $unitIds);
+            $query->whereIn('disciplines.unit_id', $unitIds);
         }
 
         // Lọc theo đơn vị
         if ($request->filled('unit_id')) {
-            $query->where('unit_id', $request->unit_id);
+            $query->where('disciplines.unit_id', $request->unit_id);
         }
 
         // Lọc theo quân nhân
@@ -73,12 +76,26 @@ class DisciplineController extends Controller
             });
         }
 
-        $disciplines = $query->orderBy('decision_date', 'desc')->get();
+        // Sắp xếp theo đơn vị và tên quân nhân
+        $disciplines = $query->leftJoin('soldiers', 'disciplines.soldier_id', '=', 'soldiers.id')
+            ->orderBy('disciplines.unit_id')
+            ->orderBy('soldiers.full_name')
+            ->select('disciplines.*')
+            ->get();
+
+        // Tính toán thống kê
+        $stats = [
+            'total_soldiers' => Soldier::count(),
+            'total_disciplines' => $disciplines->whereNotNull('discipline_form')->count(),
+            'pending_disciplines' => $disciplines->where('status', 'dang-thi-hanh')->count(),
+            'completed_disciplines' => $disciplines->where('status', 'da-thi-hanh-xong')->count(),
+        ];
 
         // Dữ liệu cho filter
         $units = $this->getAccessibleUnits($user);
         $soldiers = Soldier::whereIn('unit_id', $this->getAccessibleUnitIds($user))->get();
-        $years = Discipline::selectRaw('YEAR(decision_date) as year')
+        $years = Discipline::whereNotNull('decision_date')
+            ->selectRaw('YEAR(decision_date) as year')
             ->distinct()
             ->orderBy('year', 'desc')
             ->pluck('year');
@@ -103,8 +120,37 @@ class DisciplineController extends Controller
 
         return view('backend.disciplines.index', compact(
             'disciplines', 'units', 'soldiers', 'years',
-            'disciplineForms', 'decisionLevels', 'statuses'
+            'disciplineForms', 'decisionLevels', 'statuses', 'stats'
         ));
+    }
+
+    private function syncWithSoldiers($user)
+    {
+        $soldierQuery = Soldier::query();
+        
+        // Chỉ đồng bộ quân nhân thuộc quyền quản lý
+        if (!$user->hasRole('chi-huy') && $user->unit) {
+            $unitIds = $user->unit->getAllDescendantIds();
+            $soldierQuery->whereIn('unit_id', $unitIds);
+        }
+
+        $soldiers = $soldierQuery->get();
+        $existingSoldierIds = Discipline::pluck('soldier_id')->toArray();
+
+        foreach ($soldiers as $soldier) {
+            if (!in_array($soldier->id, $existingSoldierIds)) {
+                Discipline::create([
+                    'soldier_id' => $soldier->id,
+                    'soldier_name_at_time' => $soldier->full_name,
+                    'soldier_rank_at_time' => $soldier->rank,
+                    'unit_id' => $soldier->unit_id,
+                    'unit_name_at_time' => $soldier->unit->name ?? 'N/A',
+                    'status' => 'da-thi-hanh-xong', // Mặc định là đã thi hành xong (tức là không có kỷ luật hiện tại) hoặc tùy bạn chọn
+                    'created_by' => $user->id,
+                    'updated_by' => $user->id,
+                ]);
+            }
+        }
     }
 
     // Form thêm mới

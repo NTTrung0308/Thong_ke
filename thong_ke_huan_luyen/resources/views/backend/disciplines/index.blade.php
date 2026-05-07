@@ -31,24 +31,101 @@
                 <a href="#">Danh sách</a>
             </li>
         </ul>
+        <div class="ms-md-auto py-2 py-md-0">
+            <span class="text-muted me-3">Danh sách được tự động cập nhật theo quân nhân</span>
+            <a href="{{ route('disciplines.report') }}" class="btn btn-info btn-round me-2">
+                <i class="fa fa-chart-bar"></i> Báo cáo thống kê
+            </a>
+            <a href="{{ route('disciplines.create') }}" class="btn btn-primary btn-round">
+                <i class="fa fa-plus"></i> Thêm kỷ luật bổ sung
+            </a>
+        </div>
     </div>
+
+    <div class="row">
+        <div class="col-sm-6 col-md-3">
+            <div class="card card-stats card-round">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-icon">
+                            <div class="icon-big text-center icon-primary bubble-shadow-small">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </div>
+                        <div class="col col-stats ms-3 ms-sm-0">
+                            <div class="numbers">
+                                <p class="card-category">Tổng quân nhân</p>
+                                <h4 class="card-title">{{ $stats['total_soldiers'] }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="card card-stats card-round">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-icon">
+                            <div class="icon-big text-center icon-danger bubble-shadow-small">
+                                <i class="fas fa-gavel"></i>
+                            </div>
+                        </div>
+                        <div class="col col-stats ms-3 ms-sm-0">
+                            <div class="numbers">
+                                <p class="card-category">Tổng kỷ luật</p>
+                                <h4 class="card-title">{{ $stats['total_disciplines'] }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="card card-stats card-round">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-icon">
+                            <div class="icon-big text-center icon-warning bubble-shadow-small">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                        </div>
+                        <div class="col col-stats ms-3 ms-sm-0">
+                            <div class="numbers">
+                                <p class="card-category">Đang thi hành</p>
+                                <h4 class="card-title">{{ $stats['pending_disciplines'] }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="card card-stats card-round">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-icon">
+                            <div class="icon-big text-center icon-success bubble-shadow-small">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                        </div>
+                        <div class="col col-stats ms-3 ms-sm-0">
+                            <div class="numbers">
+                                <p class="card-category">Hoàn thành</p>
+                                <h4 class="card-title">{{ $stats['completed_disciplines'] }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
-                    <div class="d-flex align-items-center">
-                        <h4 class="card-title">Danh sách kỷ luật</h4>
-                        <div class="ms-auto">
-                            <a href="{{ route('disciplines.report') }}" class="btn btn-info btn-round me-2">
-                                <i class="fa fa-chart-bar"></i>
-                                Báo cáo thống kê
-                            </a>
-                            <a href="{{ route('disciplines.create') }}" class="btn btn-primary btn-round">
-                                <i class="fa fa-plus"></i>
-                                Thêm kỷ luật
-                            </a>
-                        </div>
-                    </div>
+                    <div class="card-title">DANH SÁCH THEO DÕI KỶ LUẬT</div>
                 </div>
                 <div class="card-body">
                     @if (session('success'))
@@ -125,8 +202,10 @@
                             <thead>
                                 <tr>
                                     <th>STT</th>
-                                    <th>Nội dung vụ việc</th>
-                                    <th>Hình thức kỷ luật (Ngày, tháng, cấp quyết định)</th>
+                                    <th>Họ và tên / Đơn vị</th>
+                                    <th>Nội dung vi phạm</th>
+                                    <th>Hình thức & Quyết định</th>
+                                    <th>Trạng thái</th>
                                     <th style="width: 10%">Hành động</th>
                                 </tr>
                             </thead>
@@ -135,14 +214,34 @@
                                     <tr>
                                         <td>{{ $index + 1 }}</td>
                                         <td>
-                                            <strong>{{ $discipline->soldier_name_at_time }}</strong><br>
-                                            <small>{{ $discipline->soldier_rank_at_time }} - {{ $discipline->unit_name_at_time }}</small><br>
-                                            {{ $discipline->reason }}
+                                            @if($discipline->soldier)
+                                                <strong>{{ $discipline->soldier->full_name }}</strong><br>
+                                                <small class="text-muted">{{ $discipline->soldier->unit->name ?? 'N/A' }}</small>
+                                            @else
+                                                <strong>{{ $discipline->unit_name_at_time }}</strong><br>
+                                                <small class="text-muted">(Đơn vị)</small>
+                                            @endif
+                                        </td>
+                                        <td>{!!$discipline->violation_details ? Str::limit($discipline->violation_details, 50) : '-' !!}</td>
+                                        <td>
+                                            @if($discipline->discipline_form)
+                                                <strong>{{ $discipline->discipline_form }}</strong><br>
+                                                <small>
+                                                    Ngày: {{ $discipline->decision_date ? $discipline->decision_date->format('d/m/Y') : '...' }}<br>
+                                                    Số: {{ $discipline->decision_number ?? '...' }}
+                                                </small>
+                                            @else
+                                                <span class="text-muted">Chưa cập nhật</span>
+                                            @endif
                                         </td>
                                         <td>
-                                            - Hình thức: {{ $discipline->discipline_form }}<br>
-                                            - Ngày: {{ $discipline->decision_date ? $discipline->decision_date->format('d/m/Y') : ($discipline->decision_month ?: '...') }}<br>
-                                            - Cấp quyết định: {{ $discipline->decision_level }} (Số: {{ $discipline->decision_number }})
+                                            @if($discipline->discipline_form)
+                                                <span class="badge {{ $discipline->status_badge }}">
+                                                    {{ $discipline->status_name }}
+                                                </span>
+                                            @else
+                                                -
+                                            @endif
                                         </td>
                                         <td>
                                             <div class="form-button-action">
@@ -189,37 +288,43 @@
                     "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Vietnamese.json"
                 },
                 "columnDefs": [
-                    { "orderable": false, "targets": 3 }
+                    { "orderable": false, "targets": 5 }
                 ]
             });
 
             // Kéo bảng sang ngang bằng chuột
             const slider = document.querySelector('.table-responsive');
-            let isDown = false;
-            let startX;
-            let scrollLeft;
+            if (slider) {
+                let isDown = false;
+                let startX;
+                let scrollLeft;
 
-            slider.addEventListener('mousedown', (e) => {
-                isDown = true;
-                slider.classList.add('dragging');
-                startX = e.pageX - slider.offsetLeft;
-                scrollLeft = slider.scrollLeft;
-            });
-            slider.addEventListener('mouseleave', () => {
-                isDown = false;
-                slider.classList.remove('dragging');
-            });
-            slider.addEventListener('mouseup', () => {
-                isDown = false;
-                slider.classList.remove('dragging');
-            });
-            slider.addEventListener('mousemove', (e) => {
-                if (!isDown) return;
-                e.preventDefault();
-                const x = e.pageX - slider.offsetLeft;
-                const walk = (x - startX) * 2;
-                slider.scrollLeft = scrollLeft - walk;
-            });
+                slider.addEventListener('mousedown', (e) => {
+                    if (e.button !== 0 || e.target.closest('a, button, .dataTables_length, .dataTables_filter')) return;
+                    isDown = true;
+                    slider.classList.add('dragging');
+                    startX = e.pageX - slider.offsetLeft;
+                    scrollLeft = slider.scrollLeft;
+                });
+
+                slider.addEventListener('mouseleave', () => {
+                    isDown = false;
+                    slider.classList.remove('dragging');
+                });
+
+                slider.addEventListener('mouseup', () => {
+                    isDown = false;
+                    slider.classList.remove('dragging');
+                });
+
+                slider.addEventListener('mousemove', (e) => {
+                    if (!isDown) return;
+                    e.preventDefault();
+                    const x = e.pageX - slider.offsetLeft;
+                    const walk = (x - startX) * 2;
+                    slider.scrollLeft = scrollLeft - walk;
+                });
+            }
         });
 
         function confirmDelete(id) {

@@ -45,7 +45,7 @@
                 <li class="nav-item {{ Request::is('soldiers*') ? 'active' : '' }}">
                     <a href="{{ route('soldiers.index') }}">
                         <i class="fas fa-users"></i>
-                        <p>Quản lý quân nhân</p>
+                        <p>Danh sách quân nhân</p>
                     </a>
                 </li>
                 <li class="nav-item {{ Request::is('weapon-equipments*') ? 'active' : '' }}">
@@ -78,39 +78,39 @@
                         <p>Nhật ký huấn luyện</p>
                     </a>
                 </li>
-                @if(auth()->user()->hasRole('chi-huy'))
-                <li class="nav-section">
-                    <span class="sidebar-mini-icon">
-                        <i class="fa fa-ellipsis-h"></i>
-                    </span>
-                    <h4 class="text-section">Cài đặt hệ thống</h4>
-                </li>
-                <li class="nav-item">
-                    <a data-bs-toggle="collapse" href="#settings">
-                        <i class="fas fa-cog"></i>
-                        <p>Hệ thống</p>
-                        <span class="caret"></span>
-                    </a>
-                    <div class="collapse" id="settings">
-                        <ul class="nav nav-collapse">
-                            <li>
-                                <a href="{{ route('units.index') }}">
-                                    <span class="sub-item">Quản lý đơn vị</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('users.index') }}">
-                                    <span class="sub-item">Quản lý người dùng</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#">
-                                    <span class="sub-item">Vai trò & Quyền</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
+                @if (auth()->user()->hasRole('chi-huy'))
+                    <li class="nav-section">
+                        <span class="sidebar-mini-icon">
+                            <i class="fa fa-ellipsis-h"></i>
+                        </span>
+                        <h4 class="text-section">Cài đặt hệ thống</h4>
+                    </li>
+                    <li class="nav-item">
+                        <a data-bs-toggle="collapse" href="#settings">
+                            <i class="fas fa-cog"></i>
+                            <p>Hệ thống</p>
+                            <span class="caret"></span>
+                        </a>
+                        <div class="collapse" id="settings">
+                            <ul class="nav nav-collapse">
+                                <li>
+                                    <a href="{{ route('units.index') }}">
+                                        <span class="sub-item">Quản lý đơn vị</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('users.index') }}">
+                                        <span class="sub-item">Quản lý người dùng</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        <span class="sub-item">Vai trò & Quyền</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
                 @endif
             </ul>
         </div>

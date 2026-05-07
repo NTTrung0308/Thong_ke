@@ -12,6 +12,7 @@ class TrainingLog extends Model
 
     protected $fillable = [
         'unit_id', 'unit_name_at_time',
+        'soldier_id', 'soldier_name_at_time',
         'training_date', 'day_of_week',
         'attendance_mon', 'attendance_tue', 'attendance_wed',
         'attendance_thu', 'attendance_fri', 'attendance_sat', 'attendance_sun',
@@ -40,6 +41,11 @@ class TrainingLog extends Model
     public function unit()
     {
         return $this->belongsTo(Unit::class);
+    }
+
+    public function soldier()
+    {
+        return $this->belongsTo(Soldier::class);
     }
 
     public function creator()

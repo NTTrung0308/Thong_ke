@@ -27,7 +27,13 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Cập nhật thông tin kỷ luật</div>
+                    <div class="card-title">Cập nhật kỷ luật: 
+                        @if($discipline->soldier)
+                            <span class="text-primary">{{ $discipline->soldier->full_name }}</span>
+                        @else
+                            {{ $discipline->soldier_name_at_time }}
+                        @endif
+                    </div>
                 </div>
                 <form action="{{ route('disciplines.update', $discipline->id) }}" method="POST"
                     enctype="multipart/form-data">
@@ -67,8 +73,8 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Hình thức kỷ luật <span class="text-danger">*</span></label>
-                                    <select name="discipline_form" class="form-control" required>
+                                    <label>Hình thức kỷ luật</label>
+                                    <select name="discipline_form" class="form-control">
                                         <option value="">-- Chọn hình thức --</option>
                                         @foreach ($disciplineForms as $form)
                                             <option value="{{ $form }}"
@@ -81,8 +87,8 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Cấp quyết định <span class="text-danger">*</span></label>
-                                    <select name="decision_level" class="form-control" required>
+                                    <label>Cấp quyết định</label>
+                                    <select name="decision_level" class="form-control">
                                         <option value="">-- Chọn cấp quyết định --</option>
                                         @foreach ($decisionLevels as $level)
                                             <option value="{{ $level }}"
@@ -105,15 +111,15 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label>Ngày quyết định <span class="text-danger">*</span></label>
-                                    <input type="date" name="decision_date" class="form-control" required
-                                        value="{{ $discipline->decision_date->format('Y-m-d') }}">
+                                    <label>Ngày quyết định</label>
+                                    <input type="date" name="decision_date" class="form-control"
+                                        value="{{ $discipline->decision_date ? $discipline->decision_date->format('Y-m-d') : '' }}">
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label>Trạng thái <span class="text-danger">*</span></label>
-                                    <select name="status" class="form-control" required>
+                                    <label>Trạng thái</label>
+                                    <select name="status" class="form-control">
                                         @foreach ($statuses as $value => $label)
                                             <option value="{{ $value }}"
                                                 {{ $discipline->status == $value ? 'selected' : '' }}>
@@ -160,15 +166,17 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Nội dung công việc/Sai phạm <span class="text-danger">*</span></label>
-                            <input type="text" name="work_content" class="form-control" required
+                            <label>Nội dung công việc vi phạm</label>
+                            <input type="text" name="work_content" class="form-control"
                                 value="{{ $discipline->work_content }}">
                         </div>
 
+
                         <div class="form-group">
-                            <label>Chi tiết sai phạm <span class="text-danger">*</span></label>
-                            <textarea name="violation_details" id="violation_details" class="form-control" rows="4" required>{{ $discipline->violation_details }}</textarea>
+                            <label>Chi tiết vi phạm</label>
+                            <textarea name="violation_details" class="form-control" rows="3">{{ $discipline->violation_details }}</textarea>
                         </div>
+
 
                         <div class="form-group">
                             <label>Biện pháp khắc phục</label>

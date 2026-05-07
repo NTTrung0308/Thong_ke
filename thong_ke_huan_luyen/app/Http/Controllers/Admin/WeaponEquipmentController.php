@@ -13,17 +13,64 @@ class WeaponEquipmentController extends Controller
 {
     public function index()
     {
-        $query = WeaponEquipment::with(['soldier', 'unit']);
-        
-        // Phân quyền theo đơn vị (nếu cần)
         $user = Auth::user();
+
+        // Tự động đồng bộ danh sách vũ khí theo quân nhân
+        $this->syncWithSoldiers($user);
+
+        $query = WeaponEquipment::with(['soldier.unit', 'unit']);
+        
+        // Phân quyền theo đơn vị
         if (!$user->hasRole('chi-huy') && $user->unit) {
             $unitIds = $user->unit->getAllDescendantIds();
             $query->whereIn('unit_id', $unitIds);
         }
 
-        $equipments = $query->get();
-        return view('backend.weapon_equipments.index', compact('equipments'));
+        // Sắp xếp theo đơn vị và tên quân nhân
+        $equipments = $query->join('soldiers', 'weapon_equipment.soldier_id', '=', 'soldiers.id')
+            ->orderBy('weapon_equipment.unit_id')
+            ->orderBy('soldiers.full_name')
+            ->select('weapon_equipment.*')
+            ->get();
+
+        // Tính toán thống kê
+        $stats = [
+            'total_soldiers' => $equipments->count(),
+            'ak_count' => $equipments->whereNotNull('ak')->count(),
+            'rpd_count' => $equipments->whereNotNull('rpd')->count(),
+            'b41_count' => $equipments->whereNotNull('b41')->count(),
+            'm79_count' => $equipments->whereNotNull('m79')->count(),
+            'grenade_total' => $equipments->sum('grenade'),
+        ];
+
+        return view('backend.weapon_equipments.index', compact('equipments', 'stats'));
+    }
+
+    private function syncWithSoldiers($user)
+    {
+        $soldierQuery = Soldier::query();
+        
+        // Chỉ đồng bộ quân nhân thuộc quyền quản lý
+        if (!$user->hasRole('chi-huy') && $user->unit) {
+            $unitIds = $user->unit->getAllDescendantIds();
+            $soldierQuery->whereIn('unit_id', $unitIds);
+        }
+
+        $soldiers = $soldierQuery->get();
+        $existingSoldierIds = WeaponEquipment::pluck('soldier_id')->toArray();
+
+        foreach ($soldiers as $soldier) {
+            if (!in_array($soldier->id, $existingSoldierIds)) {
+                WeaponEquipment::create([
+                    'soldier_id' => $soldier->id,
+                    'unit_id' => $soldier->unit_id,
+                    'status' => 'dang-su-dung',
+                    'receive_date' => now(),
+                    'created_by' => $user->id,
+                    'updated_by' => $user->id,
+                ]);
+            }
+        }
     }
 
     public function create()

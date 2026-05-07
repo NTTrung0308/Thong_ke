@@ -43,24 +43,101 @@
                 <a href="{{ route('training-logs.index') }}">Nhật ký huấn luyện</a>
             </li>
         </ul>
+        <div class="ms-md-auto py-2 py-md-0">
+            {{-- <span class="text-muted me-3">Danh sách được tự động cập nhật theo quân nhân</span> --}}
+            <a href="{{ route('training-logs.report') }}" class="btn btn-info btn-round me-2">
+                <i class="fa fa-chart-bar"></i> Báo cáo
+            </a>
+            <a href="{{ route('training-logs.create') }}" class="btn btn-primary btn-round">
+                <i class="fa fa-plus"></i> Thêm nhật ký bổ sung
+            </a>
+        </div>
     </div>
+
+    <div class="row">
+        {{-- <div class="col-sm-6 col-md-3">
+            <div class="card card-stats card-round">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-icon">
+                            <div class="icon-big text-center icon-primary bubble-shadow-small">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </div>
+                        <div class="col col-stats ms-3 ms-sm-0">
+                            <div class="numbers">
+                                <p class="card-category">Tổng quân nhân</p>
+                                <h4 class="card-title">{{ $stats['total_soldiers'] }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> --}}
+        {{-- <div class="col-sm-6 col-md-3">
+            <div class="card card-stats card-round">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-icon">
+                            <div class="icon-big text-center icon-info bubble-shadow-small">
+                                <i class="fas fa-book"></i>
+                            </div>
+                        </div>
+                        <div class="col col-stats ms-3 ms-sm-0">
+                            <div class="numbers">
+                                <p class="card-category">Nhật ký đã ghi</p>
+                                <h4 class="card-title">{{ $stats['total_logs'] }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="card card-stats card-round">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-icon">
+                            <div class="icon-big text-center icon-success bubble-shadow-small">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                        </div>
+                        <div class="col col-stats ms-3 ms-sm-0">
+                            <div class="numbers">
+                                <p class="card-category">Quân số đạt</p>
+                                <h4 class="card-title">{{ $stats['avg_result'] }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="card card-stats card-round">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-icon">
+                            <div class="icon-big text-center icon-secondary bubble-shadow-small">
+                                <i class="fas fa-sync"></i>
+                            </div>
+                        </div>
+                        <div class="col col-stats ms-3 ms-sm-0">
+                            <div class="numbers">
+                                <p class="card-category">Trạng thái</p>
+                                <h4 class="card-title">Đã đồng bộ</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> --}}
+    </div>
+
     <div class="row">
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
-                    <div class="d-flex align-items-center">
-                        <h4 class="card-title">Danh sách Nhật ký</h4>
-                        <div class="ms-auto">
-                            <a href="{{ route('training-logs.report') }}" class="btn btn-info btn-round me-2">
-                                <i class="fa fa-chart-bar"></i>
-                                Báo cáo
-                            </a>
-                            <a href="{{ route('training-logs.create') }}" class="btn btn-primary btn-round">
-                                <i class="fa fa-plus"></i>
-                                Thêm nhật ký
-                            </a>
-                        </div>
-                    </div>
+                    <div class="card-title">NHẬT KÝ HUẤN LUYỆN</div>
                 </div>
                 <div class="card-body">
                     @if (session('success'))
@@ -98,6 +175,7 @@
                             <thead>
                                 <tr>
                                     <th rowspan="3">STT</th>
+                                    <th rowspan="3">Họ và tên / Đơn vị</th>
                                     <th colspan="7">Chấm công, điểm danh, điểm quân số</th>
                                     <th rowspan="3">Thứ ngày tháng</th>
                                     <th rowspan="3">Nội dung huấn luyện</th>
@@ -140,6 +218,15 @@
                                 @foreach ($trainingLogs as $index => $log)
                                     <tr>
                                         <td>{{ $index + 1 }}</td>
+                                        <td>
+                                            @if($log->soldier)
+                                                <strong>{{ $log->soldier->full_name }}</strong><br>
+                                                <small class="text-muted">{{ $log->soldier->unit->name ?? 'N/A' }}</small>
+                                            @else
+                                                <strong>{{ $log->unit_name_at_time }}</strong><br>
+                                                <small class="text-muted">(Đơn vị)</small>
+                                            @endif
+                                        </td>
                                         <td>{{ $log->attendance_mon }}</td>
                                         <td>{{ $log->attendance_tue }}</td>
                                         <td>{{ $log->attendance_wed }}</td>
@@ -147,8 +234,14 @@
                                         <td>{{ $log->attendance_fri }}</td>
                                         <td>{{ $log->attendance_sat }}</td>
                                         <td>{{ $log->attendance_sun }}</td>
-                                        <td>{{ $log->day_of_week }}, {{ $log->training_date->format('d/m/Y') }}</td>
-                                        <td class="text-left-important">{{ Str::limit($log->training_content, 50) }}</td>
+                                        <td>
+                                            @if($log->training_date)
+                                                {{ $log->day_of_week }}, {{ $log->training_date->format('d/m/Y') }}
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+                                        <td class="text-left-important">{{ $log->training_content ? Str::limit($log->training_content, 50) : '-' }}</td>
                                         <td>{{ $log->required_quanso }}</td>
                                         <td>{{ $log->actual_quanso }}</td>
                                         <td>{{ $log->required_hours }}</td>
@@ -163,9 +256,13 @@
                                         <td>{{ $log->fail_count }}</td>
                                         <td>{{ $log->fail_percent }}</td>
                                         <td>
-                                            <span class="badge {{ $log->rating_badge }}">
-                                                {{ $log->rating_name }}
-                                            </span>
+                                            @if($log->training_content)
+                                                <span class="badge {{ $log->rating_badge }}">
+                                                    {{ $log->rating_name }}
+                                                </span>
+                                            @else
+                                                -
+                                            @endif
                                         </td>
                                         <td>
                                             <div class="form-button-action">
@@ -211,31 +308,38 @@
                     "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Vietnamese.json"
                 },
                 "columnDefs": [
-                    { "orderable": false, "targets": [1, 2, 3, 4, 5, 6, 7, 24] }
+                    { "orderable": false, "targets": [2, 3, 4, 5, 6, 7, 8, 25] }
                 ],
-                "order": [[ 8, "desc" ]]
+                "order": [[ 9, "desc" ]]
             });
 
-            // Kéo bảng sang ngang bằng chuột
-            const slider = document.querySelector('.table-responsive');
+        // Kéo bảng sang ngang bằng chuột
+        const slider = document.querySelector('.table-responsive');
+        if (slider) {
             let isDown = false;
             let startX;
             let scrollLeft;
 
             slider.addEventListener('mousedown', (e) => {
+                // Chỉ nhận chuột trái và không nhận trên các phần tử tương tác
+                if (e.button !== 0 || e.target.closest('a, button, .dataTables_length, .dataTables_filter')) return;
+
                 isDown = true;
                 slider.classList.add('dragging');
                 startX = e.pageX - slider.offsetLeft;
                 scrollLeft = slider.scrollLeft;
             });
+
             slider.addEventListener('mouseleave', () => {
                 isDown = false;
                 slider.classList.remove('dragging');
             });
+
             slider.addEventListener('mouseup', () => {
                 isDown = false;
                 slider.classList.remove('dragging');
             });
+
             slider.addEventListener('mousemove', (e) => {
                 if (!isDown) return;
                 e.preventDefault();
@@ -243,6 +347,7 @@
                 const walk = (x - startX) * 2; // Tốc độ kéo
                 slider.scrollLeft = scrollLeft - walk;
             });
+        }
         });
 
         function confirmDelete(logId) {

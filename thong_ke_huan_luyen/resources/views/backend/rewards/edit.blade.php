@@ -113,8 +113,8 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label>Ngày quyết định <span class="text-danger">*</span></label>
-                                    <input type="date" name="decision_date" class="form-control" required value="{{ $reward->decision_date->format('Y-m-d') }}">
+                                    <label>Ngày quyết định</label>
+                                    <input type="date" name="decision_date" class="form-control" value="{{ $reward->decision_date ? $reward->decision_date->format('Y-m-d') : '' }}">
                                 </div>
                             </div>
                             <div class="col-md-4">
