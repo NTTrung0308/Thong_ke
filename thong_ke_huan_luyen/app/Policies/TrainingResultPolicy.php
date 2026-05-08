@@ -31,7 +31,23 @@ class TrainingResultPolicy
 
     private function isInSameOrSubUnit(User $user, TrainingResult $trainingResult)
     {
-        return $user->unit_id === $trainingResult->unit_id ||
-               $user->unit->children()->where('id', $trainingResult->unit_id)->exists();
+        if ($user->unit) {
+            $allowedUnitIds = $user->unit->getAllDescendantIds();
+            return in_array($trainingResult->unit_id, $allowedUnitIds);
+        }
+        
+        $levels = ['trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
+        foreach ($levels as $l) {
+            if ($user->hasRole($l)) {
+                $levelsHierarchy = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
+                $userLevelIndex = array_search($l, $levelsHierarchy);
+                $targetLevel = $trainingResult->unit->level ?? 'trung-doi';
+                $targetLevelIndex = array_search($targetLevel, $levelsHierarchy);
+                
+                return $userLevelIndex !== false && $targetLevelIndex !== false && $userLevelIndex <= $targetLevelIndex;
+            }
+        }
+
+        return false;
     }
 }

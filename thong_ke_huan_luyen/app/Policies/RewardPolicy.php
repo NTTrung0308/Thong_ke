@@ -34,7 +34,23 @@ class RewardPolicy
 
     private function isInSameOrSubUnit(User $user, Reward $reward)
     {
-        return $user->unit_id === $reward->unit_id ||
-               $user->unit->children()->where('id', $reward->unit_id)->exists();
+        if ($user->unit) {
+            $allowedUnitIds = $user->unit->getAllDescendantIds();
+            return in_array($reward->unit_id, $allowedUnitIds);
+        }
+        
+        $levels = ['trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
+        foreach ($levels as $l) {
+            if ($user->hasRole($l)) {
+                $levelsHierarchy = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
+                $userLevelIndex = array_search($l, $levelsHierarchy);
+                $targetLevel = $reward->unit->level ?? 'trung-doi';
+                $targetLevelIndex = array_search($targetLevel, $levelsHierarchy);
+                
+                return $userLevelIndex !== false && $targetLevelIndex !== false && $userLevelIndex <= $targetLevelIndex;
+            }
+        }
+
+        return false;
     }
 }

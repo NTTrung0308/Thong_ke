@@ -31,7 +31,23 @@ class WeaponEquipmentPolicy
 
     private function isInSameOrSubUnit(User $user, WeaponEquipment $weapon)
     {
-        return $user->unit_id === $weapon->unit_id ||
-               $user->unit->children()->where('id', $weapon->unit_id)->exists();
+        if ($user->unit) {
+            $allowedUnitIds = $user->unit->getAllDescendantIds();
+            return in_array($weapon->unit_id, $allowedUnitIds);
+        }
+        
+        $levels = ['trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
+        foreach ($levels as $l) {
+            if ($user->hasRole($l)) {
+                $levelsHierarchy = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
+                $userLevelIndex = array_search($l, $levelsHierarchy);
+                $targetLevel = $weapon->unit->level ?? 'trung-doi';
+                $targetLevelIndex = array_search($targetLevel, $levelsHierarchy);
+                
+                return $userLevelIndex !== false && $targetLevelIndex !== false && $userLevelIndex <= $targetLevelIndex;
+            }
+        }
+
+        return false;
     }
 }

@@ -37,7 +37,25 @@ class DisciplinePolicy
 
     private function isInSameOrSubUnit(User $user, Discipline $discipline)
     {
-        return $user->unit_id === $discipline->unit_id ||
-               $user->unit->children()->where('id', $discipline->unit_id)->exists();
+        // 1. Nếu user có đơn vị cụ thể, kiểm tra theo cây đơn vị
+        if ($user->unit) {
+            $allowedUnitIds = $user->unit->getAllDescendantIds();
+            return in_array($discipline->unit_id, $allowedUnitIds);
+        }
+        
+        // 2. Nếu user không có đơn vị (nhưng có Role), kiểm tra theo cấp bậc Role
+        $levels = ['trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
+        foreach ($levels as $l) {
+            if ($user->hasRole($l)) {
+                $levelsHierarchy = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
+                $userLevelIndex = array_search($l, $levelsHierarchy);
+                $targetLevel = $discipline->unit->level ?? 'trung-doi';
+                $targetLevelIndex = array_search($targetLevel, $levelsHierarchy);
+                
+                return $userLevelIndex !== false && $targetLevelIndex !== false && $userLevelIndex <= $targetLevelIndex;
+            }
+        }
+
+        return false;
     }
 }

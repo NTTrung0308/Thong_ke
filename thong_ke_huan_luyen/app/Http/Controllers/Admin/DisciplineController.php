@@ -28,7 +28,7 @@ class DisciplineController extends Controller
 
         // Phân quyền xem theo cấp đơn vị
         if (!$user->hasRole('chi-huy')) {
-            $unitIds = $this->getAccessibleUnitIds($user);
+            $unitIds = $user->getAccessibleUnitIds();
             $query->whereIn('disciplines.unit_id', $unitIds);
         }
 
@@ -92,8 +92,8 @@ class DisciplineController extends Controller
         ];
 
         // Dữ liệu cho filter
-        $units = $this->getAccessibleUnits($user);
-        $soldiers = Soldier::whereIn('unit_id', $this->getAccessibleUnitIds($user))->get();
+        $units = $user->getAccessibleUnits();
+        $soldiers = Soldier::whereIn('unit_id', $user->getAccessibleUnitIds())->get();
         $years = Discipline::whereNotNull('decision_date')
             ->selectRaw('YEAR(decision_date) as year')
             ->distinct()
@@ -159,8 +159,8 @@ class DisciplineController extends Controller
         $this->authorize('create', Discipline::class);
 
         $user = Auth::user();
-        $units = $this->getAccessibleUnits($user);
-        $soldiers = Soldier::whereIn('unit_id', $this->getAccessibleUnitIds($user))->get();
+        $units = $user->getAccessibleUnits();
+        $soldiers = Soldier::whereIn('unit_id', $user->getAccessibleUnitIds())->get();
 
         $disciplineForms = [
             'Khiển trách',
@@ -239,8 +239,8 @@ class DisciplineController extends Controller
         $this->authorize('update', $discipline);
 
         $user = Auth::user();
-        $units = $this->getAccessibleUnits($user);
-        $soldiers = Soldier::whereIn('unit_id', $this->getAccessibleUnitIds($user))->get();
+        $units = $user->getAccessibleUnits();
+        $soldiers = Soldier::whereIn('unit_id', $user->getAccessibleUnitIds())->get();
 
         $disciplineForms = [
             'Khiển trách',
@@ -337,7 +337,7 @@ class DisciplineController extends Controller
         $query = Discipline::with(['unit', 'soldier']);
 
         if (!$user->hasRole('chi-huy')) {
-            $unitIds = $this->getAccessibleUnitIds($user);
+            $unitIds = $user->getAccessibleUnitIds();
             $query->whereIn('unit_id', $unitIds);
         }
 
@@ -380,7 +380,7 @@ class DisciplineController extends Controller
             'duoc-xoa-bo' => $disciplines->where('status', 'duoc-xoa-bo')->count(),
         ];
 
-        $units = $this->getAccessibleUnits($user);
+        $units = $user->getAccessibleUnits();
         $years = Discipline::selectRaw('YEAR(decision_date) as year')
             ->distinct()
             ->orderBy('year', 'desc')
@@ -395,24 +395,5 @@ class DisciplineController extends Controller
             'currentYear' => $year,
             'years' => $years
         ]);
-    }
-
-    // Helper methods
-    private function getAccessibleUnitIds($user)
-    {
-        if ($user->hasRole('chi-huy')) {
-            return Unit::pluck('id')->toArray();
-        }
-
-        if ($user->unit) {
-            return $user->unit->getAllDescendantIds();
-        }
-
-        return [$user->unit_id];
-    }
-
-    private function getAccessibleUnits($user)
-    {
-        return Unit::whereIn('id', $this->getAccessibleUnitIds($user))->get();
     }
 }

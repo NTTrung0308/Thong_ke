@@ -34,8 +34,25 @@ class SoldierPolicy
 
     private function isInSameOrSubUnit(User $user, Soldier $soldier)
     {
-        // Logic kiểm tra đơn vị
-        return $user->unit_id === $soldier->unit_id ||
-               $user->unit->children()->where('id', $soldier->unit_id)->exists();
+        // 1. Nếu user có đơn vị cụ thể, kiểm tra theo cây đơn vị (chính xác nhất)
+        if ($user->unit) {
+            $allowedUnitIds = $user->unit->getAllDescendantIds();
+            return in_array($soldier->unit_id, $allowedUnitIds);
+        }
+        
+        // 2. Nếu user không có đơn vị (nhưng có Role), kiểm tra theo cấp bậc Role
+        $levels = ['trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
+        foreach ($levels as $l) {
+            if ($user->hasRole($l)) {
+                $levelsHierarchy = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
+                $userLevelIndex = array_search($l, $levelsHierarchy);
+                $soldierLevelIndex = array_search($soldier->unit->level ?? 'trung-doi', $levelsHierarchy);
+                
+                // Nếu cấp của user cao hơn hoặc bằng cấp của quân nhân (Index nhỏ hơn hoặc bằng)
+                return $userLevelIndex !== false && $soldierLevelIndex !== false && $userLevelIndex <= $soldierLevelIndex;
+            }
+        }
+
+        return false;
     }
 }

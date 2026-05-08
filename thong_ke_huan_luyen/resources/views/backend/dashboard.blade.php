@@ -34,19 +34,43 @@
                 <div class="collapse mt-4" id="unitLevels">
                     <div class="d-flex flex-wrap justify-content-center gap-3">
                         @php
-                            $userLevel = auth()->user()->unit ? auth()->user()->unit->level : 'trung-doan';
                             $levels = [
+                                'chi-huy' => 'Cấp Chỉ huy',
                                 'trung-doan' => 'Cấp Trung đoàn',
                                 'tieu-doan' => 'Cấp Tiểu đoàn',
                                 'dai-doi' => 'Cấp Đại đội',
                                 'trung-doi' => 'Cấp Trung đội'
                             ];
+
+                            // Xác định cấp cao nhất mà người dùng có thể xem
+                            $maxLevel = 'trung-doi'; // Mặc định thấp nhất
+                            
+                            if (auth()->user()->hasRole('chi-huy')) {
+                                $maxLevel = 'chi-huy';
+                            } elseif (auth()->user()->hasRole('trung-doan')) {
+                                $maxLevel = 'trung-doan';
+                            } elseif (auth()->user()->hasRole('tieu-doan')) {
+                                $maxLevel = 'tieu-doan';
+                            } elseif (auth()->user()->hasRole('dai-doi')) {
+                                $maxLevel = 'dai-doi';
+                            } elseif (auth()->user()->hasRole('trung-doi')) {
+                                $maxLevel = 'trung-doi';
+                            }
+                            
+                            // Nếu có đơn vị, lấy cấp của đơn vị đó làm giới hạn
+                            if (auth()->user()->unit) {
+                                $maxLevel = auth()->user()->unit->level;
+                            }
+
                             $show = false;
-                            if(auth()->user()->hasRole('chi-huy')) $show = true;
                         @endphp
 
                         @foreach($levels as $key => $label)
-                            @if($show || $userLevel == $key || $show = ($userLevel == $key ? true : $show))
+                            @if($key == $maxLevel)
+                                @php $show = true; @endphp
+                            @endif
+
+                            @if($show)
                                 <a href="{{ route('soldiers.index', ['level' => $key]) }}" class="btn btn-outline-primary btn-lg px-4 py-3">
                                     <i class="fas fa-layer-group mb-2"></i><br>
                                     {{ $label }}

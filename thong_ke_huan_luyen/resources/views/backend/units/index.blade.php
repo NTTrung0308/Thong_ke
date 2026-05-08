@@ -44,7 +44,7 @@
                                     <tr>
                                         <td>{{ $unit->id }}</td>
                                         <td>{{ $unit->name }}</td>
-                                        <td>Cấp {{ $unit->level }}</td>
+                                        <td>{{ $unit->level_label }}</td>
                                         <td>{{ $unit->parent ? $unit->parent->name : '-' }}</td>
                                         <td>
                                             <div class="form-button-action">

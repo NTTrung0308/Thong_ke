@@ -25,7 +25,7 @@ class TrainingResultController extends Controller
 
         // Phân quyền xem theo cấp đơn vị
         if (!$user->hasRole('chi-huy')) {
-            $unitIds = $this->getAccessibleUnitIds($user);
+            $unitIds = $user->getAccessibleUnitIds();
             $query->whereIn('unit_id', $unitIds);
         }
 
@@ -61,7 +61,7 @@ class TrainingResultController extends Controller
         $trainingResults = $query->orderBy('training_date', 'desc')->get();
 
         // Dữ liệu cho filter
-        $units = $this->getAccessibleUnits($user);
+        $units = $user->getAccessibleUnits();
         $years = TrainingResult::selectRaw('YEAR(training_date) as year')
             ->distinct()
             ->orderBy('year', 'desc')
@@ -92,7 +92,7 @@ class TrainingResultController extends Controller
         $this->authorize('create', TrainingResult::class);
 
         $user = Auth::user();
-        $units = $this->getAccessibleUnits($user);
+        $units = $user->getAccessibleUnits();
 
         return view('backend.training_results.create', compact('units'));
     }
@@ -161,7 +161,7 @@ class TrainingResultController extends Controller
         $this->authorize('update', $trainingResult);
 
         $user = Auth::user();
-        $units = $this->getAccessibleUnits($user);
+        $units = $user->getAccessibleUnits();
 
         return view('backend.training_results.edit', compact('trainingResult', 'units'));
     }
@@ -291,7 +291,7 @@ class TrainingResultController extends Controller
             ];
         }
 
-        $units = $this->getAccessibleUnits($user);
+        $units = $user->getAccessibleUnits();
         $years = TrainingResult::selectRaw('YEAR(training_date) as year')
             ->distinct()
             ->orderBy('year', 'desc')
@@ -306,36 +306,11 @@ class TrainingResultController extends Controller
     // Helper methods
     private function getAccessibleUnitIds($user)
     {
-        if ($user->hasRole('chi-huy')) {
-            return Unit::pluck('id')->toArray();
-        }
-
-        if ($user->hasRole('trung-doan')) {
-            return Unit::where('level', 'trung-doan')
-                ->orWhere('parent_id', $user->unit_id)
-                ->pluck('id')
-                ->toArray();
-        }
-
-        if ($user->hasRole('tieu-doan')) {
-            return Unit::where('level', 'tieu-doan')
-                ->orWhere('parent_id', $user->unit_id)
-                ->pluck('id')
-                ->toArray();
-        }
-
-        if ($user->hasRole('dai-doi')) {
-            return Unit::where('level', 'dai-doi')
-                ->orWhere('parent_id', $user->unit_id)
-                ->pluck('id')
-                ->toArray();
-        }
-
-        return [$user->unit_id];
+        return $user->getAccessibleUnitIds();
     }
 
     private function getAccessibleUnits($user)
     {
-        return Unit::whereIn('id', $this->getAccessibleUnitIds($user))->get();
+        return $user->getAccessibleUnits();
     }
 }

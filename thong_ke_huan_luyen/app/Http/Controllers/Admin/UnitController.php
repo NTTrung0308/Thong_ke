@@ -24,7 +24,7 @@ class UnitController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'level' => 'required|integer|min:1',
+            'level' => 'required|string|in:chi-huy,trung-doan,tieu-doan,dai-doi,trung-doi',
             'parent_id' => 'nullable|exists:units,id',
         ]);
 
@@ -43,7 +43,7 @@ class UnitController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'level' => 'required|integer|min:1',
+            'level' => 'required|string|in:chi-huy,trung-doan,tieu-doan,dai-doi,trung-doi',
             'parent_id' => 'nullable|exists:units,id|not_in:' . $unit->id,
         ]);
 

@@ -22,12 +22,10 @@ class SoldierController extends Controller
         $user = Auth::user();
         $query = Soldier::with('unit');
 
-        // Phân quyền xem theo cấp đơn vị
-        if (!$user->hasRole('chi-huy') && $user->unit) {
-            $unitIds = $user->unit->getAllDescendantIds();
-            $query->whereIn('unit_id', $unitIds);
+        // Phân quyền xem: Chỉ huy xem tất cả, các cấp khác chỉ xem đơn vị mình và cấp dưới
+        if (!$user->hasRole('chi-huy')) {
+            $query->whereIn('unit_id', $user->getAccessibleUnitIds());
         }
-        // Chỉ huy xem được tất cả
 
         // Tìm kiếm
         if ($request->filled('search')) {
@@ -43,15 +41,21 @@ class SoldierController extends Controller
             $query->where('unit_id', $request->unit_id);
         }
 
-        // Lọc theo cấp đơn vị
+        // Lọc theo cấp đơn vị (bao gồm cấp hiện tại và các cấp thấp hơn)
         if ($request->filled('level')) {
-            $query->whereHas('unit', function($q) use ($request) {
-                $q->where('level', $request->level);
-            });
+            $levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
+            $currentIndex = array_search($request->level, $levels);
+            
+            if ($currentIndex !== false) {
+                $targetLevels = array_slice($levels, $currentIndex);
+                $query->whereHas('unit', function($q) use ($targetLevels) {
+                    $q->whereIn('level', $targetLevels);
+                });
+            }
         }
 
         $soldiers = $query->orderBy('unit_id')->orderBy('full_name')->get();
-        $units = $this->getAccessibleUnits();
+        $units = $user->getAccessibleUnits();
 
         return view('backend.soldiers.index', compact('soldiers', 'units'));
     }
@@ -60,7 +64,7 @@ class SoldierController extends Controller
     public function create()
     {
         $this->authorize('create', Soldier::class);
-        $units = $this->getAccessibleUnits();
+        $units = Auth::user()->getAccessibleUnits();
         return view('backend.soldiers.create', compact('units'));
     }
 
@@ -152,7 +156,7 @@ class SoldierController extends Controller
     public function edit(Soldier $soldier)
     {
         $this->authorize('update', $soldier);
-        $units = $this->getAccessibleUnits();
+        $units = Auth::user()->getAccessibleUnits();
         return view('backend.soldiers.edit', compact('soldier', 'units'));
     }
 
@@ -214,18 +218,7 @@ class SoldierController extends Controller
 
     private function getAccessibleUnits()
     {
-        $user = Auth::user();
-
-        if ($user->hasRole('chi-huy')) {
-            return Unit::all();
-        }
-
-        if ($user->unit) {
-            $unitIds = $user->unit->getAllDescendantIds();
-            return Unit::whereIn('id', $unitIds)->get();
-        }
-
-        return collect();
+        return Auth::user()->getAccessibleUnits();
     }
 
     public function search(Request $request)

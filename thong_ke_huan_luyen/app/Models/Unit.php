@@ -11,6 +11,18 @@ class Unit extends Model
 
     protected $fillable = ['name', 'level', 'parent_id'];
 
+    public function getLevelLabelAttribute()
+    {
+        $labels = [
+            'chi-huy' => 'Cấp Chỉ huy',
+            'trung-doan' => 'Cấp Trung đoàn',
+            'tieu-doan' => 'Cấp Tiểu đoàn',
+            'dai-doi' => 'Cấp Đại đội',
+            'trung-doi' => 'Cấp Trung đội'
+        ];
+        return $labels[$this->level] ?? $this->level;
+    }
+
     public function parent()
     {
         return $this->belongsTo(Unit::class, 'parent_id');

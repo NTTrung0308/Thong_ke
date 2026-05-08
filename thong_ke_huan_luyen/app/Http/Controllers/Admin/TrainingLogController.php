@@ -29,7 +29,7 @@ class TrainingLogController extends Controller
 
         // Phân quyền xem
         if (!$user->hasRole('chi-huy')) {
-            $unitIds = $this->getAccessibleUnitIds($user);
+            $unitIds = $user->getAccessibleUnitIds();
             $query->whereIn('training_logs.unit_id', $unitIds);
         }
 
@@ -75,7 +75,7 @@ class TrainingLogController extends Controller
         ];
 
         // Dữ liệu cho filter
-        $units = $this->getAccessibleUnits($user);
+        $units = $user->getAccessibleUnits();
         $ratings = [
             'xuất_sắc' => 'Xuất sắc',
             'giỏi' => 'Giỏi',
@@ -121,7 +121,7 @@ class TrainingLogController extends Controller
     public function create()
     {
         $user = Auth::user();
-        $units = $this->getAccessibleUnits($user);
+        $units = $user->getAccessibleUnits();
 
         // Lấy ngày hiện tại
         $today = Carbon::now();
@@ -213,7 +213,7 @@ class TrainingLogController extends Controller
     {
         $trainingLog = TrainingLog::findOrFail($id);
         $user = Auth::user();
-        $units = $this->getAccessibleUnits($user);
+        $units = $user->getAccessibleUnits();
 
         return view('backend.training_logs.edit', compact('trainingLog', 'units'));
     }
@@ -315,7 +315,7 @@ class TrainingLogController extends Controller
         $query = TrainingLog::with('unit');
 
         if (!$user->hasRole('chi-huy')) {
-            $unitIds = $this->getAccessibleUnitIds($user);
+            $unitIds = $user->getAccessibleUnitIds();
             $query->whereIn('unit_id', $unitIds);
         }
 
@@ -369,7 +369,7 @@ class TrainingLogController extends Controller
             ];
         });
 
-        $units = $this->getAccessibleUnits($user);
+        $units = $user->getAccessibleUnits();
         $months = range(1, 12);
         $years = TrainingLog::selectRaw('YEAR(training_date) as year')
             ->distinct()
@@ -397,32 +397,5 @@ class TrainingLogController extends Controller
             'Sunday' => 'Chủ nhật'
         ];
         return $days[$date->format('l')];
-    }
-
-    private function getAccessibleUnitIds($user)
-    {
-        if ($user->hasRole('chi-huy')) {
-            return Unit::pluck('id')->toArray();
-        }
-        
-        if ($user->unit) {
-            return $user->unit->getAllDescendantIds();
-        }
-        
-        return [$user->unit_id];
-    }
-
-    private function getAccessibleUnits($user)
-    {
-        if ($user->hasRole('chi-huy')) {
-            return Unit::all();
-        }
-
-        if ($user->unit) {
-            $unitIds = $user->unit->getAllDescendantIds();
-            return Unit::whereIn('id', $unitIds)->get();
-        }
-
-        return collect();
     }
 }

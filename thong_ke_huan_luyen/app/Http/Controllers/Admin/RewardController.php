@@ -28,7 +28,7 @@ class RewardController extends Controller
 
         // Phân quyền xem theo cấp đơn vị
         if (!$user->hasRole('chi-huy')) {
-            $unitIds = $this->getAccessibleUnitIds($user);
+            $unitIds = $user->getAccessibleUnitIds();
             $query->whereIn('rewards.unit_id', $unitIds);
         }
 
@@ -77,7 +77,7 @@ class RewardController extends Controller
         ];
 
         // Lấy danh sách đơn vị để lọc
-        $units = $this->getAccessibleUnits($user);
+        $units = $user->getAccessibleUnits();
 
         // Lấy danh sách năm có dữ liệu
         $years = Reward::whereNotNull('decision_date')->selectRaw('YEAR(decision_date) as year')
@@ -125,8 +125,8 @@ class RewardController extends Controller
         $this->authorize('create', Reward::class);
 
         $user = Auth::user();
-        $units = $this->getAccessibleUnits($user);
-        $soldiers = Soldier::whereIn('unit_id', $this->getAccessibleUnitIds($user))->get();
+        $units = $user->getAccessibleUnits();
+        $soldiers = Soldier::whereIn('unit_id', $user->getAccessibleUnitIds())->get();
 
         $decisionLevels = ['Cấp thường', 'Đại đội', 'Tiểu đoàn', 'Trung đoàn', 'Sư đoàn', 'Quân khu', 'Bộ Quốc phòng'];
         $rewardForms = [
@@ -208,8 +208,8 @@ class RewardController extends Controller
         $this->authorize('update', $reward);
 
         $user = Auth::user();
-        $units = $this->getAccessibleUnits($user);
-        $soldiers = Soldier::whereIn('unit_id', $this->getAccessibleUnitIds($user))->get();
+        $units = $user->getAccessibleUnits();
+        $soldiers = Soldier::whereIn('unit_id', $user->getAccessibleUnitIds())->get();
 
         $decisionLevels = ['Cấp thường', 'Đại đội', 'Tiểu đoàn', 'Trung đoàn', 'Sư đoàn', 'Quân khu', 'Bộ Quốc phòng'];
         $rewardForms = [
@@ -302,7 +302,7 @@ class RewardController extends Controller
         $query = Reward::with('unit');
 
         if (!$user->hasRole('chi-huy')) {
-            $unitIds = $this->getAccessibleUnitIds($user);
+            $unitIds = $user->getAccessibleUnitIds();
             $query->whereIn('unit_id', $unitIds);
         }
 
@@ -329,7 +329,7 @@ class RewardController extends Controller
             return $items->count();
         });
 
-        $units = $this->getAccessibleUnits($user);
+        $units = $user->getAccessibleUnits();
         $currentYear = $year;
         $years = Reward::selectRaw('YEAR(decision_date) as year')
             ->distinct()
@@ -344,24 +344,5 @@ class RewardController extends Controller
             'currentYear',
             'years'
         ));
-    }
-
-    // Helper methods
-    private function getAccessibleUnitIds($user)
-    {
-        if ($user->hasRole('chi-huy')) {
-            return Unit::pluck('id')->toArray();
-        }
-
-        if ($user->unit) {
-            return $user->unit->getAllDescendantIds();
-        }
-
-        return [$user->unit_id];
-    }
-
-    private function getAccessibleUnits($user)
-    {
-        return Unit::whereIn('id', $this->getAccessibleUnitIds($user))->get();
     }
 }

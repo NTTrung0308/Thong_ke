@@ -45,11 +45,11 @@
                             <label for="level">Cấp đơn vị <span class="text-danger">*</span></label>
                             <select class="form-select @error('level') is-invalid @enderror" id="level" name="level" required>
                                 <option value="">-- Chọn cấp --</option>
-                                <option value="1" {{ old('level') == 1 ? 'selected' : '' }}>Cấp 1 (Lữ đoàn/Trung đoàn)</option>
-                                <option value="2" {{ old('level') == 2 ? 'selected' : '' }}>Cấp 2 (Tiểu đoàn)</option>
-                                <option value="3" {{ old('level') == 3 ? 'selected' : '' }}>Cấp 3 (Đại đội)</option>
-                                <option value="4" {{ old('level') == 4 ? 'selected' : '' }}>Cấp 4 (Trung đội)</option>
-                                <option value="5" {{ old('level') == 5 ? 'selected' : '' }}>Cấp 5 (Tiểu đội)</option>
+                                <option value="chi-huy" {{ old('level') == 'chi-huy' ? 'selected' : '' }}>Cấp Chỉ huy</option>
+                                <option value="trung-doan" {{ old('level') == 'trung-doan' ? 'selected' : '' }}>Cấp Trung đoàn</option>
+                                <option value="tieu-doan" {{ old('level') == 'tieu-doan' ? 'selected' : '' }}>Cấp Tiểu đoàn</option>
+                                <option value="dai-doi" {{ old('level') == 'dai-doi' ? 'selected' : '' }}>Cấp Đại đội</option>
+                                <option value="trung-doi" {{ old('level') == 'trung-doi' ? 'selected' : '' }}>Cấp Trung đội</option>
                             </select>
                             @error('level')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -61,7 +61,7 @@
                                 <option value="">-- Không có (Cấp cao nhất) --</option>
                                 @foreach ($parentUnits as $pUnit)
                                     <option value="{{ $pUnit->id }}" {{ old('parent_id') == $pUnit->id ? 'selected' : '' }}>
-                                        {{ $pUnit->name }} (Cấp {{ $pUnit->level }})
+                                        {{ $pUnit->name }} ({{ $pUnit->level_label }})
                                     </option>
                                 @endforeach
                             </select>
