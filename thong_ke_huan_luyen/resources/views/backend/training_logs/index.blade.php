@@ -241,7 +241,7 @@
                                                 -
                                             @endif
                                         </td>
-                                        <td class="text-left-important">{{ $log->training_content ? Str::limit($log->training_content, 50) : '-' }}</td>
+                                        <td class="text-left-important">{!! $log->training_content ? Str::limit($log->training_content, 50) : '-' !!}</td>
                                         <td>{{ $log->required_quanso }}</td>
                                         <td>{{ $log->actual_quanso }}</td>
                                         <td>{{ $log->required_hours }}</td>

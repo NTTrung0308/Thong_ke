@@ -32,7 +32,7 @@
             </li>
         </ul>
         <div class="ms-md-auto py-2 py-md-0">
-            <span class="text-muted me-3">Danh sách được tự động cập nhật theo quân nhân</span>
+            {{-- <span class="text-muted me-3">Danh sách được tự động cập nhật theo quân nhân</span> --}}
             <a href="{{ route('disciplines.report') }}" class="btn btn-info btn-round me-2">
                 <i class="fa fa-chart-bar"></i> Báo cáo thống kê
             </a>
