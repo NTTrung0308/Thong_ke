@@ -14,11 +14,11 @@ class Unit extends Model
     public function getLevelLabelAttribute()
     {
         $labels = [
-            'chi-huy' => 'Cấp Chỉ huy',
-            'trung-doan' => 'Cấp Trung đoàn',
-            'tieu-doan' => 'Cấp Tiểu đoàn',
-            'dai-doi' => 'Cấp Đại đội',
-            'trung-doi' => 'Cấp Trung đội'
+            'chi-huy' => 'Bộ chỉ huy',
+            'trung-doan' => 'Trung đoàn',
+            'tieu-doan' => 'Tiểu đoàn',
+            'dai-doi' => 'Đại đội',
+            'trung-doi' => 'Trung đội'
         ];
         return $labels[$this->level] ?? $this->level;
     }
@@ -44,12 +44,43 @@ class Unit extends Model
         return $query->where('level', $level);
     }
 
-    public function getAllDescendantIds()
+    public function getAllDescendantIds($visited = [])
     {
+        if (in_array($this->id, $visited)) {
+            return [];
+        }
+        $visited[] = $this->id;
+        
         $ids = [$this->id];
         foreach ($this->children as $child) {
-            $ids = array_merge($ids, $child->getAllDescendantIds());
+            $ids = array_merge($ids, $child->getAllDescendantIds($visited));
         }
         return $ids;
+    }
+
+    public function getAncestors()
+    {
+        $ancestors = collect([]);
+        $parent = $this->parent;
+        $visited = [$this->id];
+
+        while ($parent && !in_array($parent->id, $visited)) {
+            $ancestors->push($parent);
+            $visited[] = $parent->id;
+            $parent = $parent->parent;
+        }
+        return $ancestors->reverse();
+    }
+
+    public function getFullHierarchyName()
+    {
+        $ancestors = $this->getAncestors();
+        if ($ancestors->isEmpty()) {
+            return $this->name;
+        }
+        // Trả về theo thứ tự: Trung đội - Đại đội - Tiểu đoàn - Trung đoàn - Bộ chỉ huy khu vực
+        // collect([$this]) là đơn vị hiện tại (thường là cấp thấp nhất của soldier)
+        // ancestors->reverse() là các cấp trên theo thứ tự từ thấp đến cao
+        return collect([$this])->concat($this->getAncestors()->reverse())->pluck('name')->implode(' - ');
     }
 }

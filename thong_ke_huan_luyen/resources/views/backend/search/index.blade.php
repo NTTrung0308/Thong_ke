@@ -67,7 +67,7 @@
                                         <td>{{ $soldier->full_name }}</td>
                                         <td>{{ $soldier->rank }}</td>
                                         <td>{{ $soldier->position }}</td>
-                                        <td>{{ $soldier->unit->name }}</td>
+                                        <td>{{ $soldier->unit ? $soldier->unit->getFullHierarchyName() : 'N/A' }}</td>
                                         <td>
                                             @foreach($soldier->weapons as $weapon)
                                                 @php

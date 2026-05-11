@@ -64,8 +64,8 @@ class SoldierController extends Controller
     public function create()
     {
         $this->authorize('create', Soldier::class);
-        $units = Auth::user()->getAccessibleUnits();
-        return view('backend.soldiers.create', compact('units'));
+        $rootUnits = Auth::user()->getRootAccessibleUnits();
+        return view('backend.soldiers.create', compact('rootUnits'));
     }
 
     // Lưu quân nhân mới
@@ -156,8 +156,35 @@ class SoldierController extends Controller
     public function edit(Soldier $soldier)
     {
         $this->authorize('update', $soldier);
-        $units = Auth::user()->getAccessibleUnits();
-        return view('backend.soldiers.edit', compact('soldier', 'units'));
+        
+        $ancestors = $soldier->unit ? $soldier->unit->getAncestors() : collect([]);
+        $hierarchy = $soldier->unit ? $ancestors->concat([$soldier->unit]) : collect([]);
+        
+        $user = Auth::user();
+        $navigableIds = $user->getNavigableUnitIds();
+        
+        $levelOptions = [];
+        
+        // Cấp 1: Các root units mà user có quyền navigate
+        $levelOptions[] = Unit::whereNull('parent_id')
+            ->whereIn('id', $navigableIds)
+            ->orderBy('name')
+            ->get();
+
+        // Các cấp tiếp theo dựa trên hierarchy của soldier
+        foreach ($hierarchy as $index => $unit) {
+            // Lấy các con của đơn vị hiện tại (siblings của cấp tiếp theo trong hierarchy)
+            $children = Unit::where('parent_id', $unit->id)
+                ->whereIn('id', $navigableIds)
+                ->orderBy('name')
+                ->get();
+            
+            if ($children->count() > 0) {
+                $levelOptions[] = $children;
+            }
+        }
+        
+        return view('backend.soldiers.edit', compact('soldier', 'hierarchy', 'levelOptions'));
     }
 
     // Cập nhật

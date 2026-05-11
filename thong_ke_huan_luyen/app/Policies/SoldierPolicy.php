@@ -46,7 +46,7 @@ class SoldierPolicy
             if ($user->hasRole($l)) {
                 $levelsHierarchy = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
                 $userLevelIndex = array_search($l, $levelsHierarchy);
-                $soldierLevelIndex = array_search($soldier->unit->level ?? 'trung-doi', $levelsHierarchy);
+                $soldierLevelIndex = array_search($soldier->unit?->level ?? 'trung-doi', $levelsHierarchy);
                 
                 // Nếu cấp của user cao hơn hoặc bằng cấp của quân nhân (Index nhỏ hơn hoặc bằng)
                 return $userLevelIndex !== false && $soldierLevelIndex !== false && $userLevelIndex <= $soldierLevelIndex;

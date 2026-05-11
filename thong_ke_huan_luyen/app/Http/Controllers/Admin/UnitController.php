@@ -47,6 +47,15 @@ class UnitController extends Controller
             'parent_id' => 'nullable|exists:units,id|not_in:' . $unit->id,
         ]);
 
+        // Kiểm tra tránh tạo vòng lặp (Cycle)
+        if ($request->parent_id) {
+            $parent = Unit::find($request->parent_id);
+            $descendantIds = $unit->getAllDescendantIds();
+            if (in_array($parent->id, $descendantIds)) {
+                return back()->withErrors(['parent_id' => 'Không thể chọn đơn vị con làm đơn vị cha (tạo vòng lặp).'])->withInput();
+            }
+        }
+
         $unit->update($request->all());
 
         return redirect()->route('units.index')->with('success', 'Cập nhật đơn vị thành công!');
@@ -65,5 +74,30 @@ class UnitController extends Controller
         $unit->delete();
 
         return redirect()->route('units.index')->with('success', 'Xóa đơn vị thành công!');
+    }
+
+    public function getChildren(Request $request, $parentId = null)
+    {
+        $query = Unit::query();
+        if ($parentId === 'null' || $parentId === null || $parentId === '') {
+            $query->whereNull('parent_id');
+        } else {
+            $query->where('parent_id', $parentId);
+        }
+
+        // Lọc theo quyền truy cập của người dùng
+        $user = auth()->user();
+        $navigableIds = $user->getNavigableUnitIds();
+        $query->whereIn('id', $navigableIds);
+
+        $units = $query->orderBy('name')->get()->map(function($unit) {
+            return [
+                'id' => $unit->id,
+                'name' => $unit->name,
+                'level_label' => $unit->level_label
+            ];
+        });
+
+        return response()->json($units);
     }
 }

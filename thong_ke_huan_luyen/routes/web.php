@@ -48,6 +48,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('soldiers', SoldierController::class);
 
     // Units Management
+    Route::get('units/children/{parentId?}', [UnitController::class, 'getChildren'])->name('units.getChildren');
     Route::resource('units', UnitController::class)->middleware('check.role:chi-huy');
 
     // Weapon & Equipment Management

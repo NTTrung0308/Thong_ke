@@ -62,7 +62,7 @@
                                 </tr>
                                 <tr>
                                     <th>Đơn vị</th>
-                                    <td>{{ $soldier->unit->name ?? 'N/A' }}</td>
+                                    <td>{{ $soldier->unit ? $soldier->unit->getFullHierarchyName() : 'N/A' }}</td>
                                 </tr>
                                 <tr>
                                     <th>Ngày sinh</th>

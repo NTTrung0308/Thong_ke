@@ -75,6 +75,7 @@
                                     <th>Họ và tên</th>
                                     <th>Cấp bậc</th>
                                     <th>Chức vụ</th>
+                                    <th>Đơn vị</th>
                                     <th>Ngày tháng năm sinh</th>
                                     <th>Tháng nhập ngũ</th>
                                     <th>Số hiệu quân nhân</th>
@@ -94,6 +95,7 @@
                                         <td>{{ $soldier->full_name }}</td>
                                         <td>{{ $soldier->rank }}</td>
                                         <td>{{ $soldier->position }}</td>
+                                        <td>{{ $soldier->unit ? $soldier->unit->getFullHierarchyName() : 'N/A' }}</td>
                                         <td>{{ $soldier->birth_date ? $soldier->birth_date->format('d/m/Y') : '' }}</td>
                                         <td>{{ $soldier->enlistment_date ? $soldier->enlistment_date->format('m/Y') : '' }}</td>
                                         <td>{{ $soldier->code }}</td>
@@ -140,7 +142,7 @@
                     "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Vietnamese.json"
                 },
                 "columnDefs": [
-                    { "orderable": false, "targets": 13 } // Vô hiệu hóa sắp xếp cho cột Thao tác (cột thứ 14)
+                    { "orderable": false, "targets": 14 } // Vô hiệu hóa sắp xếp cho cột Thao tác
                 ]
             });
 

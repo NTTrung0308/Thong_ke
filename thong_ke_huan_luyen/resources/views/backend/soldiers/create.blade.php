@@ -52,19 +52,47 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-12">
                                 <div class="form-group">
-                                    <label for="unit_id">Đơn vị <span class="text-danger">*</span></label>
-                                    <select class="form-select form-control @error('unit_id') is-invalid @enderror" id="unit_id" name="unit_id" required>
-                                        <option value="">-- Chọn đơn vị --</option>
-                                        @foreach($units as $unit)
-                                            <option value="{{ $unit->id }}" {{ old('unit_id') == $unit->id ? 'selected' : '' }}>
-                                                {{ $unit->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <label class="d-block mb-2">Đơn vị biên chế <span class="text-danger">*</span></label>
+                                    <div class="row g-2">
+                                        <div class="col-md">
+                                            <label class="small text-muted">1. Bộ chỉ huy</label>
+                                            <select class="form-select form-control unit-selector" data-level="chi-huy" id="unit_chi_huy">
+                                                <option value="">-- Chọn Bộ chỉ huy --</option>
+                                                @foreach($rootUnits as $unit)
+                                                    <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md">
+                                            <label class="small text-muted">2. Trung đoàn</label>
+                                            <select class="form-select form-control unit-selector" data-level="trung-doan" id="unit_trung_doan" disabled>
+                                                <option value="">-- Chọn Trung đoàn --</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md">
+                                            <label class="small text-muted">3. Tiểu đoàn</label>
+                                            <select class="form-select form-control unit-selector" data-level="tieu-doan" id="unit_tieu_doan" disabled>
+                                                <option value="">-- Chọn Tiểu đoàn --</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md">
+                                            <label class="small text-muted">4. Đại đội</label>
+                                            <select class="form-select form-control unit-selector" data-level="dai-doi" id="unit_dai_doi" disabled>
+                                                <option value="">-- Chọn Đại đội --</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md">
+                                            <label class="small text-muted">5. Trung đội</label>
+                                            <select class="form-select form-control unit-selector" data-level="trung-doi" id="unit_trung_doi" disabled>
+                                                <option value="">-- Chọn Trung đội --</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="unit_id" id="final_unit_id" value="{{ old('unit_id') }}" required>
                                     @error('unit_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="text-danger small mt-1">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
@@ -196,4 +224,56 @@
             </div>
         </div>
     </div>
+@endsection
+
+@section('scripts')
+<script>
+$(document).ready(function() {
+    const levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
+
+    function updateFinalUnitId() {
+        let lastId = '';
+        levels.forEach(level => {
+            const val = $(`#unit_${level.replace('-', '_')}`).val();
+            if (val) lastId = val;
+        });
+        $('#final_unit_id').val(lastId);
+    }
+
+    $('.unit-selector').on('change', function() {
+        const parentId = $(this).val();
+        const currentLevel = $(this).data('level');
+        const currentIndex = levels.indexOf(currentLevel);
+        
+        // Reset all lower levels
+        for (let i = currentIndex + 1; i < levels.length; i++) {
+            const $nextSelect = $(`#unit_${levels[i].replace('-', '_')}`);
+            $nextSelect.html(`<option value="">-- Chọn ${$nextSelect.prev('label').text().split('. ')[1]} --</option>`);
+            $nextSelect.prop('disabled', true);
+        }
+        
+        updateFinalUnitId();
+        
+        if (parentId && currentIndex < levels.length - 1) {
+            const nextLevel = levels[currentIndex + 1];
+            const $nextSelect = $(`#unit_${nextLevel.replace('-', '_')}`);
+            
+            $.ajax({
+                url: `{{ route('units.getChildren', '') }}/${parentId}`,
+                type: 'GET',
+                success: function(data) {
+                    if (data.length > 0) {
+                        let options = `<option value="">-- Chọn ${$nextSelect.prev('label').text().split('. ')[1]} --</option>`;
+                        data.forEach(unit => {
+                            options += `<option value="${unit.id}">${unit.name}</option>`;
+                        });
+                        $nextSelect.html(options);
+                        $nextSelect.prop('disabled', false);
+                    }
+                }
+            });
+        }
+    });
+});
+</script>
 @endsection

@@ -55,9 +55,42 @@ class User extends Authenticatable
         return [];
     }
 
+    public function getNavigableUnitIds()
+    {
+        if ($this->hasRole('chi-huy')) {
+            return Unit::pluck('id')->toArray();
+        }
+
+        $accessibleIds = $this->getAccessibleUnitIds();
+        $navigableIds = $accessibleIds;
+        
+        $units = Unit::whereIn('id', $accessibleIds)->get();
+        foreach ($units as $unit) {
+            $ancestors = $unit->getAncestors();
+            foreach ($ancestors as $ancestor) {
+                if (!in_array($ancestor->id, $navigableIds)) {
+                    $navigableIds[] = $ancestor->id;
+                }
+            }
+        }
+        return $navigableIds;
+    }
+
     public function getAccessibleUnits()
     {
         return Unit::whereIn('id', $this->getAccessibleUnitIds())->get();
+    }
+
+    public function getRootAccessibleUnits()
+    {
+        // Luôn bắt đầu từ các đơn vị cấp cao nhất (parent_id is null)
+        // Nhưng chỉ lấy những đơn vị mà user có quyền truy cập (trực tiếp hoặc gián tiếp)
+        $navigableIds = $this->getNavigableUnitIds();
+        
+        return Unit::whereNull('parent_id')
+            ->whereIn('id', $navigableIds)
+            ->orderBy('name')
+            ->get();
     }
 
     /**
