@@ -201,7 +201,7 @@
                             <thead>
                                 <tr>
                                     <th>STT</th>
-                                    <th>Họ và tên / Đơn vị</th>
+                                    <th>Họ và tên</th>
                                     <th>Lý do khen thưởng</th>
                                     <th>Hình thức & Quyết định</th>
                                     <th style="width: 10%">Hành động</th>
@@ -214,10 +214,12 @@
                                         <td>
                                             @if($reward->soldier)
                                                 <strong>{{ $reward->soldier->full_name }}</strong><br>
-                                                <small class="text-muted">{{ $reward->soldier->unit->name ?? 'N/A' }}</small>
+                                                {{-- <small class="text-muted">ĐVBC: {{ $reward->soldier->unit->name ?? 'N/A' }}</small><br>
+                                                <small class="text-success">ĐVKT: {{ $reward->unit->getFullHierarchyName() ?? 'N/A' }}</small> --}}
                                             @else
-                                                <strong>{{ $reward->unit_name_at_time }}</strong><br>
-                                                <small class="text-muted">(Khen thưởng đơn vị)</small>
+                                                <strong>{{ $reward->unit->name ?? $reward->unit_name_at_time }}</strong><br>
+                                                {{-- <small class="text-muted">(Khen thưởng tập thể)</small><br> --}}
+                                                {{-- <small class="text-success">ĐVKT: {{ $reward->unit ? $reward->unit->getFullHierarchyName() : 'N/A' }}</small> --}}
                                             @endif
                                         </td>
                                         <td>{{ $reward->reason ?? '-' }}</td>

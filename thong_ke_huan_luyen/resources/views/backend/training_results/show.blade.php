@@ -30,7 +30,8 @@
                     <div class="d-flex align-items-center">
                         <h4 class="card-title">Thông tin chi tiết</h4>
                         <div class="ms-auto">
-                            <a href="{{ route('training-results.edit', $trainingResult->id) }}" class="btn btn-primary btn-round">
+                            <a href="{{ route('training-results.edit', $trainingResult->id) }}"
+                                class="btn btn-primary btn-round">
                                 <i class="fa fa-edit"></i> Sửa
                             </a>
                             <a href="{{ route('training-results.index') }}" class="btn btn-secondary btn-round">
@@ -45,7 +46,9 @@
                             <table class="table table-bordered">
                                 <tr>
                                     <th style="width: 40%">Đơn vị</th>
-                                    <td>{{ $trainingResult->unit ? $trainingResult->unit->name : $trainingResult->unit_name_at_time }}</td>
+                                    <td>
+                                        {{ $trainingResult->unit->getFullHierarchyName() ?? 'N/A' }}
+                                    </td>
                                 </tr>
                                 <tr>
                                     <th>Ngày tập huấn</th>
@@ -53,7 +56,9 @@
                                 </tr>
                                 <tr>
                                     <th>Thời gian</th>
-                                    <td>{{ $trainingResult->formatted_start_time }} - {{ $trainingResult->formatted_end_time }} ({{ $trainingResult->duration_hours }} giờ)</td>
+                                    <td>{{ $trainingResult->formatted_start_time }} -
+                                        {{ $trainingResult->formatted_end_time }} ({{ $trainingResult->duration_hours }}
+                                        giờ)</td>
                                 </tr>
                                 <tr>
                                     <th>Quân số tham gia</th>
@@ -100,7 +105,7 @@
                                         Nội dung tập huấn
                                     </div>
                                     <div class="annoucement-desc">
-                                        {!! $trainingResult->content !!}
+                                        {!! html_entity_decode($trainingResult->content, ENT_QUOTES | ENT_HTML5, 'UTF-8') !!}
                                     </div>
                                 </div>
                             </div>
@@ -112,7 +117,8 @@
                             <h5 class="fw-bold">Đánh giá & Chi tiết</h5>
                             <div class="accordion accordion-secondary">
                                 <div class="card">
-                                    <div class="card-header" id="headingOne" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                    <div class="card-header" id="headingOne" data-bs-toggle="collapse"
+                                        data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
                                         <div class="span-icon">
                                             <div class="flaticon-box-1"></div>
                                         </div>
@@ -122,7 +128,8 @@
                                         <div class="span-mode"></div>
                                     </div>
 
-                                    <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+                                    <div id="collapseOne" class="collapse show" aria-labelledby="headingOne"
+                                        data-parent="#accordion">
                                         <div class="card-body">
                                             <h6><strong>Đánh giá chung:</strong></h6>
                                             <p>{{ $trainingResult->evaluation ?: 'Không có thông tin' }}</p>
@@ -133,7 +140,8 @@
                                     </div>
                                 </div>
                                 <div class="card">
-                                    <div class="card-header collapsed" id="headingTwo" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                    <div class="card-header collapsed" id="headingTwo" data-bs-toggle="collapse"
+                                        data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
                                         <div class="span-icon">
                                             <div class="flaticon-success"></div>
                                         </div>
@@ -142,7 +150,8 @@
                                         </div>
                                         <div class="span-mode"></div>
                                     </div>
-                                    <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+                                    <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo"
+                                        data-parent="#accordion">
                                         <div class="card-body">
                                             <div class="row">
                                                 <div class="col-md-6">
@@ -158,7 +167,8 @@
                                     </div>
                                 </div>
                                 <div class="card">
-                                    <div class="card-header collapsed" id="headingThree" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                    <div class="card-header collapsed" id="headingThree" data-bs-toggle="collapse"
+                                        data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
                                         <div class="span-icon">
                                             <div class="flaticon-error"></div>
                                         </div>
@@ -167,14 +177,16 @@
                                         </div>
                                         <div class="span-mode"></div>
                                     </div>
-                                    <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
+                                    <div id="collapseThree" class="collapse" aria-labelledby="headingThree"
+                                        data-parent="#accordion">
                                         <div class="card-body">
                                             <h6><strong>Đề xuất, kiến nghị:</strong></h6>
                                             <p>{{ $trainingResult->recommendations ?: 'Không có thông tin' }}</p>
                                             <hr>
                                             <h6><strong>Tài liệu đính kèm:</strong></h6>
-                                            @if($trainingResult->attachment)
-                                                <a href="{{ Storage::url($trainingResult->attachment) }}" class="btn btn-link" target="_blank">
+                                            @if ($trainingResult->attachment)
+                                                <a href="{{ Storage::url($trainingResult->attachment) }}"
+                                                    class="btn btn-link" target="_blank">
                                                     <i class="fa fa-file-pdf"></i> Xem tài liệu đính kèm
                                                 </a>
                                             @else
@@ -189,8 +201,10 @@
                 </div>
                 <div class="card-footer">
                     <div class="text-muted small">
-                        Được tạo bởi: {{ $trainingResult->creator ? $trainingResult->creator->name : 'N/A' }} lúc {{ $trainingResult->created_at->format('d/m/Y H:i') }} <br>
-                        Cập nhật cuối bởi: {{ $trainingResult->updater ? $trainingResult->updater->name : 'N/A' }} lúc {{ $trainingResult->updated_at->format('d/m/Y H:i') }}
+                        Được tạo bởi: {{ $trainingResult->creator ? $trainingResult->creator->name : 'N/A' }} lúc
+                        {{ $trainingResult->created_at->format('d/m/Y H:i') }} <br>
+                        Cập nhật cuối bởi: {{ $trainingResult->updater ? $trainingResult->updater->name : 'N/A' }} lúc
+                        {{ $trainingResult->updated_at->format('d/m/Y H:i') }}
                     </div>
                 </div>
             </div>

@@ -5,19 +5,23 @@
         .table-responsive {
             cursor: grab;
         }
+
         .table-responsive.dragging {
             cursor: grabbing;
             user-select: none;
         }
+
         #training-logs-datatables th {
             text-align: center;
             vertical-align: middle;
             white-space: nowrap;
         }
+
         #training-logs-datatables td {
             vertical-align: middle;
             text-align: center;
         }
+
         .text-left-important {
             text-align: left !important;
         }
@@ -159,8 +163,9 @@
                                     <label>Đơn vị:</label>
                                     <select name="unit_id" class="form-select form-control" onchange="this.form.submit()">
                                         <option value="">-- Tất cả đơn vị --</option>
-                                        @foreach($units as $unit)
-                                            <option value="{{ $unit->id }}" {{ request('unit_id') == $unit->id ? 'selected' : '' }}>
+                                        @foreach ($units as $unit)
+                                            <option value="{{ $unit->id }}"
+                                                {{ request('unit_id') == $unit->id ? 'selected' : '' }}>
                                                 {{ $unit->name }}
                                             </option>
                                         @endforeach
@@ -175,7 +180,7 @@
                             <thead>
                                 <tr>
                                     <th rowspan="3">STT</th>
-                                    <th rowspan="3">Họ và tên / Đơn vị</th>
+                                    <th rowspan="3">Họ và tên</th>
                                     <th colspan="7">Chấm công, điểm danh, điểm quân số</th>
                                     <th rowspan="3">Thứ ngày tháng</th>
                                     <th rowspan="3">Nội dung huấn luyện</th>
@@ -219,9 +224,9 @@
                                     <tr>
                                         <td>{{ $index + 1 }}</td>
                                         <td>
-                                            @if($log->soldier)
+                                            @if ($log->soldier)
                                                 <strong>{{ $log->soldier->full_name }}</strong><br>
-                                                <small class="text-muted">{{ $log->soldier->unit->name ?? 'N/A' }}</small>
+                                                {{-- <small class="text-muted">{{ $log->soldier->unit->name ?? 'N/A' }}</small> --}}
                                             @else
                                                 <strong>{{ $log->unit_name_at_time }}</strong><br>
                                                 <small class="text-muted">(Đơn vị)</small>
@@ -235,13 +240,15 @@
                                         <td>{{ $log->attendance_sat }}</td>
                                         <td>{{ $log->attendance_sun }}</td>
                                         <td>
-                                            @if($log->training_date)
+                                            @if ($log->training_date)
                                                 {{ $log->day_of_week }}, {{ $log->training_date->format('d/m/Y') }}
                                             @else
                                                 -
                                             @endif
                                         </td>
-                                        <td class="text-left-important">{!! $log->training_content ? Str::limit($log->training_content, 50) : '-' !!}</td>
+                                        <td class="text-left-important">
+                                            {{ $log->training_content ? Str::limit(strip_tags(html_entity_decode($log->training_content, ENT_QUOTES | ENT_HTML5, 'UTF-8')), 50) : '-' }}
+                                        </td>
                                         <td>{{ $log->required_quanso }}</td>
                                         <td>{{ $log->actual_quanso }}</td>
                                         <td>{{ $log->required_hours }}</td>
@@ -256,7 +263,7 @@
                                         <td>{{ $log->fail_count }}</td>
                                         <td>{{ $log->fail_percent }}</td>
                                         <td>
-                                            @if($log->training_content)
+                                            @if ($log->training_content)
                                                 <span class="badge {{ $log->rating_badge }}">
                                                     {{ $log->rating_name }}
                                                 </span>
@@ -276,8 +283,9 @@
                                                     title="Sửa">
                                                     <i class="fa fa-edit"></i>
                                                 </a>
-                                                <form action="{{ route('training-logs.destroy', $log->id) }}" method="POST"
-                                                    id="delete-form-{{ $log->id }}" style="display:inline-block">
+                                                <form action="{{ route('training-logs.destroy', $log->id) }}"
+                                                    method="POST" id="delete-form-{{ $log->id }}"
+                                                    style="display:inline-block">
                                                     @csrf
                                                     @method('DELETE')
                                                 </form>
@@ -307,47 +315,51 @@
                 "language": {
                     "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Vietnamese.json"
                 },
-                "columnDefs": [
-                    { "orderable": false, "targets": [2, 3, 4, 5, 6, 7, 8, 25] }
-                ],
-                "order": [[ 9, "desc" ]]
+                "columnDefs": [{
+                    "orderable": false,
+                    "targets": [2, 3, 4, 5, 6, 7, 8, 25]
+                }],
+                "order": [
+                    [9, "desc"]
+                ]
             });
 
-        // Kéo bảng sang ngang bằng chuột
-        const slider = document.querySelector('.table-responsive');
-        if (slider) {
-            let isDown = false;
-            let startX;
-            let scrollLeft;
+            // Kéo bảng sang ngang bằng chuột
+            const slider = document.querySelector('.table-responsive');
+            if (slider) {
+                let isDown = false;
+                let startX;
+                let scrollLeft;
 
-            slider.addEventListener('mousedown', (e) => {
-                // Chỉ nhận chuột trái và không nhận trên các phần tử tương tác
-                if (e.button !== 0 || e.target.closest('a, button, .dataTables_length, .dataTables_filter')) return;
+                slider.addEventListener('mousedown', (e) => {
+                    // Chỉ nhận chuột trái và không nhận trên các phần tử tương tác
+                    if (e.button !== 0 || e.target.closest(
+                            'a, button, .dataTables_length, .dataTables_filter')) return;
 
-                isDown = true;
-                slider.classList.add('dragging');
-                startX = e.pageX - slider.offsetLeft;
-                scrollLeft = slider.scrollLeft;
-            });
+                    isDown = true;
+                    slider.classList.add('dragging');
+                    startX = e.pageX - slider.offsetLeft;
+                    scrollLeft = slider.scrollLeft;
+                });
 
-            slider.addEventListener('mouseleave', () => {
-                isDown = false;
-                slider.classList.remove('dragging');
-            });
+                slider.addEventListener('mouseleave', () => {
+                    isDown = false;
+                    slider.classList.remove('dragging');
+                });
 
-            slider.addEventListener('mouseup', () => {
-                isDown = false;
-                slider.classList.remove('dragging');
-            });
+                slider.addEventListener('mouseup', () => {
+                    isDown = false;
+                    slider.classList.remove('dragging');
+                });
 
-            slider.addEventListener('mousemove', (e) => {
-                if (!isDown) return;
-                e.preventDefault();
-                const x = e.pageX - slider.offsetLeft;
-                const walk = (x - startX) * 2; // Tốc độ kéo
-                slider.scrollLeft = scrollLeft - walk;
-            });
-        }
+                slider.addEventListener('mousemove', (e) => {
+                    if (!isDown) return;
+                    e.preventDefault();
+                    const x = e.pageX - slider.offsetLeft;
+                    const walk = (x - startX) * 2; // Tốc độ kéo
+                    slider.scrollLeft = scrollLeft - walk;
+                });
+            }
         });
 
         function confirmDelete(logId) {

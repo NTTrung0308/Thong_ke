@@ -8,7 +8,7 @@ use App\Models\Unit;
 use App\Models\Soldier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 
 class DisciplineController extends Controller
 {
@@ -127,10 +127,10 @@ class DisciplineController extends Controller
     private function syncWithSoldiers($user)
     {
         $soldierQuery = Soldier::query();
-        
+
         // Chỉ đồng bộ quân nhân thuộc quyền quản lý
-        if (!$user->hasRole('chi-huy') && $user->unit) {
-            $unitIds = $user->unit->getAllDescendantIds();
+        if (!$user->hasRole('chi-huy')) {
+            $unitIds = $user->getAccessibleUnitIds();
             $soldierQuery->whereIn('unit_id', $unitIds);
         }
 
@@ -153,13 +153,12 @@ class DisciplineController extends Controller
         }
     }
 
-    // Form thêm mới
     public function create()
     {
         $this->authorize('create', Discipline::class);
 
         $user = Auth::user();
-        $units = $user->getAccessibleUnits();
+        $rootUnits = $user->getRootAccessibleUnits();
         $soldiers = Soldier::whereIn('unit_id', $user->getAccessibleUnitIds())->get();
 
         $disciplineForms = [
@@ -175,7 +174,7 @@ class DisciplineController extends Controller
 
         $decisionLevels = ['Cấp thường', 'Đại đội', 'Tiểu đoàn', 'Trung đoàn', 'Sư đoàn', 'Quân khu', 'Bộ Quốc phòng'];
 
-        return view('backend.disciplines.create', compact('units', 'soldiers', 'disciplineForms', 'decisionLevels'));
+        return view('backend.disciplines.create', compact('rootUnits', 'soldiers', 'disciplineForms', 'decisionLevels'));
     }
 
     // Lưu kỷ luật mới
@@ -213,8 +212,14 @@ class DisciplineController extends Controller
 
         // Xử lý file đính kèm
         if ($request->hasFile('attachment')) {
-            $path = $request->file('attachment')->store('disciplines', 'public');
-            $validated['attachment'] = $path;
+            $file = $request->file('attachment');
+            $fileName = time() . '_' . preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
+            $destination = public_path('disciplines');
+            if (!File::exists($destination)) {
+                File::makeDirectory($destination, 0755, true);
+            }
+            $file->move($destination, $fileName);
+            $validated['attachment'] = 'disciplines/' . $fileName;
         }
 
         $validated['created_by'] = Auth::id();
@@ -239,7 +244,31 @@ class DisciplineController extends Controller
         $this->authorize('update', $discipline);
 
         $user = Auth::user();
-        $units = $user->getAccessibleUnits();
+        
+        $ancestors = $discipline->unit ? $discipline->unit->getAncestors() : collect([]);
+        $hierarchy = $discipline->unit ? $ancestors->concat([$discipline->unit]) : collect([]);
+        
+        $navigableIds = $user->getNavigableUnitIds();
+        $levelOptions = [];
+        
+        // Cấp 1: Các root units mà user có quyền navigate
+        $levelOptions[] = Unit::whereNull('parent_id')
+            ->whereIn('id', $navigableIds)
+            ->orderBy('name')
+            ->get();
+
+        // Các cấp tiếp theo dựa trên hierarchy của unit hiện tại
+        foreach ($hierarchy as $index => $unit) {
+            $children = Unit::where('parent_id', $unit->id)
+                ->whereIn('id', $navigableIds)
+                ->orderBy('name')
+                ->get();
+            
+            if ($children->count() > 0) {
+                $levelOptions = array_merge($levelOptions, [$children]);
+            }
+        }
+
         $soldiers = Soldier::whereIn('unit_id', $user->getAccessibleUnitIds())->get();
 
         $disciplineForms = [
@@ -261,7 +290,7 @@ class DisciplineController extends Controller
         ];
 
         return view('backend.disciplines.edit', compact(
-            'discipline', 'units', 'soldiers', 'disciplineForms', 'decisionLevels', 'statuses'
+            'discipline', 'hierarchy', 'levelOptions', 'soldiers', 'disciplineForms', 'decisionLevels', 'statuses'
         ));
     }
 
@@ -300,11 +329,17 @@ class DisciplineController extends Controller
 
         // Xử lý file mới
         if ($request->hasFile('attachment')) {
-            if ($discipline->attachment) {
-                Storage::disk('public')->delete($discipline->attachment);
+            if ($discipline->attachment && File::exists(public_path($discipline->attachment))) {
+                File::delete(public_path($discipline->attachment));
             }
-            $path = $request->file('attachment')->store('disciplines', 'public');
-            $validated['attachment'] = $path;
+            $file = $request->file('attachment');
+            $fileName = time() . '_' . preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
+            $destination = public_path('disciplines');
+            if (!File::exists($destination)) {
+                File::makeDirectory($destination, 0755, true);
+            }
+            $file->move($destination, $fileName);
+            $validated['attachment'] = 'disciplines/' . $fileName;
         }
 
         $validated['updated_by'] = Auth::id();
@@ -320,8 +355,8 @@ class DisciplineController extends Controller
     {
         $this->authorize('delete', $discipline);
 
-        if ($discipline->attachment) {
-            Storage::disk('public')->delete($discipline->attachment);
+        if ($discipline->attachment && File::exists(public_path($discipline->attachment))) {
+            File::delete(public_path($discipline->attachment));
         }
 
         $discipline->delete();

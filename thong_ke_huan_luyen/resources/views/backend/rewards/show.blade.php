@@ -49,13 +49,15 @@
                                 </tr>
                                 <tr>
                                     <th>Đơn vị</th>
-                                    <td>{{ $reward->unit_name_at_time }}</td>
+                                    <td>
+                                        {{ $reward->unit ? $reward->unit->getFullHierarchyName() : 'N/A' }}
+                                    </td>
                                 </tr>
-                                @if($reward->type == 'superior')
-                                <tr>
-                                    <th>Quân nhân</th>
-                                    <td>{{ $reward->soldier_name_at_time }}</td>
-                                </tr>
+                                @if ($reward->type == 'superior')
+                                    <tr>
+                                        <th>Quân nhân</th>
+                                        <td>{{ $reward->soldier_name_at_time }}</td>
+                                    </tr>
                                 @endif
                                 <tr>
                                     <th>Hình thức</th>
@@ -92,27 +94,28 @@
                         </div>
                     </div>
 
-                    @if($reward->result)
-                    <div class="mt-4">
-                        <h5 class="fw-bold">Kết quả:</h5>
-                        <div class="p-3 bg-light rounded">
-                            {{ $reward->result }}
+                    @if ($reward->result)
+                        <div class="mt-4">
+                            <h5 class="fw-bold">Kết quả:</h5>
+                            <div class="p-3 bg-light rounded">
+                                {{ $reward->result }}
+                            </div>
                         </div>
-                    </div>
                     @endif
 
-                    @if($reward->attachment)
-                    <div class="mt-4">
-                        <h5 class="fw-bold">Tệp đính kèm:</h5>
-                        <a href="{{ asset('storage/' . $reward->attachment) }}" target="_blank" class="btn btn-info">
-                            <i class="fa fa-file-download"></i> Xem/Tải xuống tệp đính kèm
-                        </a>
-                    </div>
+                    @if ($reward->attachment)
+                        <div class="mt-4">
+                            <h5 class="fw-bold">Tệp đính kèm:</h5>
+                            <a href="{{ asset('storage/' . $reward->attachment) }}" target="_blank" class="btn btn-info">
+                                <i class="fa fa-file-download"></i> Xem/Tải xuống tệp đính kèm
+                            </a>
+                        </div>
                     @endif
                 </div>
                 <div class="card-footer text-muted">
-                    <small>Được tạo bởi: {{ $reward->creator->name ?? 'N/A' }} lúc {{ $reward->created_at->format('d/m/Y H:i') }}</small>
-                    @if($reward->updated_at > $reward->created_at)
+                    <small>Được tạo bởi: {{ $reward->creator->name ?? 'N/A' }} lúc
+                        {{ $reward->created_at->format('d/m/Y H:i') }}</small>
+                    @if ($reward->updated_at > $reward->created_at)
                         <br><small>Cập nhật lần cuối lúc {{ $reward->updated_at->format('d/m/Y H:i') }}</small>
                     @endif
                 </div>

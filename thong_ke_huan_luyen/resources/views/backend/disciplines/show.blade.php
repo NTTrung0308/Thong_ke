@@ -30,7 +30,8 @@
                     <div class="d-flex align-items-center">
                         <h4 class="card-title">Quyết định kỷ luật: {{ $discipline->decision_number }}</h4>
                         <div class="ms-auto">
-                            <a href="{{ route('disciplines.edit', $discipline->id) }}" class="btn btn-primary btn-round me-2">
+                            <a href="{{ route('disciplines.edit', $discipline->id) }}"
+                                class="btn btn-primary btn-round me-2">
                                 <i class="fa fa-edit"></i> Sửa
                             </a>
                             <a href="{{ route('disciplines.index') }}" class="btn btn-black btn-round">
@@ -57,7 +58,7 @@
                                 </tr>
                                 <tr>
                                     <th>Đơn vị quản lý</th>
-                                    <td>{{ $discipline->unit_name_at_time }}</td>
+                                    <td>{{ $discipline->unit->getFullHierarchyName() ?? 'N/A' }}</td>
                                 </tr>
                                 <tr>
                                     <th>Trạng thái hiện tại</th>
@@ -111,11 +112,12 @@
                             </table>
                         </div>
                         <div class="col-md-6">
-                            @if($discipline->attachment)
-                            <h5 class="fw-bold mb-3 text-primary">Tài liệu đính kèm</h5>
-                            <a href="{{ asset('storage/' . $discipline->attachment) }}" target="_blank" class="btn btn-outline-info">
-                                <i class="fa fa-file-pdf"></i> Xem văn bản quyết định
-                            </a>
+                            @if ($discipline->attachment)
+                                <h5 class="fw-bold mb-3 text-primary">Tài liệu đính kèm</h5>
+                                <a href="{{ asset($discipline->attachment) }}" target="_blank"
+                                    class="btn btn-outline-info">
+                                    <i class="fa fa-file-pdf"></i> Xem văn bản quyết định
+                                </a>
                             @endif
                         </div>
                     </div>
@@ -129,26 +131,27 @@
                         </div>
                     </div>
 
-                    @if($discipline->improvement_measures)
-                    <div class="mt-4">
-                        <h5 class="fw-bold text-primary">Biện pháp khắc phục:</h5>
-                        <div class="p-3 bg-light rounded border-start border-success border-4">
-                            {!! $discipline->improvement_measures !!}
+                    @if ($discipline->improvement_measures)
+                        <div class="mt-4">
+                            <h5 class="fw-bold text-primary">Biện pháp khắc phục:</h5>
+                            <div class="p-3 bg-light rounded border-start border-success border-4">
+                                {!! $discipline->improvement_measures !!}
+                            </div>
                         </div>
-                    </div>
                     @endif
 
-                    @if($discipline->result)
-                    <div class="mt-4">
-                        <h5 class="fw-bold text-primary">Ghi chú kết quả:</h5>
-                        <div class="p-3 bg-light rounded">
-                            {!! $discipline->result !!}
+                    @if ($discipline->result)
+                        <div class="mt-4">
+                            <h5 class="fw-bold text-primary">Ghi chú kết quả:</h5>
+                            <div class="p-3 bg-light rounded">
+                                {!! $discipline->result !!}
+                            </div>
                         </div>
-                    </div>
                     @endif
                 </div>
                 <div class="card-footer text-muted">
-                    <small>Được tạo bởi: {{ $discipline->creator->name ?? 'N/A' }} lúc {{ $discipline->created_at->format('d/m/Y H:i') }}</small>
+                    <small>Được tạo bởi: {{ $discipline->creator->name ?? 'N/A' }} lúc
+                        {{ $discipline->created_at->format('d/m/Y H:i') }}</small>
                 </div>
             </div>
         </div>

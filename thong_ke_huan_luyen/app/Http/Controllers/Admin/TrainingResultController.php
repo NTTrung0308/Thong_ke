@@ -86,15 +86,14 @@ class TrainingResultController extends Controller
         ));
     }
 
-    // Form thêm mới
     public function create()
     {
         $this->authorize('create', TrainingResult::class);
 
         $user = Auth::user();
-        $units = $user->getAccessibleUnits();
+        $rootUnits = $user->getRootAccessibleUnits();
 
-        return view('backend.training_results.create', compact('units'));
+        return view('backend.training_results.create', compact('rootUnits'));
     }
 
     // Lưu kết quả tập huấn mới
@@ -161,9 +160,32 @@ class TrainingResultController extends Controller
         $this->authorize('update', $trainingResult);
 
         $user = Auth::user();
-        $units = $user->getAccessibleUnits();
+        
+        $ancestors = $trainingResult->unit ? $trainingResult->unit->getAncestors() : collect([]);
+        $hierarchy = $trainingResult->unit ? $ancestors->concat([$trainingResult->unit]) : collect([]);
+        
+        $navigableIds = $user->getNavigableUnitIds();
+        $levelOptions = [];
+        
+        // Cấp 1: Các root units mà user có quyền navigate
+        $levelOptions[] = Unit::whereNull('parent_id')
+            ->whereIn('id', $navigableIds)
+            ->orderBy('name')
+            ->get();
 
-        return view('backend.training_results.edit', compact('trainingResult', 'units'));
+        // Các cấp tiếp theo dựa trên hierarchy của unit hiện tại
+        foreach ($hierarchy as $index => $unit) {
+            $children = Unit::where('parent_id', $unit->id)
+                ->whereIn('id', $navigableIds)
+                ->orderBy('name')
+                ->get();
+            
+            if ($children->count() > 0) {
+                $levelOptions = array_merge($levelOptions, [$children]);
+            }
+        }
+
+        return view('backend.training_results.edit', compact('trainingResult', 'hierarchy', 'levelOptions'));
     }
 
     // Cập nhật

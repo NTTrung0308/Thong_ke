@@ -23,9 +23,8 @@ class SoldierController extends Controller
         $query = Soldier::with('unit');
 
         // Phân quyền xem: Chỉ huy xem tất cả, các cấp khác chỉ xem đơn vị mình và cấp dưới
-        if (!$user->hasRole('chi-huy')) {
-            $query->whereIn('unit_id', $user->getAccessibleUnitIds());
-        }
+        $accessibleUnitIds = $user->getAccessibleUnitIds();
+        $query->whereIn('unit_id', $accessibleUnitIds);
 
         // Tìm kiếm
         if ($request->filled('search')) {
@@ -36,9 +35,16 @@ class SoldierController extends Controller
             });
         }
 
-        // Lọc theo đơn vị
+        // Lọc theo đơn vị (bao gồm các đơn vị con)
         if ($request->filled('unit_id')) {
-            $query->where('unit_id', $request->unit_id);
+            $selectedUnit = Unit::find($request->unit_id);
+            if ($selectedUnit && in_array($selectedUnit->id, $accessibleUnitIds)) {
+                $targetUnitIds = $selectedUnit->getAllDescendantIds();
+                $query->whereIn('unit_id', $targetUnitIds);
+            } else {
+                // Nếu không có quyền hoặc unit không tồn tại, trả về rỗng nếu đã chọn unit_id
+                $query->whereRaw('1 = 0');
+            }
         }
 
         // Lọc theo cấp đơn vị (bao gồm cấp hiện tại và các cấp thấp hơn)
@@ -149,6 +155,9 @@ class SoldierController extends Controller
     public function show(Soldier $soldier)
     {
         $this->authorize('view', $soldier);
+        $soldier->load(['unit', 'weapons', 'rewards', 'disciplines', 'trainingLogs' => function($q) {
+            $q->orderBy('training_date', 'desc');
+        }]);
         return view('backend.soldiers.show', compact('soldier'));
     }
 
@@ -251,7 +260,9 @@ class SoldierController extends Controller
     public function search(Request $request)
     {
         $units = $this->getAccessibleUnits();
-        $query = Soldier::query();
+        $accessibleUnitIds = Auth::user()->getAccessibleUnitIds();
+        
+        $query = Soldier::query()->whereIn('unit_id', $accessibleUnitIds);
 
         if ($request->filled('q')) {
             $q = $request->q;
@@ -313,7 +324,13 @@ class SoldierController extends Controller
         }
 
         if ($request->filled('unit_id')) {
-            $query->where('unit_id', $request->unit_id);
+            $selectedUnit = Unit::find($request->unit_id);
+            if ($selectedUnit && in_array($selectedUnit->id, $accessibleUnitIds)) {
+                $targetUnitIds = $selectedUnit->getAllDescendantIds();
+                $query->whereIn('unit_id', $targetUnitIds);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
         }
 
         $soldiers = $query->with(['unit', 'weapons' => function($q) {

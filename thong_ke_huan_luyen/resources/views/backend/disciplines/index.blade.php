@@ -202,7 +202,7 @@
                             <thead>
                                 <tr>
                                     <th>STT</th>
-                                    <th>Họ và tên / Đơn vị</th>
+                                    <th>Họ và tên</th>
                                     <th>Nội dung vi phạm</th>
                                     <th>Hình thức & Quyết định</th>
                                     <th>Trạng thái</th>
@@ -216,10 +216,12 @@
                                         <td>
                                             @if($discipline->soldier)
                                                 <strong>{{ $discipline->soldier->full_name }}</strong><br>
-                                                <small class="text-muted">{{ $discipline->soldier->unit->name ?? 'N/A' }}</small>
+                                                {{-- <small class="text-muted">ĐVBC: {{ $discipline->soldier->unit->name ?? 'N/A' }}</small><br>
+                                                <small class="text-danger">ĐVKL: {{ $discipline->unit->getFullHierarchyName() ?? 'N/A' }}</small> --}}
                                             @else
-                                                <strong>{{ $discipline->unit_name_at_time }}</strong><br>
-                                                <small class="text-muted">(Đơn vị)</small>
+                                                <strong>{{ $discipline->unit->name ?? $discipline->unit_name_at_time }}</strong><br>
+                                                <small class="text-muted">(Khen thưởng tập thể)</small><br>
+                                                <small class="text-danger">ĐVKL: {{ $discipline->unit ? $discipline->unit->getFullHierarchyName() : 'N/A' }}</small>
                                             @endif
                                         </td>
                                         <td>{!!$discipline->violation_details ? Str::limit($discipline->violation_details, 50) : '-' !!}</td>

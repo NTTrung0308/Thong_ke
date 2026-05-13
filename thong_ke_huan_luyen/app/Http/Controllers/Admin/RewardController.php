@@ -96,8 +96,8 @@ class RewardController extends Controller
         $soldierQuery = Soldier::query();
         
         // Chỉ đồng bộ quân nhân thuộc quyền quản lý
-        if (!$user->hasRole('chi-huy') && $user->unit) {
-            $unitIds = $user->unit->getAllDescendantIds();
+        if (!$user->hasRole('chi-huy')) {
+            $unitIds = $user->getAccessibleUnitIds();
             $soldierQuery->whereIn('unit_id', $unitIds);
         }
 
@@ -119,13 +119,12 @@ class RewardController extends Controller
         }
     }
 
-    // Form thêm mới
     public function create()
     {
         $this->authorize('create', Reward::class);
 
         $user = Auth::user();
-        $units = $user->getAccessibleUnits();
+        $rootUnits = $user->getRootAccessibleUnits();
         $soldiers = Soldier::whereIn('unit_id', $user->getAccessibleUnitIds())->get();
 
         $decisionLevels = ['Cấp thường', 'Đại đội', 'Tiểu đoàn', 'Trung đoàn', 'Sư đoàn', 'Quân khu', 'Bộ Quốc phòng'];
@@ -140,7 +139,7 @@ class RewardController extends Controller
             'Nâng lương trước thời hạn'
         ];
 
-        return view('backend.rewards.create', compact('units', 'soldiers', 'decisionLevels', 'rewardForms'));
+        return view('backend.rewards.create', compact('rootUnits', 'soldiers', 'decisionLevels', 'rewardForms'));
     }
 
     // Lưu khen thưởng mới
@@ -208,7 +207,31 @@ class RewardController extends Controller
         $this->authorize('update', $reward);
 
         $user = Auth::user();
-        $units = $user->getAccessibleUnits();
+        
+        $ancestors = $reward->unit ? $reward->unit->getAncestors() : collect([]);
+        $hierarchy = $reward->unit ? $ancestors->concat([$reward->unit]) : collect([]);
+        
+        $navigableIds = $user->getNavigableUnitIds();
+        $levelOptions = [];
+        
+        // Cấp 1: Các root units mà user có quyền navigate
+        $levelOptions[] = Unit::whereNull('parent_id')
+            ->whereIn('id', $navigableIds)
+            ->orderBy('name')
+            ->get();
+
+        // Các cấp tiếp theo dựa trên hierarchy của unit hiện tại
+        foreach ($hierarchy as $index => $unit) {
+            $children = Unit::where('parent_id', $unit->id)
+                ->whereIn('id', $navigableIds)
+                ->orderBy('name')
+                ->get();
+            
+            if ($children->count() > 0) {
+                $levelOptions = array_merge($levelOptions, [$children]);
+            }
+        }
+
         $soldiers = Soldier::whereIn('unit_id', $user->getAccessibleUnitIds())->get();
 
         $decisionLevels = ['Cấp thường', 'Đại đội', 'Tiểu đoàn', 'Trung đoàn', 'Sư đoàn', 'Quân khu', 'Bộ Quốc phòng'];
@@ -223,7 +246,7 @@ class RewardController extends Controller
             'Nâng lương trước thời hạn'
         ];
 
-        return view('backend.rewards.edit', compact('reward', 'units', 'soldiers', 'decisionLevels', 'rewardForms'));
+        return view('backend.rewards.edit', compact('reward', 'hierarchy', 'levelOptions', 'soldiers', 'decisionLevels', 'rewardForms'));
     }
 
     // Cập nhật

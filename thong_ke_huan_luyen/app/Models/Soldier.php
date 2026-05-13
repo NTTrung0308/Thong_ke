@@ -42,4 +42,19 @@ class Soldier extends Model
     {
         return $this->hasMany(WeaponEquipment::class, 'soldier_id');
     }
+
+    public function rewards()
+    {
+        return $this->hasMany(Reward::class, 'soldier_id');
+    }
+
+    public function disciplines()
+    {
+        return $this->hasMany(Discipline::class, 'soldier_id');
+    }
+
+    public function trainingLogs()
+    {
+        return $this->hasMany(TrainingLog::class, 'soldier_id');
+    }
 }

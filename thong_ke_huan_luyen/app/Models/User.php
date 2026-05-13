@@ -83,12 +83,16 @@ class User extends Authenticatable
 
     public function getRootAccessibleUnits()
     {
-        // Luôn bắt đầu từ các đơn vị cấp cao nhất (parent_id is null)
-        // Nhưng chỉ lấy những đơn vị mà user có quyền truy cập (trực tiếp hoặc gián tiếp)
+        // Lấy các đơn vị "gốc" trong phạm vi quyền hạn của user
+        // Gốc ở đây là đơn vị mà user có quyền truy cập, nhưng parent của nó thì user không có quyền truy cập
+        // Hoặc đơn vị đó không có parent (parent_id is null)
         $navigableIds = $this->getNavigableUnitIds();
         
-        return Unit::whereNull('parent_id')
-            ->whereIn('id', $navigableIds)
+        return Unit::whereIn('id', $navigableIds)
+            ->where(function($query) use ($navigableIds) {
+                $query->whereNull('parent_id')
+                      ->orWhereNotIn('parent_id', $navigableIds);
+            })
             ->orderBy('name')
             ->get();
     }

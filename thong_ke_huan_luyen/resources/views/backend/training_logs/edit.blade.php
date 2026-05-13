@@ -41,23 +41,47 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-12">
                             <div class="form-group">
-                                <label for="unit_id">Đơn vị <span class="text-danger">*</span></label>
-                                <select class="form-control" id="unit_id" name="unit_id" required>
-                                    <option value="">-- Chọn đơn vị --</option>
-                                    @foreach($units as $unit)
-                                        <option value="{{ $unit->id }}" {{ old('unit_id', $trainingLog->unit_id) == $unit->id ? 'selected' : '' }}>
-                                            {{ $unit->name }}
-                                        </option>
+                                <label class="d-block mb-2">Đơn vị huấn luyện <span class="text-danger">*</span></label>
+                                <div class="row g-2">
+                                    @php
+                                        $levelMap = [
+                                            'chi-huy' => ['label' => 'Bộ chỉ huy', 'id' => 'unit_chi_huy'],
+                                            'trung-doan' => ['label' => 'Trung đoàn', 'id' => 'unit_trung_doan'],
+                                            'tieu-doan' => ['label' => 'Tiểu đoàn', 'id' => 'unit_tieu_doan'],
+                                            'dai-doi' => ['label' => 'Đại đội', 'id' => 'unit_dai_doi'],
+                                            'trung-doi' => ['label' => 'Trung đội', 'id' => 'unit_trung_doi'],
+                                        ];
+                                        $levelKeys = array_keys($levelMap);
+                                    @endphp
+
+                                    @foreach($levelKeys as $index => $levelKey)
+                                        <div class="col-md">
+                                            <label class="small text-muted">{{ $index + 1 }}. {{ $levelMap[$levelKey]['label'] }}</label>
+                                            <select class="form-select form-control unit-selector" data-level="{{ $levelKey }}" id="{{ $levelMap[$levelKey]['id'] }}" {{ !isset($levelOptions[$index]) ? 'disabled' : '' }}>
+                                                <option value="">-- Chọn {{ $levelMap[$levelKey]['label'] }} --</option>
+                                                @if(isset($levelOptions[$index]))
+                                                    @foreach($levelOptions[$index] as $option)
+                                                        <option value="{{ $option->id }}" {{ (isset($hierarchy[$index]) && $hierarchy[$index]->id == $option->id) ? 'selected' : '' }}>
+                                                            {{ $option->name }}
+                                                        </option>
+                                                    @endforeach
+                                                @endif
+                                            </select>
+                                        </div>
                                     @endforeach
-                                </select>
+                                </div>
+                                <input type="hidden" name="unit_id" id="final_unit_id" value="{{ old('unit_id', $trainingLog->unit_id) }}" required>
                                 @error('unit_id')
-                                    <small class="text-danger">{{ $message }}</small>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
-                        <div class="col-md-4">
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
                             <div class="form-group">
                                 <label for="training_date">Ngày huấn luyện</label>
                                 <input type="date" class="form-control" id="training_date" name="training_date" value="{{ old('training_date', $trainingLog->training_date ? $trainingLog->training_date->format('Y-m-d') : '') }}">
@@ -66,7 +90,7 @@
                                 @enderror
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <div class="form-group">
                                 <label for="day_of_week">Thứ</label>
                                 <input type="text" class="form-control" id="day_of_week" name="day_of_week" value="{{ old('day_of_week', $trainingLog->day_of_week) }}" readonly>
@@ -237,6 +261,52 @@
             promotion: false,
             branding: false,
             height: 300
+        });
+
+        const levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
+
+        function updateFinalUnitId() {
+            let lastId = '';
+            levels.forEach(level => {
+                const val = $(`#unit_${level.replace('-', '_')}`).val();
+                if (val) lastId = val;
+            });
+            $('#final_unit_id').val(lastId);
+        }
+
+        $('.unit-selector').on('change', function() {
+            const parentId = $(this).val();
+            const currentLevel = $(this).data('level');
+            const currentIndex = levels.indexOf(currentLevel);
+            
+            // Reset all lower levels
+            for (let i = currentIndex + 1; i < levels.length; i++) {
+                const $nextSelect = $(`#unit_${levels[i].replace('-', '_')}`);
+                $nextSelect.html(`<option value="">-- Chọn ${$nextSelect.prev('label').text().split('. ')[1]} --</option>`);
+                $nextSelect.prop('disabled', true);
+            }
+            
+            updateFinalUnitId();
+            
+            if (parentId && currentIndex < levels.length - 1) {
+                const nextLevel = levels[currentIndex + 1];
+                const $nextSelect = $(`#unit_${nextLevel.replace('-', '_')}`);
+                
+                $.ajax({
+                    url: `{{ route('units.getChildren', '') }}/${parentId}`,
+                    type: 'GET',
+                    success: function(data) {
+                        if (data.length > 0) {
+                            let options = `<option value="">-- Chọn ${$nextSelect.prev('label').text().split('. ')[1]} --</option>`;
+                            data.forEach(unit => {
+                                options += `<option value="${unit.id}">${unit.name}</option>`;
+                            });
+                            $nextSelect.html(options);
+                            $nextSelect.prop('disabled', false);
+                        }
+                    }
+                });
+            }
         });
 
         $('#training_date').on('change', function() {

@@ -92,8 +92,8 @@ class TrainingLogController extends Controller
         $soldierQuery = Soldier::query();
         
         // Chỉ đồng bộ quân nhân thuộc quyền quản lý
-        if (!$user->hasRole('chi-huy') && $user->unit) {
-            $unitIds = $user->unit->getAllDescendantIds();
+        if (!$user->hasRole('chi-huy')) {
+            $unitIds = $user->getAccessibleUnitIds();
             $soldierQuery->whereIn('unit_id', $unitIds);
         }
 
@@ -117,17 +117,16 @@ class TrainingLogController extends Controller
         }
     }
 
-    // Form thêm mới
     public function create()
     {
         $user = Auth::user();
-        $units = $user->getAccessibleUnits();
+        $rootUnits = $user->getRootAccessibleUnits();
 
         // Lấy ngày hiện tại
         $today = Carbon::now();
         $dayOfWeek = $this->getVietnameseDayOfWeek($today);
 
-        return view('backend.training_logs.create', compact('units', 'today', 'dayOfWeek'));
+        return view('backend.training_logs.create', compact('rootUnits', 'today', 'dayOfWeek'));
     }
 
     // Lưu nhật ký mới
@@ -213,9 +212,32 @@ class TrainingLogController extends Controller
     {
         $trainingLog = TrainingLog::findOrFail($id);
         $user = Auth::user();
-        $units = $user->getAccessibleUnits();
+        
+        $ancestors = $trainingLog->unit ? $trainingLog->unit->getAncestors() : collect([]);
+        $hierarchy = $trainingLog->unit ? $ancestors->concat([$trainingLog->unit]) : collect([]);
+        
+        $navigableIds = $user->getNavigableUnitIds();
+        $levelOptions = [];
+        
+        // Cấp 1: Các root units mà user có quyền navigate
+        $levelOptions[] = Unit::whereNull('parent_id')
+            ->whereIn('id', $navigableIds)
+            ->orderBy('name')
+            ->get();
 
-        return view('backend.training_logs.edit', compact('trainingLog', 'units'));
+        // Các cấp tiếp theo dựa trên hierarchy của unit hiện tại
+        foreach ($hierarchy as $index => $unit) {
+            $children = Unit::where('parent_id', $unit->id)
+                ->whereIn('id', $navigableIds)
+                ->orderBy('name')
+                ->get();
+            
+            if ($children->count() > 0) {
+                $levelOptions = array_merge($levelOptions, [$children]);
+            }
+        }
+
+        return view('backend.training_logs.edit', compact('trainingLog', 'hierarchy', 'levelOptions'));
     }
 
     // Cập nhật

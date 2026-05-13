@@ -97,7 +97,7 @@
                                         Nội dung huấn luyện
                                     </div>
                                     <div class="annoucement-desc">
-                                        {!! $trainingLog->training_content !!}
+                                        {!! html_entity_decode($trainingLog->training_content, ENT_QUOTES | ENT_HTML5, 'UTF-8') !!}
                                     </div>
                                 </div>
                             </div>

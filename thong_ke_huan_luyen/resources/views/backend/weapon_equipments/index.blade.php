@@ -125,7 +125,7 @@
                             <thead>
                                 <tr>
                                     <th>STT</th>
-                                    <th>Họ và tên / Đơn vị</th>
+                                    <th>Họ và tên</th>
                                     <th>AK</th>
                                     <th>RPD</th>
                                     <th>B41</th>
@@ -154,7 +154,8 @@
                                         <td>{{ $index + 1 }}</td>
                                         <td>
                                             <strong>{{ $item->soldier->full_name }}</strong><br>
-                                            <small class="text-muted">{{ $item->soldier->unit->name ?? 'N/A' }}</small>
+                                            {{-- <small class="text-muted">ĐVBC: {{ $item->soldier->unit->name ?? 'N/A' }}</small><br>
+                                            <small class="text-success">ĐVQL: {{ $item->unit->getFullHierarchyName() ?? 'N/A' }}</small> --}}
                                         </td>
                                         <td>{{ $item->ak ?? '-' }}</td>
                                         <td>{{ $item->rpd ?? '-' }}</td>

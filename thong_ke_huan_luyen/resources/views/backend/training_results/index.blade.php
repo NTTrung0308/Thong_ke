@@ -84,6 +84,7 @@
                             <thead>
                                 <tr>
                                     <th rowspan="2" style="width: 5%">STT</th>
+                                    <th rowspan="2">Đơn vị</th>
                                     <th rowspan="2">Ngày tháng</th>
                                     <th rowspan="2">Nội dung</th>
                                     <th rowspan="2">Thời gian (giờ)</th>
@@ -100,6 +101,10 @@
                                 @foreach ($trainingResults as $index => $result)
                                     <tr>
                                         <td class="text-center">{{ $index + 1 }}</td>
+                                        <td>
+                                            <strong>{{ $result->unit->name }}</strong><br>
+                                            <small class="text-muted">{{ $result->unit->getFullHierarchyName() }}</small>
+                                        </td>
                                         <td class="text-center">{{ $result->formatted_training_date }}</td>
                                         <td>{!! Str::limit($result->content, 100) !!}</td>
                                         <td class="text-center">{{ sprintf('%02s', str_replace('.', ',', (float)$result->duration_hours)) }}</td>

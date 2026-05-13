@@ -23,181 +23,230 @@
             </li>
         </ul>
     </div>
+
     <div class="row">
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Cập nhật kỷ luật: 
-                        @if($discipline->soldier)
-                            <span class="text-primary">{{ $discipline->soldier->full_name }}</span>
-                        @else
-                            {{ $discipline->soldier_name_at_time }}
-                        @endif
-                    </div>
+                    <div class="card-title">Cập nhật thông tin kỷ luật cho: {{ $discipline->soldier_name_at_time }}</div>
                 </div>
-                <form action="{{ route('disciplines.update', $discipline->id) }}" method="POST"
-                    enctype="multipart/form-data">
+                <form action="{{ route('disciplines.update', $discipline->id) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-6">
+                            <!-- Đơn vị và Quân nhân -->
+                            <div class="col-md-12">
                                 <div class="form-group">
-                                    <label>Đơn vị <span class="text-danger">*</span></label>
-                                    <select name="unit_id" id="unit_id" class="form-control" required>
-                                        <option value="">-- Chọn đơn vị --</option>
-                                        @foreach ($units as $unit)
-                                            <option value="{{ $unit->id }}"
-                                                {{ $discipline->unit_id == $unit->id ? 'selected' : '' }}>
-                                                {{ $unit->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Quân nhân <span class="text-danger">*</span></label>
-                                    <select name="soldier_id" id="soldier_id" class="form-control select2" required>
-                                        @foreach ($soldiers as $soldier)
-                                            <option value="{{ $soldier->id }}" data-unit="{{ $soldier->unit_id }}"
-                                                {{ $discipline->soldier_id == $soldier->id ? 'selected' : '' }}>
-                                                {{ $soldier->full_name }} ({{ $soldier->code }})
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
+                                    <label class="d-block mb-2">Đơn vị vi phạm <span class="text-danger">*</span></label>
+                                    <div class="row g-2">
+                                        @php
+                                            $levelMap = [
+                                                'chi-huy' => ['label' => 'Bộ chỉ huy', 'id' => 'unit_chi_huy'],
+                                                'trung-doan' => ['label' => 'Trung đoàn', 'id' => 'unit_trung_doan'],
+                                                'tieu-doan' => ['label' => 'Tiểu đoàn', 'id' => 'unit_tieu_doan'],
+                                                'dai-doi' => ['label' => 'Đại đội', 'id' => 'unit_dai_doi'],
+                                                'trung-doi' => ['label' => 'Trung đội', 'id' => 'unit_trung_doi'],
+                                            ];
+                                            $levelKeys = array_keys($levelMap);
+                                        @endphp
 
-                        <div class="row">
+                                        @foreach($levelKeys as $index => $levelKey)
+                                            <div class="col-md">
+                                                <label class="small text-muted">{{ $index + 1 }}. {{ $levelMap[$levelKey]['label'] }}</label>
+                                                <select class="form-select form-control unit-selector" data-level="{{ $levelKey }}" id="{{ $levelMap[$levelKey]['id'] }}" {{ !isset($levelOptions[$index]) ? 'disabled' : '' }}>
+                                                    <option value="">-- Chọn {{ $levelMap[$levelKey]['label'] }} --</option>
+                                                    @if(isset($levelOptions[$index]))
+                                                        @foreach($levelOptions[$index] as $option)
+                                                            <option value="{{ $option->id }}" {{ (isset($hierarchy[$index]) && $hierarchy[$index]->id == $option->id) ? 'selected' : '' }}>
+                                                                {{ $option->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    @endif
+                                                </select>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    <input type="hidden" name="unit_id" id="final_unit_id" value="{{ old('unit_id', $discipline->unit_id) }}" required>
+                                    @error('unit_id')
+                                        <div class="text-danger small mt-1">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Hình thức kỷ luật</label>
-                                    <select name="discipline_form" class="form-control">
+                                    <label for="soldier_id">Quân nhân vi phạm <span class="text-danger">*</span></label>
+                                    <select class="form-select select2 @error('soldier_id') is-invalid @enderror" id="soldier_id" name="soldier_id" required>
+                                        <option value="">-- Chọn quân nhân --</option>
+                                        @foreach($soldiers as $soldier)
+                                            <option value="{{ $soldier->id }}" {{ old('soldier_id', $discipline->soldier_id) == $soldier->id ? 'selected' : '' }}>
+                                                {{ $soldier->full_name }} ({{ $soldier->unit->name ?? 'N/A' }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('soldier_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="discipline_form">Hình thức kỷ luật <span class="text-danger">*</span></label>
+                                    <select class="form-select @error('discipline_form') is-invalid @enderror" id="discipline_form" name="discipline_form" required>
                                         <option value="">-- Chọn hình thức --</option>
-                                        @foreach ($disciplineForms as $form)
-                                            <option value="{{ $form }}"
-                                                {{ $discipline->discipline_form == $form ? 'selected' : '' }}>
-                                                {{ $form }}
-                                            </option>
+                                        @foreach($disciplineForms as $form)
+                                            <option value="{{ $form }}" {{ old('discipline_form', $discipline->discipline_form) == $form ? 'selected' : '' }}>{{ $form }}</option>
                                         @endforeach
                                     </select>
+                                    @error('discipline_form')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
-                            <div class="col-md-6">
+
+                            <div class="col-md-12">
                                 <div class="form-group">
-                                    <label>Cấp quyết định</label>
-                                    <select name="decision_level" class="form-control">
-                                        <option value="">-- Chọn cấp quyết định --</option>
-                                        @foreach ($decisionLevels as $level)
-                                            <option value="{{ $level }}"
-                                                {{ $discipline->decision_level == $level ? 'selected' : '' }}>
-                                                {{ $level }}
-                                            </option>
+                                    <label for="work_content">Nội dung công tác/Sự việc vi phạm <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control @error('work_content') is-invalid @enderror" id="work_content" name="work_content" value="{{ old('work_content', $discipline->work_content) }}" required>
+                                    @error('work_content')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="violation_details">Chi tiết sai phạm <span class="text-danger">*</span></label>
+                                    <textarea class="form-control @error('violation_details') is-invalid @enderror" id="violation_details" name="violation_details" rows="4" required>{{ old('violation_details', $discipline->violation_details) }}</textarea>
+                                    @error('violation_details')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="decision_date">Ngày quyết định <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control @error('decision_date') is-invalid @enderror" id="decision_date" name="decision_date" value="{{ old('decision_date', $discipline->decision_date ? $discipline->decision_date->format('Y-m-d') : '') }}" required>
+                                    @error('decision_date')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="decision_level">Cấp quyết định <span class="text-danger">*</span></label>
+                                    <select class="form-select @error('decision_level') is-invalid @enderror" id="decision_level" name="decision_level" required>
+                                        <option value="">-- Chọn cấp --</option>
+                                        @foreach($decisionLevels as $level)
+                                            <option value="{{ $level }}" {{ old('decision_level', $discipline->decision_level) == $level ? 'selected' : '' }}>{{ $level }}</option>
                                         @endforeach
                                     </select>
+                                    @error('decision_level')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="row">
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label>Số quyết định</label>
-                                    <input type="text" name="decision_number" class="form-control"
-                                        value="{{ $discipline->decision_number }}">
+                                    <label for="decision_number">Số quyết định</label>
+                                    <input type="text" class="form-control @error('decision_number') is-invalid @enderror" id="decision_number" name="decision_number" value="{{ old('decision_number', $discipline->decision_number) }}">
+                                    @error('decision_number')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
-                            <div class="col-md-4">
+
+                            <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Ngày quyết định</label>
-                                    <input type="date" name="decision_date" class="form-control"
-                                        value="{{ $discipline->decision_date ? $discipline->decision_date->format('Y-m-d') : '' }}">
+                                    <label for="signer_name">Người ký</label>
+                                    <input type="text" class="form-control @error('signer_name') is-invalid @enderror" id="signer_name" name="signer_name" value="{{ old('signer_name', $discipline->signer_name) }}">
+                                    @error('signer_name')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="signer_position">Chức vụ người ký</label>
+                                    <input type="text" class="form-control @error('signer_position') is-invalid @enderror" id="signer_position" name="signer_position" value="{{ old('signer_position', $discipline->signer_position) }}">
+                                    @error('signer_position')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label>Trạng thái</label>
-                                    <select name="status" class="form-control">
-                                        @foreach ($statuses as $value => $label)
-                                            <option value="{{ $value }}"
-                                                {{ $discipline->status == $value ? 'selected' : '' }}>
-                                                {{ $label }}
-                                            </option>
+                                    <label for="execution_date">Ngày thi hành</label>
+                                    <input type="date" class="form-control @error('execution_date') is-invalid @enderror" id="execution_date" name="execution_date" value="{{ old('execution_date', $discipline->execution_date ? $discipline->execution_date->format('Y-m-d') : '') }}">
+                                    @error('execution_date')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="expiry_date">Ngày hết hạn</label>
+                                    <input type="date" class="form-control @error('expiry_date') is-invalid @enderror" id="expiry_date" name="expiry_date" value="{{ old('expiry_date', $discipline->expiry_date ? $discipline->expiry_date->format('Y-m-d') : '') }}">
+                                    @error('expiry_date')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="status">Trạng thái <span class="text-danger">*</span></label>
+                                    <select class="form-select @error('status') is-invalid @enderror" id="status" name="status" required>
+                                        @foreach($statuses as $val => $label)
+                                            <option value="{{ $val }}" {{ old('status', $discipline->status) == $val ? 'selected' : '' }}>{{ $label }}</option>
                                         @endforeach
                                     </select>
+                                    @error('status')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Ngày bắt đầu thi hành</label>
-                                    <input type="date" name="execution_date" class="form-control"
-                                        value="{{ $discipline->execution_date ? $discipline->execution_date->format('Y-m-d') : '' }}">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Ngày hết hiệu lực (dự kiến)</label>
-                                    <input type="date" name="expiry_date" class="form-control"
-                                        value="{{ $discipline->expiry_date ? $discipline->expiry_date->format('Y-m-d') : '' }}">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Người ký</label>
-                                    <input type="text" name="signer_name" class="form-control"
-                                        value="{{ $discipline->signer_name }}">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Chức vụ người ký</label>
-                                    <input type="text" name="signer_position" class="form-control"
-                                        value="{{ $discipline->signer_position }}">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Nội dung công việc vi phạm</label>
-                            <input type="text" name="work_content" class="form-control"
-                                value="{{ $discipline->work_content }}">
-                        </div>
-
-
-                        <div class="form-group">
-                            <label>Chi tiết vi phạm</label>
-                            <textarea name="violation_details" class="form-control" rows="3">{{ $discipline->violation_details }}</textarea>
-                        </div>
-
-
-                        <div class="form-group">
-                            <label>Biện pháp khắc phục</label>
-                            <textarea name="improvement_measures" class="form-control" rows="2">{{ $discipline->improvement_measures }}</textarea>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Ghi chú kết quả</label>
-                                    <textarea name="result" class="form-control" rows="2">{{ $discipline->result }}</textarea>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Tệp đính kèm (Để trống nếu giữ nguyên)</label>
-                                    <input type="file" name="attachment" class="form-control-file">
-                                    @if ($discipline->attachment)
-                                        <small class="text-muted">Đã có tệp:
-                                            {{ basename($discipline->attachment) }}</small>
+                                    <label for="attachment">Tài liệu đính kèm (Để trống nếu giữ nguyên)</label>
+                                    <input type="file" class="form-control @error('attachment') is-invalid @enderror" id="attachment" name="attachment">
+                                    @if($discipline->attachment)
+                                        <small class="text-muted">
+                                            File hiện tại: <a href="{{ asset($discipline->attachment) }}" target="_blank">Xem tài liệu</a>
+                                        </small>
                                     @endif
+                                    @error('attachment')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="improvement_measures">Biện pháp khắc phục</label>
+                                    <textarea class="form-control @error('improvement_measures') is-invalid @enderror" id="improvement_measures" name="improvement_measures" rows="2">{{ old('improvement_measures', $discipline->improvement_measures) }}</textarea>
+                                    @error('improvement_measures')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="result">Kết quả xử lý/Ghi chú</label>
+                                    <textarea class="form-control @error('result') is-invalid @enderror" id="result" name="result" rows="2">{{ old('result', $discipline->result) }}</textarea>
+                                    @error('result')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
                         </div>
@@ -213,40 +262,60 @@
 @endsection
 
 @section('scripts')
-    <script src="https://cdn.tiny.cloud/1/8s4hqaa7an28jigjhd5vzvhjwyiid21n0lczimuwgobsmr8m/tinymce/8/tinymce.min.js" referrerpolicy="origin"
-        crossorigin="anonymous"></script>
-    <script>
-        $(document).ready(function() {
-            // TinyMCE initialization
-            tinymce.init({
-                selector: '#violation_details',
-                plugins: 'advlist autolink lists link image charmap preview anchor searchreplace vertical-align visualblocks code fullscreen insertdatetime media table help wordcount',
-                toolbar: 'undo redo | blocks | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
-                language: 'vi',
-                promotion: false,
-                branding: false,
-                height: 300
-            });
-            // Lọc quân nhân theo đơn vị
-            $('#unit_id').change(function() {
-                var unitId = $(this).val();
-                if (unitId) {
-                    $('#soldier_id option').each(function() {
-                        if ($(this).data('unit') == unitId || $(this).val() == "") {
-                            $(this).show();
-                        } else {
-                            $(this).hide();
-                        }
-                    });
-                } else {
-                    $('#soldier_id option').show();
-                }
+<script>
+$(document).ready(function() {
+    const levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
 
-                var currentSoldierUnit = $('#soldier_id option:selected').data('unit');
-                if (currentSoldierUnit != unitId) {
-                    $('#soldier_id').val('');
+    function updateFinalUnitId() {
+        let lastId = '';
+        levels.forEach(level => {
+            const val = $(`#unit_${level.replace('-', '_')}`).val();
+            if (val) lastId = val;
+        });
+        $('#final_unit_id').val(lastId);
+    }
+
+    $('.unit-selector').on('change', function() {
+        const parentId = $(this).val();
+        const currentLevel = $(this).data('level');
+        const currentIndex = levels.indexOf(currentLevel);
+        
+        // Reset all lower levels
+        for (let i = currentIndex + 1; i < levels.length; i++) {
+            const $nextSelect = $(`#unit_${levels[i].replace('-', '_')}`);
+            $nextSelect.html(`<option value="">-- Chọn ${$nextSelect.prev('label').text().split('. ')[1]} --</option>`);
+            $nextSelect.prop('disabled', true);
+        }
+        
+        updateFinalUnitId();
+        
+        if (parentId && currentIndex < levels.length - 1) {
+            const nextLevel = levels[currentIndex + 1];
+            const $nextSelect = $(`#unit_${nextLevel.replace('-', '_')}`);
+            
+            $.ajax({
+                url: `{{ route('units.getChildren', '') }}/${parentId}`,
+                type: 'GET',
+                success: function(data) {
+                    if (data.length > 0) {
+                        let options = `<option value="">-- Chọn ${$nextSelect.prev('label').text().split('. ')[1]} --</option>`;
+                        data.forEach(unit => {
+                            options += `<option value="${unit.id}">${unit.name}</option>`;
+                        });
+                        $nextSelect.html(options);
+                        $nextSelect.prop('disabled', false);
+                    }
                 }
             });
+        }
+    });
+
+    if ($('.select2').length > 0) {
+        $('.select2').select2({
+            theme: 'bootstrap4',
+            width: '100%'
         });
-    </script>
+    }
+});
+</script>
 @endsection

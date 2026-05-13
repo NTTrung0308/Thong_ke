@@ -19,11 +19,11 @@ class UserController extends Controller
         $query = User::with(['roles', 'unit']);
 
         if (!$user->hasRole('chi-huy')) {
-            if ($user->unit) {
-                $unitIds = $user->unit->getAllDescendantIds();
+            $unitIds = $user->getAccessibleUnitIds();
+            if (!empty($unitIds)) {
                 $query->whereIn('unit_id', $unitIds);
             } else {
-                // Nếu user không có đơn vị và không phải chỉ huy, họ không thấy ai (hoặc chỉ thấy chính họ)
+                // Nếu user không có quyền trên bất kỳ đơn vị nào, chỉ thấy chính họ
                 $query->where('id', $user->id);
             }
         }
