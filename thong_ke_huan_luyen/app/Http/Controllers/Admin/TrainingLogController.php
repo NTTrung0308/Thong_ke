@@ -120,13 +120,24 @@ class TrainingLogController extends Controller
     public function create()
     {
         $user = Auth::user();
-        $rootUnits = $user->getRootAccessibleUnits();
+        $levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
+        
+        $levelOptions = [];
+        $roots = $user->getRootAccessibleUnits();
+        if ($roots->count() > 0) {
+            $firstRoot = $roots->first();
+            $rootLevelIndex = array_search($firstRoot->level, $levels);
+            if ($rootLevelIndex === false) $rootLevelIndex = 0;
+            $levelOptions[$rootLevelIndex] = $roots;
+        }
+        
+        $hierarchy = array_fill(0, count($levels), null);
 
         // Lấy ngày hiện tại
         $today = Carbon::now();
         $dayOfWeek = $this->getVietnameseDayOfWeek($today);
 
-        return view('backend.training_logs.create', compact('rootUnits', 'today', 'dayOfWeek'));
+        return view('backend.training_logs.create', compact('levelOptions', 'hierarchy', 'today', 'dayOfWeek'));
     }
 
     // Lưu nhật ký mới
@@ -212,28 +223,43 @@ class TrainingLogController extends Controller
     {
         $trainingLog = TrainingLog::findOrFail($id);
         $user = Auth::user();
-        
-        $ancestors = $trainingLog->unit ? $trainingLog->unit->getAncestors() : collect([]);
-        $hierarchy = $trainingLog->unit ? $ancestors->concat([$trainingLog->unit]) : collect([]);
-        
         $navigableIds = $user->getNavigableUnitIds();
-        $levelOptions = [];
+        $levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
         
-        // Cấp 1: Các root units mà user có quyền navigate
-        $levelOptions[] = Unit::whereNull('parent_id')
-            ->whereIn('id', $navigableIds)
-            ->orderBy('name')
-            ->get();
+        $hierarchy = array_fill(0, count($levels), null);
+        $levelOptions = [];
 
-        // Các cấp tiếp theo dựa trên hierarchy của unit hiện tại
-        foreach ($hierarchy as $index => $unit) {
-            $children = Unit::where('parent_id', $unit->id)
-                ->whereIn('id', $navigableIds)
-                ->orderBy('name')
-                ->get();
+        // 1. Xác định hierarchy của unit hiện tại
+        $currentUnit = $trainingLog->unit;
+        while ($currentUnit) {
+            $lvlIndex = array_search($currentUnit->level, $levels);
+            if ($lvlIndex !== false) {
+                $hierarchy[$lvlIndex] = $currentUnit;
+            }
+            $currentUnit = $currentUnit->parent;
+        }
+
+        // 2. Lấy các đơn vị gốc mà user có quyền truy cập
+        $roots = $user->getRootAccessibleUnits();
+        if ($roots->count() > 0) {
+            $firstRoot = $roots->first();
+            $rootLevelIndex = array_search($firstRoot->level, $levels);
+            if ($rootLevelIndex === false) $rootLevelIndex = 0;
             
-            if ($children->count() > 0) {
-                $levelOptions = array_merge($levelOptions, [$children]);
+            $levelOptions[$rootLevelIndex] = $roots;
+        }
+
+        // 3. Với mỗi cấp trong hierarchy, lấy danh sách các đơn vị con cho cấp tiếp theo
+        foreach ($levels as $index => $level) {
+            if ($index < count($levels) - 1 && $hierarchy[$index]) {
+                $children = Unit::where('parent_id', $hierarchy[$index]->id)
+                    ->whereIn('id', $navigableIds)
+                    ->orderBy('name')
+                    ->get();
+                
+                if ($children->count() > 0) {
+                    $levelOptions[$index + 1] = $children;
+                }
             }
         }
 

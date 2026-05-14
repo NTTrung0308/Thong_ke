@@ -36,7 +36,7 @@
                                 <option value="">Tất cả đơn vị</option>
                                 @foreach($units as $unit)
                                     <option value="{{ $unit->id }}" {{ request('unit_id') == $unit->id ? 'selected' : '' }}>
-                                        {{ $unit->name }}
+                                        {{ $unit->getFullHierarchyName() }}
                                     </option>
                                 @endforeach
                             </select>
@@ -178,7 +178,7 @@
                             @forelse($logs as $log)
                                 <tr>
                                     <td>{{ $log->training_date->format('d/m') }}</td>
-                                    <td>{{ $log->unit_name_at_time ?? ($log->unit ? $log->unit->name : 'N/A') }}</td>
+                                    <td>{{ $log->unit ? $log->unit->getFullHierarchyName() : ($log->unit_name_at_time ?? 'N/A') }}</td>
                                     <td>{{ Str::limit($log->training_content, 40) }}</td>
                                     <td>{{ $log->actual_quanso }}/{{ $log->required_quanso }}</td>
                                     <td>{{ $log->actual_hours }}/{{ $log->required_hours }}</td>

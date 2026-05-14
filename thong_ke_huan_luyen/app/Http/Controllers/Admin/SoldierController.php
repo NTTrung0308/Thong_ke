@@ -70,8 +70,21 @@ class SoldierController extends Controller
     public function create()
     {
         $this->authorize('create', Soldier::class);
-        $rootUnits = Auth::user()->getRootAccessibleUnits();
-        return view('backend.soldiers.create', compact('rootUnits'));
+        $user = Auth::user();
+        $levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
+        
+        $levelOptions = [];
+        $roots = $user->getRootAccessibleUnits();
+        if ($roots->count() > 0) {
+            $firstRoot = $roots->first();
+            $rootLevelIndex = array_search($firstRoot->level, $levels);
+            if ($rootLevelIndex === false) $rootLevelIndex = 0;
+            $levelOptions[$rootLevelIndex] = $roots;
+        }
+        
+        $hierarchy = array_fill(0, count($levels), null);
+        
+        return view('backend.soldiers.create', compact('levelOptions', 'hierarchy'));
     }
 
     // Lưu quân nhân mới
@@ -166,30 +179,44 @@ class SoldierController extends Controller
     {
         $this->authorize('update', $soldier);
         
-        $ancestors = $soldier->unit ? $soldier->unit->getAncestors() : collect([]);
-        $hierarchy = $soldier->unit ? $ancestors->concat([$soldier->unit]) : collect([]);
-        
         $user = Auth::user();
         $navigableIds = $user->getNavigableUnitIds();
+        $levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
         
+        $hierarchy = array_fill(0, count($levels), null);
         $levelOptions = [];
-        
-        // Cấp 1: Các root units mà user có quyền navigate
-        $levelOptions[] = Unit::whereNull('parent_id')
-            ->whereIn('id', $navigableIds)
-            ->orderBy('name')
-            ->get();
 
-        // Các cấp tiếp theo dựa trên hierarchy của soldier
-        foreach ($hierarchy as $index => $unit) {
-            // Lấy các con của đơn vị hiện tại (siblings của cấp tiếp theo trong hierarchy)
-            $children = Unit::where('parent_id', $unit->id)
-                ->whereIn('id', $navigableIds)
-                ->orderBy('name')
-                ->get();
+        // 1. Xác định hierarchy của quân nhân (từ đơn vị hiện tại lên gốc)
+        $currentUnit = $soldier->unit;
+        while ($currentUnit) {
+            $lvlIndex = array_search($currentUnit->level, $levels);
+            if ($lvlIndex !== false) {
+                $hierarchy[$lvlIndex] = $currentUnit;
+            }
+            $currentUnit = $currentUnit->parent;
+        }
+
+        // 2. Lấy các đơn vị gốc mà user có quyền truy cập
+        $roots = $user->getRootAccessibleUnits();
+        if ($roots->count() > 0) {
+            $firstRoot = $roots->first();
+            $rootLevelIndex = array_search($firstRoot->level, $levels);
+            if ($rootLevelIndex === false) $rootLevelIndex = 0;
             
-            if ($children->count() > 0) {
-                $levelOptions[] = $children;
+            $levelOptions[$rootLevelIndex] = $roots;
+        }
+
+        // 3. Với mỗi cấp trong hierarchy, lấy danh sách các đơn vị con cho cấp tiếp theo
+        foreach ($levels as $index => $level) {
+            if ($index < count($levels) - 1 && $hierarchy[$index]) {
+                $children = Unit::where('parent_id', $hierarchy[$index]->id)
+                    ->whereIn('id', $navigableIds)
+                    ->orderBy('name')
+                    ->get();
+                
+                if ($children->count() > 0) {
+                    $levelOptions[$index + 1] = $children;
+                }
             }
         }
         

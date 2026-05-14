@@ -78,9 +78,7 @@ class Unit extends Model
         if ($ancestors->isEmpty()) {
             return $this->name;
         }
-        // Trả về theo thứ tự: Trung đội - Đại đội - Tiểu đoàn - Trung đoàn - Bộ chỉ huy khu vực
-        // collect([$this]) là đơn vị hiện tại (thường là cấp thấp nhất của soldier)
-        // ancestors->reverse() là các cấp trên theo thứ tự từ thấp đến cao
-        return collect([$this])->concat($this->getAncestors()->reverse())->pluck('name')->implode(' - ');
+        // Trả về theo thứ tự: Bộ chỉ huy - Trung đoàn - Tiểu đoàn - Đại đội - Trung đội
+        return $ancestors->concat([$this])->pluck('name')->implode(' - ');
     }
 }

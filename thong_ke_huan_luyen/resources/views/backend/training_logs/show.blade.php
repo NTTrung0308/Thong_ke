@@ -47,7 +47,7 @@
                             <table class="table table-bordered">
                                 <tr>
                                     <th width="40%">Đơn vị</th>
-                                    <td>{{ $trainingLog->unit_name_at_time ?? ($trainingLog->unit ? $trainingLog->unit->name : 'N/A') }}
+                                    <td>{{ $trainingLog->unit ? $trainingLog->unit->getFullHierarchyName() : ($trainingLog->unit_name_at_time ?? 'N/A') }}
                                     </td>
                                 </tr>
                                 <tr>

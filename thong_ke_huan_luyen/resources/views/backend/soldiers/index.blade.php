@@ -57,7 +57,7 @@
                                         <option value="">-- Tất cả đơn vị --</option>
                                         @foreach($units as $unit)
                                             <option value="{{ $unit->id }}" {{ request('unit_id') == $unit->id ? 'selected' : '' }}>
-                                                {{ $unit->name }}
+                                                {{ $unit->getFullHierarchyName() }}
                                             </option>
                                         @endforeach
                                     </select>

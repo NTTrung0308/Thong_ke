@@ -39,39 +39,32 @@
                                 <div class="form-group">
                                     <label class="d-block mb-2">Đơn vị vi phạm <span class="text-danger">*</span></label>
                                     <div class="row g-2">
-                                        <div class="col-md">
-                                            <label class="small text-muted">1. Bộ chỉ huy</label>
-                                            <select class="form-select form-control unit-selector" data-level="chi-huy" id="unit_chi_huy">
-                                                <option value="">-- Chọn Bộ chỉ huy --</option>
-                                                @foreach($rootUnits as $unit)
-                                                    <option value="{{ $unit->id }}">{{ $unit->name }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div class="col-md">
-                                            <label class="small text-muted">2. Trung đoàn</label>
-                                            <select class="form-select form-control unit-selector" data-level="trung-doan" id="unit_trung_doan" disabled>
-                                                <option value="">-- Chọn Trung đoàn --</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md">
-                                            <label class="small text-muted">3. Tiểu đoàn</label>
-                                            <select class="form-select form-control unit-selector" data-level="tieu-doan" id="unit_tieu_doan" disabled>
-                                                <option value="">-- Chọn Tiểu đoàn --</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md">
-                                            <label class="small text-muted">4. Đại đội</label>
-                                            <select class="form-select form-control unit-selector" data-level="dai-doi" id="unit_dai_doi" disabled>
-                                                <option value="">-- Chọn Đại đội --</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md">
-                                            <label class="small text-muted">5. Trung đội</label>
-                                            <select class="form-select form-control unit-selector" data-level="trung-doi" id="unit_trung_doi" disabled>
-                                                <option value="">-- Chọn Trung đội --</option>
-                                            </select>
-                                        </div>
+                                        @php
+                                            $levelMap = [
+                                                'chi-huy' => ['label' => 'Bộ chỉ huy', 'id' => 'unit_chi_huy'],
+                                                'trung-doan' => ['label' => 'Trung đoàn', 'id' => 'unit_trung_doan'],
+                                                'tieu-doan' => ['label' => 'Tiểu đoàn', 'id' => 'unit_tieu_doan'],
+                                                'dai-doi' => ['label' => 'Đại đội', 'id' => 'unit_dai_doi'],
+                                                'trung-doi' => ['label' => 'Trung đội', 'id' => 'unit_trung_doi'],
+                                            ];
+                                            $levelKeys = array_keys($levelMap);
+                                        @endphp
+
+                                        @foreach($levelKeys as $index => $levelKey)
+                                            <div class="col-md">
+                                                <label class="small text-muted">{{ $index + 1 }}. {{ $levelMap[$levelKey]['label'] }}</label>
+                                                <select class="form-select form-control unit-selector" data-level="{{ $levelKey }}" id="{{ $levelMap[$levelKey]['id'] }}" {{ !isset($levelOptions[$index]) ? 'disabled' : '' }}>
+                                                    <option value="">-- Chọn {{ $levelMap[$levelKey]['label'] }} --</option>
+                                                    @if(isset($levelOptions[$index]))
+                                                        @foreach($levelOptions[$index] as $option)
+                                                            <option value="{{ $option->id }}" {{ (isset($hierarchy[$index]) && $hierarchy[$index]->id == $option->id) ? 'selected' : '' }}>
+                                                                {{ $option->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    @endif
+                                                </select>
+                                            </div>
+                                        @endforeach
                                     </div>
                                     <input type="hidden" name="unit_id" id="final_unit_id" value="{{ old('unit_id') }}" required>
                                     @error('unit_id')

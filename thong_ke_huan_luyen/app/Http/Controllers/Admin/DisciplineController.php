@@ -158,7 +158,19 @@ class DisciplineController extends Controller
         $this->authorize('create', Discipline::class);
 
         $user = Auth::user();
-        $rootUnits = $user->getRootAccessibleUnits();
+        $levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
+        
+        $levelOptions = [];
+        $roots = $user->getRootAccessibleUnits();
+        if ($roots->count() > 0) {
+            $firstRoot = $roots->first();
+            $rootLevelIndex = array_search($firstRoot->level, $levels);
+            if ($rootLevelIndex === false) $rootLevelIndex = 0;
+            $levelOptions[$rootLevelIndex] = $roots;
+        }
+        
+        $hierarchy = array_fill(0, count($levels), null);
+
         $soldiers = Soldier::whereIn('unit_id', $user->getAccessibleUnitIds())->get();
 
         $disciplineForms = [
@@ -174,7 +186,7 @@ class DisciplineController extends Controller
 
         $decisionLevels = ['Cấp thường', 'Đại đội', 'Tiểu đoàn', 'Trung đoàn', 'Sư đoàn', 'Quân khu', 'Bộ Quốc phòng'];
 
-        return view('backend.disciplines.create', compact('rootUnits', 'soldiers', 'disciplineForms', 'decisionLevels'));
+        return view('backend.disciplines.create', compact('levelOptions', 'hierarchy', 'soldiers', 'disciplineForms', 'decisionLevels'));
     }
 
     // Lưu kỷ luật mới
@@ -244,28 +256,43 @@ class DisciplineController extends Controller
         $this->authorize('update', $discipline);
 
         $user = Auth::user();
-        
-        $ancestors = $discipline->unit ? $discipline->unit->getAncestors() : collect([]);
-        $hierarchy = $discipline->unit ? $ancestors->concat([$discipline->unit]) : collect([]);
-        
         $navigableIds = $user->getNavigableUnitIds();
-        $levelOptions = [];
+        $levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
         
-        // Cấp 1: Các root units mà user có quyền navigate
-        $levelOptions[] = Unit::whereNull('parent_id')
-            ->whereIn('id', $navigableIds)
-            ->orderBy('name')
-            ->get();
+        $hierarchy = array_fill(0, count($levels), null);
+        $levelOptions = [];
 
-        // Các cấp tiếp theo dựa trên hierarchy của unit hiện tại
-        foreach ($hierarchy as $index => $unit) {
-            $children = Unit::where('parent_id', $unit->id)
-                ->whereIn('id', $navigableIds)
-                ->orderBy('name')
-                ->get();
+        // 1. Xác định hierarchy của unit hiện tại
+        $currentUnit = $discipline->unit;
+        while ($currentUnit) {
+            $lvlIndex = array_search($currentUnit->level, $levels);
+            if ($lvlIndex !== false) {
+                $hierarchy[$lvlIndex] = $currentUnit;
+            }
+            $currentUnit = $currentUnit->parent;
+        }
+
+        // 2. Lấy các đơn vị gốc mà user có quyền truy cập
+        $roots = $user->getRootAccessibleUnits();
+        if ($roots->count() > 0) {
+            $firstRoot = $roots->first();
+            $rootLevelIndex = array_search($firstRoot->level, $levels);
+            if ($rootLevelIndex === false) $rootLevelIndex = 0;
             
-            if ($children->count() > 0) {
-                $levelOptions = array_merge($levelOptions, [$children]);
+            $levelOptions[$rootLevelIndex] = $roots;
+        }
+
+        // 3. Với mỗi cấp trong hierarchy, lấy danh sách các đơn vị con cho cấp tiếp theo
+        foreach ($levels as $index => $level) {
+            if ($index < count($levels) - 1 && $hierarchy[$index]) {
+                $children = Unit::where('parent_id', $hierarchy[$index]->id)
+                    ->whereIn('id', $navigableIds)
+                    ->orderBy('name')
+                    ->get();
+                
+                if ($children->count() > 0) {
+                    $levelOptions[$index + 1] = $children;
+                }
             }
         }
 
