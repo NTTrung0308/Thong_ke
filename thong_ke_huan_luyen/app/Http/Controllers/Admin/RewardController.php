@@ -175,6 +175,11 @@ class RewardController extends Controller
             'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120'
         ]);
 
+        // Kiểm tra quyền đối với đơn vị đã chọn
+        if (!in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
+            return back()->withErrors(['unit_id' => 'Bạn không có quyền thêm khen thưởng cho đơn vị này.'])->withInput();
+        }
+
         // Lấy tên đơn vị tại thời điểm
         $unit = Unit::find($validated['unit_id']);
         $validated['unit_name_at_time'] = $unit->name;
@@ -296,6 +301,13 @@ class RewardController extends Controller
             'result' => 'nullable|string',
             'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120'
         ]);
+
+        // Kiểm tra quyền đối với đơn vị đã chọn (nếu có thay đổi đơn vị)
+        if ($reward->unit_id != $validated['unit_id']) {
+            if (!in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
+                return back()->withErrors(['unit_id' => 'Bạn không có quyền chuyển khen thưởng sang đơn vị này.'])->withInput();
+            }
+        }
 
         // Cập nhật tên đơn vị
         $unit = Unit::find($validated['unit_id']);

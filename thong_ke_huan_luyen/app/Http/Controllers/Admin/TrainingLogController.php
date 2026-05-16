@@ -119,6 +119,7 @@ class TrainingLogController extends Controller
 
     public function create()
     {
+        $this->authorize('create', TrainingLog::class);
         $user = Auth::user();
         $levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
         
@@ -143,6 +144,7 @@ class TrainingLogController extends Controller
     // Lưu nhật ký mới
     public function store(Request $request)
     {
+        $this->authorize('create', TrainingLog::class);
         $validated = $request->validate([
             'unit_id' => 'required|exists:units,id',
             'soldier_id' => 'nullable|exists:soldiers,id',
@@ -172,6 +174,11 @@ class TrainingLogController extends Controller
             'commander' => 'nullable|string|max:100',
             'attachment' => 'nullable|file|mimes:pdf,doc,docx|max:10240'
         ]);
+
+        // Kiểm tra quyền đối với đơn vị đã chọn
+        if (!in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
+            return back()->withErrors(['unit_id' => 'Bạn không có quyền thêm nhật ký huấn luyện cho đơn vị này.'])->withInput();
+        }
 
         // Tính toán phần trăm
         if (isset($validated['test_quanso']) && $validated['test_quanso'] > 0) {
@@ -215,6 +222,7 @@ class TrainingLogController extends Controller
     public function show($id)
     {
         $trainingLog = TrainingLog::findOrFail($id);
+        $this->authorize('view', $trainingLog);
         return view('backend.training_logs.show', compact('trainingLog'));
     }
 
@@ -222,6 +230,7 @@ class TrainingLogController extends Controller
     public function edit($id)
     {
         $trainingLog = TrainingLog::findOrFail($id);
+        $this->authorize('update', $trainingLog);
         $user = Auth::user();
         $navigableIds = $user->getNavigableUnitIds();
         $levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
@@ -270,6 +279,7 @@ class TrainingLogController extends Controller
     public function update(Request $request, $id)
     {
         $trainingLog = TrainingLog::findOrFail($id);
+        $this->authorize('update', $trainingLog);
         $validated = $request->validate([
             'unit_id' => 'required|exists:units,id',
             'soldier_id' => 'nullable|exists:soldiers,id',
@@ -299,6 +309,13 @@ class TrainingLogController extends Controller
             'commander' => 'nullable|string|max:100',
             'attachment' => 'nullable|file|mimes:pdf,doc,docx|max:10240'
         ]);
+
+        // Kiểm tra quyền đối với đơn vị đã chọn (nếu có thay đổi đơn vị)
+        if ($trainingLog->unit_id != $validated['unit_id']) {
+            if (!in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
+                return back()->withErrors(['unit_id' => 'Bạn không có quyền chuyển nhật ký huấn luyện sang đơn vị này.'])->withInput();
+            }
+        }
 
         // Tính toán lại phần trăm
         if (isset($validated['test_quanso']) && $validated['test_quanso'] > 0) {
@@ -346,6 +363,7 @@ class TrainingLogController extends Controller
     public function destroy($id)
     {
         $trainingLog = TrainingLog::findOrFail($id);
+        $this->authorize('delete', $trainingLog);
         if ($trainingLog->attachment) {
             Storage::disk('public')->delete($trainingLog->attachment);
         }

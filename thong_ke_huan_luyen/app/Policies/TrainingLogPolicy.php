@@ -15,7 +15,7 @@ class TrainingLogPolicy
 
     public function create(User $user)
     {
-        return $user->hasAnyRole(['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi']);
+        return $user->hasAnyRole(['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi']);
     }
 
     public function update(User $user, TrainingLog $log)
@@ -26,7 +26,8 @@ class TrainingLogPolicy
 
     public function delete(User $user, TrainingLog $log)
     {
-        return $user->hasRole('chi-huy');
+        if ($user->hasRole('chi-huy')) return true;
+        return $this->isInSameOrSubUnit($user, $log);
     }
 
     private function isInSameOrSubUnit(User $user, TrainingLog $log)

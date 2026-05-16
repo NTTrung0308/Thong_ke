@@ -75,6 +75,7 @@ class WeaponEquipmentController extends Controller
 
     public function create()
     {
+        $this->authorize('create', WeaponEquipment::class);
         $user = Auth::user();
         $soldiers = Soldier::whereIn('unit_id', $user->getAccessibleUnitIds())->orderBy('full_name')->get();
         $levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
@@ -95,12 +96,18 @@ class WeaponEquipmentController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create', WeaponEquipment::class);
         $request->validate([
             'soldier_id' => 'required|exists:soldiers,id',
             'unit_id' => 'required|exists:units,id',
             'receive_date' => 'nullable|date',
             'status' => 'required|string',
         ]);
+
+        // Kiểm tra quyền đối với đơn vị đã chọn
+        if (!in_array($request->unit_id, Auth::user()->getAccessibleUnitIds())) {
+            return back()->withErrors(['unit_id' => 'Bạn không có quyền thêm vũ khí trang bị cho đơn vị này.'])->withInput();
+        }
 
         $data = $request->all();
         $data['created_by'] = Auth::id();
@@ -113,6 +120,7 @@ class WeaponEquipmentController extends Controller
 
     public function edit(WeaponEquipment $weaponEquipment)
     {
+        $this->authorize('update', $weaponEquipment);
         $user = Auth::user();
         $soldiers = Soldier::whereIn('unit_id', $user->getAccessibleUnitIds())->orderBy('full_name')->get();
         $navigableIds = $user->getNavigableUnitIds();
@@ -160,12 +168,20 @@ class WeaponEquipmentController extends Controller
 
     public function update(Request $request, WeaponEquipment $weaponEquipment)
     {
+        $this->authorize('update', $weaponEquipment);
         $request->validate([
             'soldier_id' => 'required|exists:soldiers,id',
             'unit_id' => 'required|exists:units,id',
             'receive_date' => 'nullable|date',
             'status' => 'required|string',
         ]);
+
+        // Kiểm tra quyền đối với đơn vị đã chọn (nếu có thay đổi đơn vị)
+        if ($weaponEquipment->unit_id != $request->unit_id) {
+            if (!in_array($request->unit_id, Auth::user()->getAccessibleUnitIds())) {
+                return back()->withErrors(['unit_id' => 'Bạn không có quyền chuyển vũ khí trang bị sang đơn vị này.'])->withInput();
+            }
+        }
 
         $data = $request->all();
         $data['updated_by'] = Auth::id();
@@ -177,6 +193,7 @@ class WeaponEquipmentController extends Controller
 
     public function destroy(WeaponEquipment $weaponEquipment)
     {
+        $this->authorize('delete', $weaponEquipment);
         $weaponEquipment->delete();
         return redirect()->route('weapon-equipments.index')->with('success', 'Xóa thành công!');
     }

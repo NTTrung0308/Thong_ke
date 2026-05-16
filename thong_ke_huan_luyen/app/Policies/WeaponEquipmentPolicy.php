@@ -15,7 +15,7 @@ class WeaponEquipmentPolicy
 
     public function create(User $user)
     {
-        return $user->hasAnyRole(['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi']);
+        return $user->hasAnyRole(['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi']);
     }
 
     public function update(User $user, WeaponEquipment $weapon)
@@ -26,7 +26,8 @@ class WeaponEquipmentPolicy
 
     public function delete(User $user, WeaponEquipment $weapon)
     {
-        return $user->hasRole('chi-huy');
+        if ($user->hasRole('chi-huy')) return true;
+        return $this->isInSameOrSubUnit($user, $weapon);
     }
 
     private function isInSameOrSubUnit(User $user, WeaponEquipment $weapon)

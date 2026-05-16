@@ -17,7 +17,7 @@ class SoldierPolicy
 
     public function create(User $user)
     {
-        return $user->hasAnyRole(['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi']);
+        return $user->hasAnyRole(['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi']);
     }
 
     public function update(User $user, Soldier $soldier)
@@ -29,7 +29,9 @@ class SoldierPolicy
 
     public function delete(User $user, Soldier $soldier)
     {
-        return $user->hasRole('chi-huy');
+        if ($user->hasRole('chi-huy')) return true;
+
+        return $this->isInSameOrSubUnit($user, $soldier);
     }
 
     private function isInSameOrSubUnit(User $user, Soldier $soldier)

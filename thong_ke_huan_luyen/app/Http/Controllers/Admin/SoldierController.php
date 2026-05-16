@@ -110,6 +110,11 @@ class SoldierController extends Controller
             'unit_id' => 'required|exists:units,id'
         ]);
 
+        // Kiểm tra quyền đối với đơn vị đã chọn
+        if (!in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
+            return back()->withErrors(['unit_id' => 'Bạn không có quyền thêm quân nhân vào đơn vị này.'])->withInput();
+        }
+
         $validated['created_by'] = Auth::id();
         $validated['updated_by'] = Auth::id();
 
@@ -245,6 +250,13 @@ class SoldierController extends Controller
             'notes' => 'nullable',
             'unit_id' => 'required|exists:units,id'
         ]);
+
+        // Kiểm tra quyền đối với đơn vị đã chọn (nếu có thay đổi đơn vị)
+        if ($soldier->unit_id != $validated['unit_id']) {
+            if (!in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
+                return back()->withErrors(['unit_id' => 'Bạn không có quyền chuyển quân nhân sang đơn vị này.'])->withInput();
+            }
+        }
 
         $validated['updated_by'] = Auth::id();
         $soldier->update($validated);

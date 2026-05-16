@@ -213,6 +213,11 @@ class DisciplineController extends Controller
             'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120'
         ]);
 
+        // Kiểm tra quyền đối với đơn vị đã chọn
+        if (!in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
+            return back()->withErrors(['unit_id' => 'Bạn không có quyền thêm kỷ luật cho đơn vị này.'])->withInput();
+        }
+
         // Lấy thông tin đơn vị và quân nhân
         $unit = Unit::find($validated['unit_id']);
         $soldier = Soldier::find($validated['soldier_id']);
@@ -344,6 +349,13 @@ class DisciplineController extends Controller
             'status' => 'required|in:dang-thi-hanh,da-thi-hanh-xong,duoc-xoa-bo',
             'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120'
         ]);
+
+        // Kiểm tra quyền đối với đơn vị đã chọn (nếu có thay đổi đơn vị)
+        if ($discipline->unit_id != $validated['unit_id']) {
+            if (!in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
+                return back()->withErrors(['unit_id' => 'Bạn không có quyền chuyển kỷ luật sang đơn vị này.'])->withInput();
+            }
+        }
 
         // Cập nhật thông tin
         $unit = Unit::find($validated['unit_id']);

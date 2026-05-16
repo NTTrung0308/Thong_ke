@@ -15,8 +15,8 @@ class RewardPolicy
 
     public function create(User $user)
     {
-        // Đại đội trưởng trở lên mới được tạo khen thưởng
-        return $user->hasAnyRole(['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi']);
+        // Các cấp đơn vị đều được tạo khen thưởng cho đơn vị mình
+        return $user->hasAnyRole(['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi']);
     }
 
     public function update(User $user, Reward $reward)
@@ -28,8 +28,9 @@ class RewardPolicy
 
     public function delete(User $user, Reward $reward)
     {
-        // Chỉ chỉ huy mới được xóa
-        return $user->hasRole('chi-huy');
+        if ($user->hasRole('chi-huy')) return true;
+        // Cho phép xóa khen thưởng của đơn vị mình hoặc cấp dưới
+        return $this->isInSameOrSubUnit($user, $reward);
     }
 
     private function isInSameOrSubUnit(User $user, Reward $reward)

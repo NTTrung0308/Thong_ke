@@ -17,8 +17,8 @@ class DisciplinePolicy
 
     public function create(User $user)
     {
-        // Đại đội trưởng trở lên mới được tạo kỷ luật
-        return $user->hasAnyRole(['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi']);
+        // Các cấp đơn vị đều được tạo kỷ luật cho đơn vị mình
+        return $user->hasAnyRole(['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi']);
     }
 
     public function update(User $user, Discipline $discipline)
@@ -31,8 +31,10 @@ class DisciplinePolicy
 
     public function delete(User $user, Discipline $discipline)
     {
-        // Chỉ chỉ huy mới được xóa kỷ luật
-        return $user->hasRole('chi-huy');
+        if ($user->hasRole('chi-huy')) return true;
+
+        // Cho phép xóa kỷ luật của đơn vị mình hoặc cấp dưới
+        return $this->isInSameOrSubUnit($user, $discipline);
     }
 
     private function isInSameOrSubUnit(User $user, Discipline $discipline)

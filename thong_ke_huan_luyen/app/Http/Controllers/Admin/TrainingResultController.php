@@ -133,6 +133,11 @@ class TrainingResultController extends Controller
             'attachment' => 'nullable|file|mimes:pdf,doc,docx|max:10240'
         ]);
 
+        // Kiểm tra quyền đối với đơn vị đã chọn
+        if (!in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
+            return back()->withErrors(['unit_id' => 'Bạn không có quyền thêm kết quả tập huấn cho đơn vị này.'])->withInput();
+        }
+
         // Tính số giờ
         $start = Carbon::parse($validated['start_time']);
         $end = Carbon::parse($validated['end_time']);
@@ -239,6 +244,13 @@ class TrainingResultController extends Controller
             'supervisor' => 'nullable|string|max:100',
             'attachment' => 'nullable|file|mimes:pdf,doc,docx|max:10240'
         ]);
+
+        // Kiểm tra quyền đối với đơn vị đã chọn (nếu có thay đổi đơn vị)
+        if ($trainingResult->unit_id != $validated['unit_id']) {
+            if (!in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
+                return back()->withErrors(['unit_id' => 'Bạn không có quyền chuyển kết quả tập huấn sang đơn vị này.'])->withInput();
+            }
+        }
 
         // Tính số giờ
         $start = Carbon::parse($validated['start_time']);
