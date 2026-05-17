@@ -185,8 +185,7 @@
                                             <hr>
                                             <h6><strong>Tài liệu đính kèm:</strong></h6>
                                             @if ($trainingResult->attachment)
-                                                <a href="{{ Storage::url($trainingResult->attachment) }}"
-                                                    class="btn btn-link" target="_blank">
+                                                <a href="{{ asset($trainingResult->attachment) }}"                                                    class="btn btn-link" target="_blank">
                                                     <i class="fa fa-file-pdf"></i> Xem tài liệu đính kèm
                                                 </a>
                                             @else

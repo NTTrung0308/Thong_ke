@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Soldier;
 use App\Models\Unit;
+use App\Exports\SoldierExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,6 +17,50 @@ class SoldierController extends Controller
     {
         // Kiểm tra quyền dựa trên role
         $this->middleware('auth');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $soldiers = $this->getFilteredSoldiers($request);
+        return Excel::download(new SoldierExport($soldiers), 'danh-sach-quan-nhan.xlsx');
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $soldiers = $this->getFilteredSoldiers($request);
+        $pdf = Pdf::loadView('backend.soldiers.pdf', compact('soldiers'))
+                  ->setPaper('a4', 'landscape');
+        return $pdf->download('danh-sach-quan-nhan.pdf');
+    }
+
+    private function getFilteredSoldiers(Request $request)
+    {
+        $user = Auth::user();
+        $query = Soldier::with('unit');
+
+        $accessibleUnitIds = $user->getAccessibleUnitIds();
+        $query->whereIn('unit_id', $accessibleUnitIds);
+
+        if ($request->filled('unit_id')) {
+            $selectedUnit = Unit::find($request->unit_id);
+            if ($selectedUnit && in_array($selectedUnit->id, $accessibleUnitIds)) {
+                $targetUnitIds = $selectedUnit->getAllDescendantIds();
+                $query->whereIn('unit_id', $targetUnitIds);
+            }
+        }
+
+        if ($request->filled('level')) {
+            $levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
+            $currentIndex = array_search($request->level, $levels);
+            if ($currentIndex !== false) {
+                $targetLevels = array_slice($levels, $currentIndex);
+                $query->whereHas('unit', function($q) use ($targetLevels) {
+                    $q->whereIn('level', $targetLevels);
+                });
+            }
+        }
+
+        return $query->orderBy('unit_id')->orderBy('full_name')->get();
     }
 
     // Hiển thị danh sách quân nhân (có phân trang)

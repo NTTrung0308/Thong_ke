@@ -106,7 +106,7 @@
                     @if ($reward->attachment)
                         <div class="mt-4">
                             <h5 class="fw-bold">Tệp đính kèm:</h5>
-                            <a href="{{ asset('storage/' . $reward->attachment) }}" target="_blank" class="btn btn-info">
+                            <a href="{{ asset($reward->attachment) }}" target="_blank" class="btn btn-info">
                                 <i class="fa fa-file-download"></i> Xem/Tải xuống tệp đính kèm
                             </a>
                         </div>

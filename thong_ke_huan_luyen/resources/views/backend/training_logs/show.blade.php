@@ -184,7 +184,7 @@
                     @if ($trainingLog->attachment)
                         <div class="row mt-4">
                             <div class="col-md-12 text-center">
-                                <a href="{{ Storage::url($trainingLog->attachment) }}" class="btn btn-info btn-round"
+                                <a href="{{ asset($trainingLog->attachment) }}" class="btn btn-info btn-round"
                                     target="_blank">
                                     <i class="fa fa-file-download"></i> Xem tài liệu đính kèm
                                 </a>

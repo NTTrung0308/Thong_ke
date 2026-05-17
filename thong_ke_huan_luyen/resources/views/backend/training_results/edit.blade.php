@@ -174,8 +174,7 @@
                                     <label for="attachment">Tài liệu đính kèm (PDF, Doc)</label>
                                     <input type="file" class="form-control @error('attachment') is-invalid @enderror" id="attachment" name="attachment">
                                     @if($trainingResult->attachment)
-                                        <small class="text-muted">File cũ: <a href="{{ Storage::url($trainingResult->attachment) }}" target="_blank">Xem ngay</a></small>
-                                    @endif
+                                        <small class="text-muted">File cũ: <a href="{{ asset($trainingResult->attachment) }}" target="_blank">Xem ngay</a></small>                                    @endif
                                     @error('attachment') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                             </div>

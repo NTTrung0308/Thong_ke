@@ -189,7 +189,7 @@
                                     <input type="file" class="form-control @error('attachment') is-invalid @enderror" id="attachment" name="attachment">
                                     @if($reward->attachment)
                                         <small class="text-muted">
-                                            File hiện tại: <a href="{{ Storage::url($reward->attachment) }}" target="_blank">Xem file</a>
+                                            File hiện tại: <a href="{{ asset($reward->attachment) }}" target="_blank">Xem file</a>
                                         </small>
                                     @endif
                                     @error('attachment')

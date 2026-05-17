@@ -232,8 +232,7 @@
                                 <label for="attachment">Tài liệu đính kèm (PDF, DOC)</label>
                                 <input type="file" class="form-control" id="attachment" name="attachment">
                                 @if($trainingLog->attachment)
-                                    <small class="text-muted">Đã có file: <a href="{{ Storage::url($trainingLog->attachment) }}" target="_blank">Xem tài liệu</a></small>
-                                @endif
+                                    <small class="text-muted">Đã có file: <a href="{{ asset($trainingLog->attachment) }}" target="_blank">Xem tài liệu</a></small>                                @endif
                             </div>
                         </div>
                     </div>

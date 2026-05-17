@@ -172,7 +172,7 @@ class RewardController extends Controller
             'signer_name' => 'nullable|string|max:100',
             'signer_position' => 'nullable|string|max:100',
             'result' => 'nullable|string',
-            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120'
+            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:20480'
         ]);
 
         // Kiểm tra quyền đối với đơn vị đã chọn
@@ -195,8 +195,14 @@ class RewardController extends Controller
 
         // Xử lý file đính kèm
         if ($request->hasFile('attachment')) {
-            $path = $request->file('attachment')->store('rewards', 'public');
-            $validated['attachment'] = $path;
+            $file = $request->file('attachment');
+            $fileName = time() . '_' . preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
+            $destination = public_path('backend/uploads/rewards');
+            if (!\Illuminate\Support\Facades\File::exists($destination)) {
+                \Illuminate\Support\Facades\File::makeDirectory($destination, 0755, true);
+            }
+            $file->move($destination, $fileName);
+            $validated['attachment'] = 'backend/uploads/rewards/' . $fileName;
         }
 
         $validated['created_by'] = Auth::id();
@@ -327,11 +333,17 @@ class RewardController extends Controller
         // Xử lý file mới
         if ($request->hasFile('attachment')) {
             // Xóa file cũ nếu có
-            if ($reward->attachment) {
-                Storage::disk('public')->delete($reward->attachment);
+            if ($reward->attachment && \Illuminate\Support\Facades\File::exists(public_path($reward->attachment))) {
+                \Illuminate\Support\Facades\File::delete(public_path($reward->attachment));
             }
-            $path = $request->file('attachment')->store('rewards', 'public');
-            $validated['attachment'] = $path;
+            $file = $request->file('attachment');
+            $fileName = time() . '_' . preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
+            $destination = public_path('backend/uploads/rewards');
+            if (!\Illuminate\Support\Facades\File::exists($destination)) {
+                \Illuminate\Support\Facades\File::makeDirectory($destination, 0755, true);
+            }
+            $file->move($destination, $fileName);
+            $validated['attachment'] = 'backend/uploads/rewards/' . $fileName;
         }
 
         $validated['updated_by'] = Auth::id();
@@ -348,8 +360,8 @@ class RewardController extends Controller
         $this->authorize('delete', $reward);
 
         // Xóa file đính kèm
-        if ($reward->attachment) {
-            Storage::disk('public')->delete($reward->attachment);
+        if ($reward->attachment && \Illuminate\Support\Facades\File::exists(public_path($reward->attachment))) {
+            \Illuminate\Support\Facades\File::delete(public_path($reward->attachment));
         }
 
         $reward->delete();

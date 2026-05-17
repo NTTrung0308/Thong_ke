@@ -172,7 +172,7 @@ class TrainingLogController extends Controller
             'notes' => 'nullable|string',
             'instructor' => 'nullable|string|max:100',
             'commander' => 'nullable|string|max:100',
-            'attachment' => 'nullable|file|mimes:pdf,doc,docx|max:10240'
+            'attachment' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:20480'
         ]);
 
         // Kiểm tra quyền đối với đơn vị đã chọn
@@ -205,8 +205,14 @@ class TrainingLogController extends Controller
 
         // Xử lý file
         if ($request->hasFile('attachment')) {
-            $path = $request->file('attachment')->store('training-logs', 'public');
-            $validated['attachment'] = $path;
+            $file = $request->file('attachment');
+            $fileName = time() . '_' . preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
+            $destination = public_path('backend/uploads/training-logs');
+            if (!\Illuminate\Support\Facades\File::exists($destination)) {
+                \Illuminate\Support\Facades\File::makeDirectory($destination, 0755, true);
+            }
+            $file->move($destination, $fileName);
+            $validated['attachment'] = 'backend/uploads/training-logs/' . $fileName;
         }
 
         $validated['created_by'] = Auth::id();
@@ -307,7 +313,7 @@ class TrainingLogController extends Controller
             'notes' => 'nullable|string',
             'instructor' => 'nullable|string|max:100',
             'commander' => 'nullable|string|max:100',
-            'attachment' => 'nullable|file|mimes:pdf,doc,docx|max:10240'
+            'attachment' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:20480'
         ]);
 
         // Kiểm tra quyền đối với đơn vị đã chọn (nếu có thay đổi đơn vị)
@@ -344,11 +350,17 @@ class TrainingLogController extends Controller
 
         // Xử lý file mới
         if ($request->hasFile('attachment')) {
-            if ($trainingLog->attachment) {
-                Storage::disk('public')->delete($trainingLog->attachment);
+            if ($trainingLog->attachment && \Illuminate\Support\Facades\File::exists(public_path($trainingLog->attachment))) {
+                \Illuminate\Support\Facades\File::delete(public_path($trainingLog->attachment));
             }
-            $path = $request->file('attachment')->store('training-logs', 'public');
-            $validated['attachment'] = $path;
+            $file = $request->file('attachment');
+            $fileName = time() . '_' . preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
+            $destination = public_path('backend/uploads/training-logs');
+            if (!\Illuminate\Support\Facades\File::exists($destination)) {
+                \Illuminate\Support\Facades\File::makeDirectory($destination, 0755, true);
+            }
+            $file->move($destination, $fileName);
+            $validated['attachment'] = 'backend/uploads/training-logs/' . $fileName;
         }
 
         $validated['updated_by'] = Auth::id();
@@ -364,8 +376,8 @@ class TrainingLogController extends Controller
     {
         $trainingLog = TrainingLog::findOrFail($id);
         $this->authorize('delete', $trainingLog);
-        if ($trainingLog->attachment) {
-            Storage::disk('public')->delete($trainingLog->attachment);
+        if ($trainingLog->attachment && \Illuminate\Support\Facades\File::exists(public_path($trainingLog->attachment))) {
+            \Illuminate\Support\Facades\File::delete(public_path($trainingLog->attachment));
         }
 
         $trainingLog->delete();

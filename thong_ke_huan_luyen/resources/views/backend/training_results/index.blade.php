@@ -42,12 +42,20 @@
                 <div class="card-header">
                     <div class="d-flex align-items-center">
                         <h4 class="card-title">Danh sách kết quả tập huấn</h4>
-                        <a href="{{ route('training-results.create') }}" class="btn btn-primary btn-round ms-auto">
-                            <i class="fa fa-plus"></i>
-                            Thêm kết quả
-                        </a>
+                        <div class="ms-auto">
+                            <a href="{{ route('training-results.export-excel', request()->all()) }}" class="btn btn-success btn-round me-2">
+                                <i class="fas fa-file-excel"></i> Xuất Excel
+                            </a>
+                            <a href="{{ route('training-results.export-pdf', request()->all()) }}" class="btn btn-danger btn-round me-2">
+                                <i class="fas fa-file-pdf"></i> Xuất PDF
+                            </a>
+                            <a href="{{ route('training-results.create') }}" class="btn btn-primary btn-round">
+                                <i class="fa fa-plus"></i> Thêm mới
+                            </a>
+                        </div>
                     </div>
                 </div>
+
                 <div class="card-body">
                     @if (session('success'))
                         <div class="alert alert-success">

@@ -13,7 +13,7 @@ class AuthController extends Controller
     public function showLoginForm()
     {
         if (Auth::check()) {
-            return redirect()->route('dashboard');
+            return redirect()->route('soldiers.index');
         }
         return view('auth.login');
     }
@@ -33,8 +33,9 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
 
-            return redirect()->intended(route('dashboard'))
-                             ->with('success', 'Chào mừng bạn quay trở lại!');
+            return redirect()->intended(route('soldiers.index'))
+                             ->with('success', 'Chào mừng bạn quay trở lại!')
+                             ->with('show_dashboard', true);
         }
 
         return back()->withErrors([

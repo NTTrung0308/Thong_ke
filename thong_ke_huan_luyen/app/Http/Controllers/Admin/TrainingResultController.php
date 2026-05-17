@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\TrainingResult;
 use App\Models\Unit;
+use App\Exports\TrainingResultExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -15,6 +18,49 @@ class TrainingResultController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $results = $this->getFilteredResults($request);
+        return Excel::download(new TrainingResultExport($results), 'ket-qua-tap-huan.xlsx');
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $results = $this->getFilteredResults($request);
+        $pdf = Pdf::loadView('backend.training_results.pdf', compact('results'))
+                  ->setPaper('a4', 'landscape');
+        return $pdf->download('ket-qua-tap-huan.pdf');
+    }
+
+    private function getFilteredResults(Request $request)
+    {
+        $user = Auth::user();
+        $query = TrainingResult::with(['unit']);
+
+        if (!$user->hasRole('chi-huy')) {
+            $unitIds = $user->getAccessibleUnitIds();
+            $query->whereIn('unit_id', $unitIds);
+        }
+
+        if ($request->filled('unit_id')) {
+            $query->where('unit_id', $request->unit_id);
+        }
+
+        if ($request->filled('result')) {
+            $query->where('result', $request->result);
+        }
+
+        if ($request->filled('year')) {
+            $query->whereYear('training_date', $request->year);
+        }
+
+        if ($request->filled('month')) {
+            $query->whereMonth('training_date', $request->month);
+        }
+
+        return $query->orderBy('training_date', 'desc')->get();
     }
 
     // Hiển thị danh sách kết quả tập huấn
@@ -130,7 +176,7 @@ class TrainingResultController extends Controller
             'recommendations' => 'nullable|string',
             'instructor' => 'nullable|string|max:100',
             'supervisor' => 'nullable|string|max:100',
-            'attachment' => 'nullable|file|mimes:pdf,doc,docx|max:10240'
+            'attachment' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:20480'
         ]);
 
         // Kiểm tra quyền đối với đơn vị đã chọn
@@ -150,8 +196,14 @@ class TrainingResultController extends Controller
 
         // Xử lý file
         if ($request->hasFile('attachment')) {
-            $path = $request->file('attachment')->store('training-results', 'public');
-            $validated['attachment'] = $path;
+            $file = $request->file('attachment');
+            $fileName = time() . '_' . preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
+            $destination = public_path('backend/uploads/training-results');
+            if (!\Illuminate\Support\Facades\File::exists($destination)) {
+                \Illuminate\Support\Facades\File::makeDirectory($destination, 0755, true);
+            }
+            $file->move($destination, $fileName);
+            $validated['attachment'] = 'backend/uploads/training-results/' . $fileName;
         }
 
         $validated['created_by'] = Auth::id();
@@ -242,7 +294,7 @@ class TrainingResultController extends Controller
             'recommendations' => 'nullable|string',
             'instructor' => 'nullable|string|max:100',
             'supervisor' => 'nullable|string|max:100',
-            'attachment' => 'nullable|file|mimes:pdf,doc,docx|max:10240'
+            'attachment' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:20480'
         ]);
 
         // Kiểm tra quyền đối với đơn vị đã chọn (nếu có thay đổi đơn vị)
@@ -264,11 +316,17 @@ class TrainingResultController extends Controller
 
         // Xử lý file mới
         if ($request->hasFile('attachment')) {
-            if ($trainingResult->attachment) {
-                Storage::disk('public')->delete($trainingResult->attachment);
+            if ($trainingResult->attachment && \Illuminate\Support\Facades\File::exists(public_path($trainingResult->attachment))) {
+                \Illuminate\Support\Facades\File::delete(public_path($trainingResult->attachment));
             }
-            $path = $request->file('attachment')->store('training-results', 'public');
-            $validated['attachment'] = $path;
+            $file = $request->file('attachment');
+            $fileName = time() . '_' . preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
+            $destination = public_path('backend/uploads/training-results');
+            if (!\Illuminate\Support\Facades\File::exists($destination)) {
+                \Illuminate\Support\Facades\File::makeDirectory($destination, 0755, true);
+            }
+            $file->move($destination, $fileName);
+            $validated['attachment'] = 'backend/uploads/training-results/' . $fileName;
         }
 
         $validated['updated_by'] = Auth::id();
@@ -284,8 +342,8 @@ class TrainingResultController extends Controller
     {
         $this->authorize('delete', $trainingResult);
 
-        if ($trainingResult->attachment) {
-            Storage::disk('public')->delete($trainingResult->attachment);
+        if ($trainingResult->attachment && \Illuminate\Support\Facades\File::exists(public_path($trainingResult->attachment))) {
+            \Illuminate\Support\Facades\File::delete(public_path($trainingResult->attachment));
         }
 
         $trainingResult->delete();
@@ -343,7 +401,9 @@ class TrainingResultController extends Controller
         // Thống kê theo tháng
         $statsByMonth = [];
         for ($month = 1; $month <= 12; $month++) {
-            $monthTrainings = $trainings->where('training_date->month', $month);
+            $monthTrainings = $trainings->filter(function($item) use ($month) {
+                return $item->training_date && $item->training_date->month == $month;
+            });
             $statsByMonth[$month] = [
                 'total' => $monthTrainings->count(),
                 'total_hours' => $monthTrainings->sum('duration_hours'),
@@ -357,7 +417,7 @@ class TrainingResultController extends Controller
             ->orderBy('year', 'desc')
             ->pluck('year');
 
-        return view('reports.training', array_merge(compact(
+        return view('backend.reports.training_results', array_merge(compact(
             'statsByUnit', 'statsByResult', 'statsByMonth',
             'units', 'years'
         ), ['currentYear' => $year]));

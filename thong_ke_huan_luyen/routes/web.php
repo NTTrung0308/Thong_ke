@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return redirect()->route('dashboard');
+    return redirect()->route('soldiers.index');
 });
 
 // Auth Routes
@@ -35,7 +35,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // Dashboard (Bảo vệ bằng middleware auth)
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
-        return view('backend.dashboard');
+        return redirect()->route('soldiers.index')->with('show_dashboard', true);
     })->name('dashboard');
 
     // Search function
@@ -44,7 +44,12 @@ Route::middleware(['auth'])->group(function () {
     // Users Management - Chỉ dành cho Chỉ huy
     Route::resource('users', UserController::class)->middleware('check.role:chi-huy');
 
+    // Activity Logs - Chỉ dành cho Chỉ huy
+    Route::get('/activity-logs', [App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('activity-logs.index')->middleware('check.role:chi-huy');
+
     // Soldiers Management
+    Route::get('soldiers/export-excel', [SoldierController::class, 'exportExcel'])->name('soldiers.export-excel');
+    Route::get('soldiers/export-pdf', [SoldierController::class, 'exportPdf'])->name('soldiers.export-pdf');
     Route::resource('soldiers', SoldierController::class);
 
     // Units Management
@@ -63,6 +68,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('disciplines', DisciplineController::class);
 
     // Training Results Management
+    Route::get('training-results/export-excel', [TrainingResultController::class, 'exportExcel'])->name('training-results.export-excel');
+    Route::get('training-results/export-pdf', [TrainingResultController::class, 'exportPdf'])->name('training-results.export-pdf');
     Route::get('training-results/report', [TrainingResultController::class, 'report'])->name('training-results.report');
     Route::resource('training-results', TrainingResultController::class);
 

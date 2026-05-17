@@ -41,11 +41,7 @@
     <div class="wrapper">
         @include('backend.include.sidebar')
         @yield('content')
-        {{-- <div class="main-panel">
-            <div class="main-header">
-                <!-- Header content if needed -->
-            </div>
-        </div> --}}
+        @include('backend.include.dashboard_modal')
     </div>
     <!--   Core JS Files   -->
     <script src="{{ asset('backend/assets/js/core/jquery-3.7.1.min.js') }}"></script>
@@ -123,6 +119,11 @@
                     title: 'Thông báo',
                     text: '{{ session('info') }}'
                 });
+            @endif
+
+            @if (session('show_dashboard'))
+                var myModal = new bootstrap.Modal(document.getElementById('dashboardModal'));
+                myModal.show();
             @endif
         });
     </script>

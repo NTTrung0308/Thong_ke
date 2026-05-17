@@ -210,7 +210,7 @@ class DisciplineController extends Controller
             'result' => 'nullable|string',
             'improvement_measures' => 'nullable|string',
             'status' => 'required|in:dang-thi-hanh,da-thi-hanh-xong,duoc-xoa-bo',
-            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120'
+            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:20480'
         ]);
 
         // Kiểm tra quyền đối với đơn vị đã chọn
@@ -231,12 +231,12 @@ class DisciplineController extends Controller
         if ($request->hasFile('attachment')) {
             $file = $request->file('attachment');
             $fileName = time() . '_' . preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
-            $destination = public_path('disciplines');
-            if (!File::exists($destination)) {
-                File::makeDirectory($destination, 0755, true);
+            $destination = public_path('backend/uploads/disciplines');
+            if (!\Illuminate\Support\Facades\File::exists($destination)) {
+                \Illuminate\Support\Facades\File::makeDirectory($destination, 0755, true);
             }
             $file->move($destination, $fileName);
-            $validated['attachment'] = 'disciplines/' . $fileName;
+            $validated['attachment'] = 'backend/uploads/disciplines/' . $fileName;
         }
 
         $validated['created_by'] = Auth::id();
@@ -347,7 +347,7 @@ class DisciplineController extends Controller
             'result' => 'nullable|string',
             'improvement_measures' => 'nullable|string',
             'status' => 'required|in:dang-thi-hanh,da-thi-hanh-xong,duoc-xoa-bo',
-            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120'
+            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:20480'
         ]);
 
         // Kiểm tra quyền đối với đơn vị đã chọn (nếu có thay đổi đơn vị)
@@ -368,17 +368,17 @@ class DisciplineController extends Controller
 
         // Xử lý file mới
         if ($request->hasFile('attachment')) {
-            if ($discipline->attachment && File::exists(public_path($discipline->attachment))) {
-                File::delete(public_path($discipline->attachment));
+            if ($discipline->attachment && \Illuminate\Support\Facades\File::exists(public_path($discipline->attachment))) {
+                \Illuminate\Support\Facades\File::delete(public_path($discipline->attachment));
             }
             $file = $request->file('attachment');
             $fileName = time() . '_' . preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
-            $destination = public_path('disciplines');
-            if (!File::exists($destination)) {
-                File::makeDirectory($destination, 0755, true);
+            $destination = public_path('backend/uploads/disciplines');
+            if (!\Illuminate\Support\Facades\File::exists($destination)) {
+                \Illuminate\Support\Facades\File::makeDirectory($destination, 0755, true);
             }
             $file->move($destination, $fileName);
-            $validated['attachment'] = 'disciplines/' . $fileName;
+            $validated['attachment'] = 'backend/uploads/disciplines/' . $fileName;
         }
 
         $validated['updated_by'] = Auth::id();
@@ -394,8 +394,8 @@ class DisciplineController extends Controller
     {
         $this->authorize('delete', $discipline);
 
-        if ($discipline->attachment && File::exists(public_path($discipline->attachment))) {
-            File::delete(public_path($discipline->attachment));
+        if ($discipline->attachment && \Illuminate\Support\Facades\File::exists(public_path($discipline->attachment))) {
+            \Illuminate\Support\Facades\File::delete(public_path($discipline->attachment));
         }
 
         $discipline->delete();
