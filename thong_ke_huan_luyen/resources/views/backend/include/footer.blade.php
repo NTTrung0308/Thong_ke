@@ -16,7 +16,7 @@
             </ul> --}}
         </nav>
         <div class="copyright">
-            &copy; {{ date('Y') }} <a href="{{ route('dashboard') }}">Hệ thống thống kê huấn luyện chiến đấu</a>, All rights reserved.
+            &copy; {{ date('Y') }} <a href="{{ route('search.index') }}">Hệ thống thống kê huấn luyện chiến đấu</a>, All rights reserved.
         </div>
         <div>
             {{-- Distributed by

@@ -385,6 +385,21 @@ class DisciplineController extends Controller
 
         $discipline->update($validated);
 
+        // Gửi thông báo nếu đang thi hành kỷ luật
+        if ($discipline->status == 'dang-thi-hanh') {
+            $chiHuys = \App\Models\User::role('chi-huy')->get();
+            $message = "Quân nhân {$discipline->soldier_name_at_time} ({$discipline->unit_name_at_time}) bị kỷ luật: {$discipline->discipline_form}.";
+            foreach ($chiHuys as $chiHuy) {
+                $chiHuy->notify(new \App\Notifications\SystemNotification(
+                    'Thông báo: Kỷ luật quân nhân',
+                    $message,
+                    'fa-exclamation-circle',
+                    route('disciplines.index'),
+                    'warning'
+                ));
+            }
+        }
+
         return redirect()->route('disciplines.index')
             ->with('success', 'Cập nhật kỷ luật thành công!');
     }

@@ -85,8 +85,8 @@
                                         <td class="text-center">{{ $stat['superior_rewards'] }}</td>
                                         <td class="text-center fw-bold">{{ $stat['total'] }}</td>
                                     </tr>
-                                    @php 
-                                        $totalAll += $stat['total']; 
+                                    @php
+                                        $totalAll += $stat['total'];
                                         $totalUnit += $stat['unit_rewards'];
                                         $totalSuperior += $stat['superior_rewards'];
                                     @endphp

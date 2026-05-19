@@ -142,6 +142,7 @@
                                     <th>Lựu đạn</th>
                                     <th>Xẻng BB</th>
                                     <th>Cuốc BB</th>
+                                    <th>Tình trạng</th>
                                     <th>Ngày nhận/Ký</th>
                                     <th>Ngày trả/Ký</th>
                                     <th>Ghi chú</th>
@@ -173,6 +174,20 @@
                                         <td>{{ $item->grenade ?? '-' }}</td>
                                         <td>{{ $item->infantry_shovel ?? '-' }}</td>
                                         <td>{{ $item->infantry_pickaxe ?? '-' }}</td>
+                                        <td>
+                                            @php
+                                                $badgeClass = 'badge-success';
+                                                $conditionName = 'Tốt';
+                                                if($item->condition == 'hỏng') {
+                                                    $badgeClass = 'badge-danger';
+                                                    $conditionName = 'Hỏng';
+                                                } elseif($item->condition == 'cần_bảo_dưỡng') {
+                                                    $badgeClass = 'badge-warning';
+                                                    $conditionName = 'Cần bảo dưỡng';
+                                                }
+                                            @endphp
+                                            <span class="badge {{ $badgeClass }}">{{ $conditionName }}</span>
+                                        </td>
                                         <td> {{ $item->receive_date ? $item->receive_date->format('d/m/Y') : '' }}
                                             @if ($item->received_by)
                                                 <br><small>({{ $item->received_by }})</small>

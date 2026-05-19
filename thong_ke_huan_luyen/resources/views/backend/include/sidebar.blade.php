@@ -24,12 +24,12 @@
     <div class="sidebar-wrapper scrollbar scrollbar-inner">
         <div class="sidebar-content">
             <ul class="nav nav-secondary">
-                {{-- <li class="nav-item">
-                    <a href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#dashboardModal">
+                <li class="nav-item {{ Request::is('dashboard*') ? 'active' : '' }}">
+                    <a href="{{ route('dashboard') }}">
                         <i class="fas fa-home"></i>
                         <p>Trang chủ</p>
                     </a>
-                </li> --}}
+                </li>
                 <li class="nav-item {{ Request::is('search*') ? 'active' : '' }}">
                     <a href="{{ route('search.index') }}">
                         <i class="fas fa-search"></i>

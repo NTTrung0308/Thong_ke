@@ -5,7 +5,7 @@
         <h3 class="fw-bold mb-3">Chỉnh sửa Biên chế Vũ khí - Trang bị</h3>
         <ul class="breadcrumbs mb-3">
             <li class="nav-home">
-                <a href="{{ route('dashboard') }}"><i class="fas fa-home"></i></a>
+                <a href="{{ route('search.index') }}"><i class="fas fa-home"></i></a>
             </li>
             <li class="separator"><i class="fas fa-arrow-right"></i></li>
             <li class="nav-item"><a href="{{ route('weapon-equipments.index') }}">Vũ khí trang bị</a></li>
@@ -83,6 +83,16 @@
                                         <option value="dang-su-dung" {{ (old('status', $weaponEquipment->status) == 'dang-su-dung') ? 'selected' : '' }}>Đang sử dụng</option>
                                         <option value="da-thu-hoi" {{ (old('status', $weaponEquipment->status) == 'da-thu-hoi') ? 'selected' : '' }}>Đã thu hồi</option>
                                         <option value="bao-quan" {{ (old('status', $weaponEquipment->status) == 'bao-quan') ? 'selected' : '' }}>Đang bảo quản</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Tình trạng kỹ thuật <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="condition" required>
+                                        <option value="tot" {{ (old('condition', $weaponEquipment->condition) == 'tot') ? 'selected' : '' }}>Tốt</option>
+                                        <option value="hỏng" {{ (old('condition', $weaponEquipment->condition) == 'hỏng') ? 'selected' : '' }}>Hỏng</option>
+                                        <option value="cần_bảo_dưỡng" {{ (old('condition', $weaponEquipment->condition) == 'cần_bảo_dưỡng') ? 'selected' : '' }}>Cần bảo dưỡng</option>
                                     </select>
                                 </div>
                             </div>
@@ -299,20 +309,20 @@ $(document).ready(function() {
         const parentId = $(this).val();
         const currentLevel = $(this).data('level');
         const currentIndex = levels.indexOf(currentLevel);
-        
+
         // Reset all lower levels
         for (let i = currentIndex + 1; i < levels.length; i++) {
             const $nextSelect = $(`#unit_${levels[i].replace('-', '_')}`);
             $nextSelect.html(`<option value="">-- Chọn ${$nextSelect.prev('label').text().split('. ')[1]} --</option>`);
             $nextSelect.prop('disabled', true);
         }
-        
+
         updateFinalUnitId();
-        
+
         if (parentId && currentIndex < levels.length - 1) {
             const nextLevel = levels[currentIndex + 1];
             const $nextSelect = $(`#unit_${nextLevel.replace('-', '_')}`);
-            
+
             $.ajax({
                 url: `{{ route('units.getChildren', '') }}/${parentId}`,
                 type: 'GET',

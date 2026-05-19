@@ -255,20 +255,20 @@ $(document).ready(function() {
         const parentId = $(this).val();
         const currentLevel = $(this).data('level');
         const currentIndex = levels.indexOf(currentLevel);
-        
+
         // Reset all lower levels
         for (let i = currentIndex + 1; i < levels.length; i++) {
             const $nextSelect = $(`#unit_${levels[i].replace('-', '_')}`);
             $nextSelect.html(`<option value="">-- Chọn ${$nextSelect.prev('label').text().split('. ')[1]} --</option>`);
             $nextSelect.prop('disabled', true);
         }
-        
+
         updateFinalUnitId();
-        
+
         if (parentId && currentIndex < levels.length - 1) {
             const nextLevel = levels[currentIndex + 1];
             const $nextSelect = $(`#unit_${nextLevel.replace('-', '_')}`);
-            
+
             $.ajax({
                 url: `{{ route('units.getChildren', '') }}/${parentId}`,
                 type: 'GET',

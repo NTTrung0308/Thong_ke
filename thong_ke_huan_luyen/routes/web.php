@@ -34,12 +34,16 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Dashboard (Bảo vệ bằng middleware auth)
 Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', function () {
-        return redirect()->route('soldiers.index')->with('show_dashboard', true);
-    })->name('dashboard');
+    Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/api/units-tree', [App\Http\Controllers\Admin\DashboardController::class, 'getTreeData'])->name('api.units-tree');
+
+    // Notifications
+    Route::post('/notifications/mark-as-read/{id}', [App\Http\Controllers\Admin\NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+    Route::post('/notifications/mark-all-as-read', [App\Http\Controllers\Admin\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
 
     // Search function
     Route::get('/search', [SoldierController::class, 'search'])->name('search.index');
+    Route::get('/search/quick-view/{soldier}', [App\Http\Controllers\Admin\Ajax\SoldierAjaxController::class, 'quickView'])->name('search.quick-view');
 
     // Users Management - Chỉ dành cho Chỉ huy
     Route::resource('users', UserController::class)->middleware('check.role:chi-huy');

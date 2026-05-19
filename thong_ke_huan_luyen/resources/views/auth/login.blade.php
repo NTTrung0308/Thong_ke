@@ -1,19 +1,23 @@
 @extends('auth.index')
 @section('content')
-    <div class="bg-gray-100 h-screen flex items-center justify-center">
-        <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-            <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">ĐĂNG NHẬP</h2>
+    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full bg-white p-8 rounded-2xl shadow-lg ring-1 ring-gray-100">
+            {{-- <div class="flex justify-center mb-6">
+                <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-12 w-auto">
+            </div> --}}
+
+            <h2 class="text-3xl font-extrabold text-center text-gray-900 mb-2">Đăng nhập</h2>
+            <p class="text-sm text-center text-gray-500 mb-6">Nhập email và mật khẩu để tiếp tục</p>
 
             @if (session('success'))
-                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4"
-                    role="alert">
+                <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-md mb-4" role="alert">
                     {{ session('success') }}
                 </div>
             @endif
 
             @if ($errors->any())
-                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                    <ul>
+                <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md mb-4" role="alert">
+                    <ul class="list-disc list-inside text-sm">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
                         @endforeach
@@ -21,39 +25,50 @@
                 </div>
             @endif
 
-            <form action="{{ route('login') }}" method="POST">
+            <form action="{{ route('login') }}" method="POST" class="space-y-5">
                 @csrf
-                <div class="mb-4">
-                    <label for="email" class="block text-gray-700 text-sm font-bold mb-2">Email:</label>
-                    <input type="email" name="email" id="email" value="{{ old('email') }}" required
-                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <div class="mt-1">
+                        <input type="email" name="email" id="email" value="{{ old('email') }}" required
+                            class="block w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                    </div>
+                    @error('email')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
 
-                <div class="mb-6">
-                    <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Mật khẩu:</label>
-                    <input type="password" name="password" id="password" required
-                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                </div>
-
-                <div class="mb-6">
-                    <label class="inline-flex items-center">
-                        <input type="checkbox" name="remember" class="form-checkbox h-5 w-5 text-blue-600">
-                        <span class="ml-2 text-gray-700 text-sm">Ghi nhớ đăng nhập</span>
-                    </label>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Mật khẩu</label>
+                    <div class="mt-1">
+                        <input type="password" name="password" id="password" required
+                            class="block w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                    </div>
+                    @error('password')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div class="flex items-center justify-between">
-                    <button type="submit"
-                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full transition duration-150">
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" name="remember" class="h-4 w-4 text-blue-600 rounded border-gray-300">
+                        <span class="ml-2 text-sm text-gray-700">Ghi nhớ đăng nhập</span>
+                    </label>
+                    <div>
+                        {{-- <a href="{{ route('password.request') }}" class="text-sm text-blue-600 hover:underline">Quên mật khẩu?</a> --}}
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit" class="w-full inline-flex justify-center items-center rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
                         Đăng nhập
                     </button>
                 </div>
             </form>
 
-            <div class="mt-4 text-center">
-                <p class="text-sm text-gray-600">
-                    Chưa có tài khoản? Liên hệ quản trị viên.
-                </p>
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-600">Chưa có tài khoản? Liên hệ quản trị viên.</p>
             </div>
         </div>
     </div>

@@ -350,79 +350,63 @@ class SoldierController extends Controller
         
         $query = Soldier::query()->whereIn('unit_id', $accessibleUnitIds);
 
+        // Lọc theo từ khóa chính
         if ($request->filled('q')) {
             $q = $request->q;
             $query->where(function($sub) use ($q) {
-                // Tìm kiếm thông tin quân nhân (tất cả các trường văn bản)
                 $sub->where('full_name', 'like', "%$q%")
                     ->orWhere('code', 'like', "%$q%")
-                    ->orWhere('rank', 'like', "%$q%")
                     ->orWhere('position', 'like', "%$q%")
-                    ->orWhere('education', 'like', "%$q%")
-                    ->orWhere('foreign_language', 'like', "%$q%")
-                    ->orWhere('professional_level', 'like', "%$q%")
                     ->orWhere('permanent_residence', 'like', "%$q%")
-                    ->orWhere('emergency_contact_name', 'like', "%$q%")
-                    ->orWhere('emergency_contact_address', 'like', "%$q%")
-                    ->orWhere('notes', 'like', "%$q%")
-                    // Tìm kiếm theo số hiệu vũ khí hoặc loại vũ khí
                     ->orWhereHas('weapons', function($w) use ($q) {
                         $w->where('status', 'dang-su-dung')
                           ->where(function($query) use ($q) {
-                              $weaponFields = [
-                                  'ak', 'rpd', 'b41', 'm79', 'cleaning_rod', 'spare_parts', 
-                                  'gun_strap', 'gun_accessories', 'magazine_box', 'oil_can', 
-                                  'bag', 'gun_cover', 'muzzle_cover', 'sight', 'grenade', 
-                                  'infantry_shovel', 'infantry_pickaxe'
-                              ];
-                              
-                              $lowerQ = mb_strtolower($q);
-                              
-                              // 1. Tìm theo số hiệu (like %q%)
+                              $weaponFields = ['ak', 'rpd', 'b41', 'm79'];
                               foreach ($weaponFields as $field) {
                                   $query->orWhere($field, 'like', "%$q%");
-                              }
-                              
-                              // 2. Nếu từ khóa là tên loại vũ khí (ak, rpd...), tìm tất cả ai có biên chế loại đó
-                              if (in_array($lowerQ, ['ak', 'rpd', 'b41', 'm79'])) {
-                                  $query->orWhereNotNull($lowerQ)->where($lowerQ, '!=', '');
-                              }
-                              
-                              // 3. Hỗ trợ từ khóa tiếng Việt hoặc có dấu
-                              if (str_contains($lowerQ, 'súng ak') || str_contains($lowerQ, 'sung ak')) {
-                                  $query->orWhereNotNull('ak')->where('ak', '!=', '');
-                              }
-                              if (str_contains($lowerQ, 'súng rpd') || str_contains($lowerQ, 'sung rpd')) {
-                                  $query->orWhereNotNull('rpd')->where('rpd', '!=', '');
-                              }
-                              if (str_contains($lowerQ, 'súng b41') || str_contains($lowerQ, 'sung b41')) {
-                                  $query->orWhereNotNull('b41')->where('b41', '!=', '');
-                              }
-                              if (str_contains($lowerQ, 'xẻng') || str_contains($lowerQ, 'xeng')) {
-                                  $query->orWhereNotNull('infantry_shovel')->where('infantry_shovel', '!=', '');
-                              }
-                              if (str_contains($lowerQ, 'cuốc') || str_contains($lowerQ, 'cuoc')) {
-                                  $query->orWhereNotNull('infantry_pickaxe')->where('infantry_pickaxe', '!=', '');
                               }
                           });
                     });
             });
         }
 
+        // Lọc theo đơn vị (bao gồm cả đơn vị con)
         if ($request->filled('unit_id')) {
-            $selectedUnit = Unit::find($request->unit_id);
+            $selectedUnit = \App\Models\Unit::find($request->unit_id);
             if ($selectedUnit && in_array($selectedUnit->id, $accessibleUnitIds)) {
                 $targetUnitIds = $selectedUnit->getAllDescendantIds();
                 $query->whereIn('unit_id', $targetUnitIds);
-            } else {
-                $query->whereRaw('1 = 0');
             }
+        }
+
+        // Lọc theo cấp bậc
+        if ($request->filled('rank')) {
+            $query->where('rank', $request->rank);
+        }
+
+        // Lọc theo năm nhập ngũ
+        if ($request->filled('enlistment_year')) {
+            $query->whereYear('enlistment_date', $request->enlistment_year);
+        }
+
+        // Lọc theo trình độ chuyên môn
+        if ($request->filled('professional_level')) {
+            $query->where('professional_level', 'like', "%" . $request->professional_level . "%");
         }
 
         $soldiers = $query->with(['unit', 'weapons' => function($q) {
             $q->where('status', 'dang-su-dung');
         }])->paginate(20);
 
-        return view('backend.search.index', compact('soldiers', 'units'));
+        // Lấy danh sách cấp bậc & năm cho bộ lọc
+        $ranks = Soldier::whereIn('unit_id', $accessibleUnitIds)->distinct()->pluck('rank')->filter();
+        $enlistmentYears = Soldier::whereIn('unit_id', $accessibleUnitIds)
+            ->selectRaw('YEAR(enlistment_date) as year')
+            ->distinct()
+            ->orderBy('year', 'desc')
+            ->pluck('year')
+            ->filter();
+
+        return view('backend.search.index', compact('soldiers', 'units', 'ranks', 'enlistmentYears'));
     }
 }

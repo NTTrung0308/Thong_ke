@@ -246,6 +246,49 @@
                     </div>
                 </li> --}}
 
+                <li class="nav-item topbar-icon dropdown hidden-caret">
+                    <a class="nav-link dropdown-toggle" href="#" id="notifDropdown" role="button"
+                        data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-bell"></i>
+                        @if(auth()->user()->unreadNotifications->count() > 0)
+                            <span class="notification">{{ auth()->user()->unreadNotifications->count() }}</span>
+                        @endif
+                    </a>
+                    <ul class="dropdown-menu notif-box animated fadeIn" aria-labelledby="notifDropdown">
+                        <li>
+                            <div class="dropdown-title d-flex justify-content-between align-items-center">
+                                Bạn có {{ auth()->user()->unreadNotifications->count() }} thông báo mới
+                                @if(auth()->user()->unreadNotifications->count() > 0)
+                                    <form action="{{ route('notifications.mark-all-as-read') }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-link btn-sm p-0">Đọc tất cả</button>
+                                    </form>
+                                @endif
+                            </div>
+                        </li>
+                        <li>
+                            <div class="notif-scroll scrollbar-outer">
+                                <div class="notif-center">
+                                    @forelse(auth()->user()->unreadNotifications->take(5) as $notification)
+                                        <a href="{{ $notification->data['link'] ?? '#' }}" class="notification-item" data-id="{{ $notification->id }}">
+                                            <div class="notif-icon notif-{{ $notification->data['type'] ?? 'primary' }}">
+                                                <i class="fa {{ $notification->data['icon'] ?? 'fa-bell' }}"></i>
+                                            </div>
+                                            <div class="notif-content">
+                                                <span class="block fw-bold"> {{ $notification->data['title'] }} </span>
+                                                <span class="block small text-muted"> {{ $notification->data['message'] }} </span>
+                                                <span class="time">{{ $notification->created_at->diffForHumans() }}</span>
+                                            </div>
+                                        </a>
+                                    @empty
+                                        <div class="text-center py-3 text-muted">Không có thông báo mới</div>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+
                 <li class="nav-item topbar-user dropdown hidden-caret">
                     <a class="dropdown-toggle profile-pic" data-bs-toggle="dropdown" href="#"
                         aria-expanded="false">
