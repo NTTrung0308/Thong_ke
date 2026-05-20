@@ -8,7 +8,9 @@
                 <a href="{{ route('dashboard') }}"><i class="fas fa-home"></i></a>
             </li>
             <li class="separator"><i class="fas fa-arrow-right"></i></li>
-            <li class="nav-item"><a href="{{ route('weapon-equipments.index') }}">Vũ khí trang bị</a></li>
+            <li class="nav-item">
+                <a href="{{ route('weapon-equipments.menu') }}">Vũ khí trang bị</a>
+            </li>
             <li class="separator"><i class="fas fa-arrow-right"></i></li>
             <li class="nav-item"><a href="#">Cấp phát mới</a></li>
         </ul>
@@ -261,7 +263,7 @@
                 <div class="card">
                     <div class="card-body text-center">
                         <button type="submit" class="btn btn-success btn-lg">Lưu thông tin cấp phát</button>
-                        <a href="{{ route('weapon-equipments.index') }}" class="btn btn-danger btn-lg">Hủy bỏ</a>
+                        <a href="{{ route('weapon-equipments.menu') }}" class="btn btn-danger btn-lg">Hủy bỏ</a>
                     </div>
                 </div>
             </div>

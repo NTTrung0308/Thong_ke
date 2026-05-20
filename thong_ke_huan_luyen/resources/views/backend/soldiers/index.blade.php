@@ -22,7 +22,7 @@
                 <i class="fas fa-chevron-right"></i>
             </li>
             <li class="nav-item">
-                <a href="{{ route('soldiers.index') }}">Quân nhân</a>
+                <a href="{{ route('soldiers.menu') }}">Quân nhân</a>
             </li>
             <li class="separator">
                 <i class="fas fa-chevron-right"></i>

@@ -11,6 +11,12 @@ use Illuminate\Support\Facades\Auth;
 
 class WeaponEquipmentController extends Controller
 {
+    public function menu(Request $request)
+    {
+        $level = $request->query('level');
+        return view('backend.weapon_equipments.menu', compact('level'));
+    }
+
     public function index()
     {
         $user = Auth::user();

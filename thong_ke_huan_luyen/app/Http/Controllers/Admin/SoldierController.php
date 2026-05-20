@@ -343,6 +343,12 @@ class SoldierController extends Controller
         return Auth::user()->getAccessibleUnits();
     }
 
+    public function menu(Request $request)
+    {
+        $level = $request->query('level');
+        return view('backend.soldiers.menu', compact('level'));
+    }
+
     public function search(Request $request)
     {
         $units = $this->getAccessibleUnits();

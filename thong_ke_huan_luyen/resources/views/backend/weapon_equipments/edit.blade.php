@@ -5,10 +5,12 @@
         <h3 class="fw-bold mb-3">Chỉnh sửa Biên chế Vũ khí - Trang bị</h3>
         <ul class="breadcrumbs mb-3">
             <li class="nav-home">
-                <a href="{{ route('search.index') }}"><i class="fas fa-home"></i></a>
+                <a href="{{ route('dashboard') }}"><i class="fas fa-home"></i></a>
             </li>
             <li class="separator"><i class="fas fa-arrow-right"></i></li>
-            <li class="nav-item"><a href="{{ route('weapon-equipments.index') }}">Vũ khí trang bị</a></li>
+            <li class="nav-item">
+                <a href="{{ route('weapon-equipments.menu') }}">Vũ khí trang bị</a>
+            </li>
             <li class="separator"><i class="fas fa-arrow-right"></i></li>
             <li class="nav-item"><a href="#">Chỉnh sửa</a></li>
         </ul>
@@ -283,7 +285,7 @@
                 <div class="card">
                     <div class="card-body">
                         <button type="submit" class="btn btn-primary btn-lg">Cập nhật thông tin</button>
-                        <a href="{{ route('weapon-equipments.index') }}" class="btn btn-danger btn-lg">Hủy bỏ</a>
+                        <a href="{{ route('weapon-equipments.menu') }}" class="btn btn-danger btn-lg">Hủy bỏ</a>
                     </div>
                 </div>
             </div>

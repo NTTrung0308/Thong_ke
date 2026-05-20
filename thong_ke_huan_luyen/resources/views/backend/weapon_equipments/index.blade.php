@@ -23,7 +23,7 @@
                 <i class="fas fa-arrow-right"></i>
             </li>
             <li class="nav-item">
-                <a href="#">Vũ khí trang bị</a>
+                <a href="{{ route('weapon-equipments.menu') }}">Vũ khí trang bị</a>
             </li>
         </ul>
         <div class="ms-md-auto py-2 py-md-0">
