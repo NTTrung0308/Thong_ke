@@ -40,7 +40,7 @@
         <!-- Step 1: Chọn Cấp Quản Lý -->
         <div id="step-levels" class="row justify-content-center g-4 animate__animated animate__fadeIn">
             <div class="col-12 text-center mb-2">
-                <h4 class="fw-bold text-uppercase"><i class="fas fa-layer-group me-2 text-primary"></i> Bước 1: Chọn Cấp
+                <h4 class="fw-bold text-uppercase"><i class="fas fa-layer-group me-2 text-primary"></i>Chọn Cấp
                     Quản Lý</h4>
             </div>
 
@@ -109,7 +109,7 @@
         <div id="step-units" class="row justify-content-center g-4 d-none animate__animated">
             <div class="col-12 text-center mb-2">
                 <h4 class="fw-bold text-uppercase">
-                    <i class="fas fa-sitemap me-2 text-primary"></i> Bước 2: Chọn Đơn Vị - <span
+                    <i class="fas fa-sitemap me-2 text-primary"></i>Chọn Đơn Vị - <span
                         id="selected-level-label-units" class="text-primary"></span>
                 </h4>
             </div>
@@ -122,7 +122,7 @@
         <div id="step-modules" class="row justify-content-center g-4 d-none animate__animated">
             <div class="col-12 text-center mb-2">
                 <h4 class="fw-bold text-uppercase">
-                    <i class="fas fa-th-large me-2 text-primary"></i> Bước 3: Chọn Chức Năng - <span
+                    <i class="fas fa-th-large me-2 text-primary"></i>Chọn Chức Năng - <span
                         id="selected-unit-label" class="text-primary"></span>
                 </h4>
             </div>
