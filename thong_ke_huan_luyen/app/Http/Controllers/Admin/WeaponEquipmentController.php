@@ -11,13 +11,7 @@ use Illuminate\Support\Facades\Auth;
 
 class WeaponEquipmentController extends Controller
 {
-    public function menu(Request $request)
-    {
-        $level = $request->query('level');
-        return view('backend.weapon_equipments.menu', compact('level'));
-    }
-
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
 
@@ -26,10 +20,16 @@ class WeaponEquipmentController extends Controller
 
         $query = WeaponEquipment::with(['soldier.unit', 'unit']);
         
-        // Phân quyền theo đơn vị
-        if (!$user->hasRole('chi-huy')) {
-            $unitIds = $user->getAccessibleUnitIds();
-            $query->whereIn('weapon_equipment.unit_id', $unitIds);
+        $accessibleUnitIds = $user->getAccessibleUnitIds();
+        $query->whereIn('weapon_equipment.unit_id', $accessibleUnitIds);
+
+        // Lọc theo đơn vị (bao gồm các đơn vị con)
+        if ($request->filled('unit_id')) {
+            $selectedUnit = Unit::find($request->unit_id);
+            if ($selectedUnit && in_array($selectedUnit->id, $accessibleUnitIds)) {
+                $targetUnitIds = $selectedUnit->getAllDescendantIds();
+                $query->whereIn('weapon_equipment.unit_id', $targetUnitIds);
+            }
         }
 
         // Sắp xếp theo đơn vị và tên quân nhân
@@ -50,6 +50,14 @@ class WeaponEquipmentController extends Controller
         ];
 
         return view('backend.weapon_equipments.index', compact('equipments', 'stats'));
+    }
+
+    // Xem chi tiết vũ khí trang bị
+    public function show(WeaponEquipment $weaponEquipment)
+    {
+        $this->authorize('view', $weaponEquipment);
+        $weaponEquipment->load(['soldier.unit', 'unit', 'creator', 'updater']);
+        return view('backend.weapon_equipments.show', compact('weaponEquipment'));
     }
 
     private function syncWithSoldiers($user)

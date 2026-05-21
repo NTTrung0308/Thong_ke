@@ -28,25 +28,7 @@
     </style>
     <div class="page-header">
         <h3 class="fw-bold mb-3">Quản lý Nhật ký huấn luyện</h3>
-        <ul class="breadcrumbs mb-3">
-            <li class="nav-home">
-                <a href="{{ route('dashboard') }}">
-                    <i class="fas fa-home"></i>
-                </a>
-            </li>
-            <li class="separator">
-                <i class="fas fa-chevron-right"></i>
-            </li>
-            <li class="nav-item">
-                <a href="#">Huấn luyện</a>
-            </li>
-            <li class="separator">
-                <i class="fas fa-chevron-right"></i>
-            </li>
-            <li class="nav-item">
-                <a href="{{ route('training-logs.index') }}">Nhật ký huấn luyện</a>
-            </li>
-        </ul>
+        @include('backend.include.breadcrumbs', ['activeLabel' => 'Nhật ký huấn luyện', 'activeRoute' => route('training-logs.index')])
         <div class="ms-md-auto py-2 py-md-0">
             {{-- <span class="text-muted me-3">Danh sách được tự động cập nhật theo quân nhân</span> --}}
             <a href="{{ route('training-logs.report') }}" class="btn btn-info btn-round me-2">
@@ -157,11 +139,11 @@
 
                     <!-- Lọc theo đơn vị & Thời gian -->
                     <form action="{{ route('training-logs.index') }}" method="GET" class="mb-4">
-                        <div class="row">
+                        <div class="row align-items-end">
                             <div class="col-md-3">
                                 <div class="form-group p-0">
                                     <label>Đơn vị:</label>
-                                    <select name="unit_id" class="form-select form-control" onchange="this.form.submit()">
+                                    <select name="unit_id" class="form-select form-control">
                                         <option value="">-- Tất cả đơn vị --</option>
                                         @foreach ($units as $unit)
                                             <option value="{{ $unit->id }}"
@@ -171,6 +153,29 @@
                                         @endforeach
                                     </select>
                                 </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group p-0">
+                                    <label>Từ ngày:</label>
+                                    <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group p-0">
+                                    <label>Đến ngày:</label>
+                                    <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}">
+                                </div>
+                            </div>
+                            {{-- <div class="col-md-3">
+                                <div class="form-group p-0">
+                                    <label>Tìm kiếm:</label>
+                                    <input type="text" name="search" class="form-control" placeholder="Nội dung, quân nhân..." value="{{ request('search') }}">
+                                </div>
+                            </div> --}}
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-filter me-1"></i> Lọc
+                                </button>
                             </div>
                         </div>
                     </form>

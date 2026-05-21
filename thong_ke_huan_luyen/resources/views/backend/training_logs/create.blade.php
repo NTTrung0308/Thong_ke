@@ -244,8 +244,20 @@
 @endsection
 
 @section('scripts')
+<script src="https://cdn.tiny.cloud/1/8s4hqaa7an28jigjhd5vzvhjwyiid21n0lczimuwgobsmr8m/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 <script>
 $(document).ready(function() {
+      // TinyMCE initialization
+        tinymce.init({
+            selector: '#training_content, #general_evaluation',
+            plugins: 'advlist autolink lists link image charmap preview anchor searchreplace vertical-align visualblocks code fullscreen insertdatetime media table help wordcount',
+            toolbar: 'undo redo | blocks | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+            language: 'vi',
+            promotion: false,
+            branding: false,
+            height: 300
+        });
+
     const levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
 
     function updateFinalUnitId() {
@@ -261,20 +273,20 @@ $(document).ready(function() {
         const parentId = $(this).val();
         const currentLevel = $(this).data('level');
         const currentIndex = levels.indexOf(currentLevel);
-        
+
         // Reset all lower levels
         for (let i = currentIndex + 1; i < levels.length; i++) {
             const $nextSelect = $(`#unit_${levels[i].replace('-', '_')}`);
             $nextSelect.html(`<option value="">-- Chọn ${$nextSelect.prev('label').text().split('. ')[1]} --</option>`);
             $nextSelect.prop('disabled', true);
         }
-        
+
         updateFinalUnitId();
-        
+
         if (parentId && currentIndex < levels.length - 1) {
             const nextLevel = levels[currentIndex + 1];
             const $nextSelect = $(`#unit_${nextLevel.replace('-', '_')}`);
-            
+
             $.ajax({
                 url: `{{ route('units.getChildren', '') }}/${parentId}`,
                 type: 'GET',

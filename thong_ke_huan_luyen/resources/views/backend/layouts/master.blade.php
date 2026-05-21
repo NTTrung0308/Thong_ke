@@ -35,7 +35,7 @@
     <link rel="stylesheet" href="{{ asset('backend/assets/css/plugins.min.css') }}" />
     <link rel="stylesheet" href="{{ asset('backend/assets/css/kaiadmin.min.css') }}" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" />
-    
+
     <style>
         /* Modern UI Tweaks */
         :root {
@@ -128,6 +128,39 @@
             font-weight: 800 !important;
             color: #1a2035;
         }
+
+        /* Action icons visibility (View / Edit / Delete buttons) */
+        .form-button-action .btn-link {
+            color: rgba(58, 66, 86, 0.95) !important;
+            opacity: 1 !important;
+            padding: 6px !important;
+            border-radius: 6px !important;
+            transition: all 0.12s ease;
+        }
+        .form-button-action .btn-link .fa, .form-button-action .btn-link .fas, .form-button-action .btn-link .far {
+            font-size: 1.05rem !important;
+        }
+        .form-button-action .btn-link.btn-info {
+            color: #0d6efd !important; /* clearer blue for View */
+            background: rgba(13,110,253,0.08) !important;
+        }
+        .form-button-action .btn-link.btn-primary {
+            color: #1572E8 !important; /* Edit */
+            background: rgba(21,114,232,0.08) !important;
+        }
+        .form-button-action .btn-link.btn-success {
+            color: #198754 !important;
+            background: rgba(25,135,84,0.08) !important;
+        }
+        .form-button-action .btn-link.btn-danger {
+            color: #dc3545 !important; /* Delete */
+            background: rgba(220,53,69,0.08) !important;
+        }
+        .form-button-action .btn-link:hover {
+            text-decoration: none !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+        }
     </style>
 </head>
 
@@ -173,9 +206,9 @@
     <!-- Kaiadmin JS -->
     <script src="{{ asset('backend/assets/js/kaiadmin.min.js') }}"></script>
 
-    <!-- Kaiadmin DEMO methods, don't include it in your project! -->
+    {{-- <!-- Kaiadmin DEMO methods, don't include it in your project! -->
     <script src="{{ asset('backend/assets/js/setting-demo.js') }}"></script>
-    <script src="{{ asset('backend/assets/js/demo.js') }}"></script>
+    <script src="{{ asset('backend/assets/js/demo.js') }}"></script> --}}
 
     <script>
         // Cấu hình SweetAlert2 để tự động hiển thị thông báo từ session flash của Laravel
@@ -242,33 +275,41 @@
                 });
             });
         });
-    </script>
-    <script>
-        $("#lineChart").sparkline([102, 109, 120, 99, 110, 105, 115], {
-            type: "line",
-            height: "70",
-            width: "100%",
-            lineWidth: "2",
-            lineColor: "#177dff",
-            fillColor: "rgba(23, 125, 255, 0.14)",
-        });
 
-        $("#lineChart2").sparkline([99, 125, 122, 105, 110, 124, 115], {
-            type: "line",
-            height: "70",
-            width: "100%",
-            lineWidth: "2",
-            lineColor: "#f3545d",
-            fillColor: "rgba(243, 84, 93, .14)",
-        });
+        // Tự động thu gọn sidebar để không gian làm việc rộng rãi hơn
+        $(function() {
+            const autoCollapseDelay = 500;
+            let collapseTimer = null;
+            let manualToggled = false;
 
-        $("#lineChart3").sparkline([105, 103, 123, 100, 95, 105, 115], {
-            type: "line",
-            height: "70",
-            width: "100%",
-            lineWidth: "2",
-            lineColor: "#ffa534",
-            fillColor: "rgba(255, 165, 52, .14)",
+            const collapseSidebar = () => {
+                if (!$('.wrapper').hasClass('sidebar_minimize')) {
+                    $('.wrapper').addClass('sidebar_minimize');
+                    $('.toggle-sidebar').addClass('toggled').html('<i class="gg-more-vertical-alt"></i>');
+                }
+            };
+
+            const expandSidebar = () => {
+                if ($('.wrapper').hasClass('sidebar_minimize')) {
+                    $('.wrapper').removeClass('sidebar_minimize');
+                    $('.toggle-sidebar').removeClass('toggled').html('<i class="gg-menu-right"></i>');
+                }
+            };
+
+            // Mặc định thu gọn
+            collapseSidebar();
+
+            $('.sidebar').on('mouseenter', function() {
+                clearTimeout(collapseTimer);
+                if (!manualToggled) expandSidebar();
+            }).on('mouseleave', function() {
+                clearTimeout(collapseTimer);
+                if (!manualToggled) collapseTimer = setTimeout(collapseSidebar, autoCollapseDelay);
+            });
+
+            $('.toggle-sidebar').on('click', function() {
+                setTimeout(() => { manualToggled = !$('.wrapper').hasClass('sidebar_minimize'); }, 50);
+            });
         });
     </script>
     @yield('scripts')

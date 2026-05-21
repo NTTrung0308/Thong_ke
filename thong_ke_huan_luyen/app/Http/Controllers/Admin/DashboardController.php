@@ -86,6 +86,28 @@ class DashboardController extends Controller
         return response()->json($this->formatTree($rootUnits));
     }
 
+    public function getUnitsByLevel(Request $request)
+    {
+        $level = $request->get('level');
+        $parentId = $request->get('parent_id');
+        $user = Auth::user();
+        $accessibleUnitIds = $user->getAccessibleUnitIds();
+
+        $query = Unit::whereIn('id', $accessibleUnitIds);
+
+        if ($parentId) {
+            $query->where('parent_id', $parentId);
+        } elseif ($level) {
+            $query->where('level', $level);
+        }
+
+        $units = $query->withCount('children')
+            ->orderBy('name')
+            ->get(['id', 'name', 'level']);
+
+        return response()->json($units);
+    }
+
     private function formatTree($units)
     {
         $data = [];

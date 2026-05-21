@@ -13,7 +13,7 @@
             <i class="fas fa-chevron-right"></i>
         </li>
         <li class="nav-item">
-            <a href="{{ route('weapon-equipments.menu') }}">Vũ khí</a>
+            <a href="{{ route('weapon-equipments.index') }}">Vũ khí</a>
         </li>
     </ul>
 </div>

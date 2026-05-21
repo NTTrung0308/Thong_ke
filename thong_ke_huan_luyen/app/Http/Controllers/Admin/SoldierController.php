@@ -343,76 +343,283 @@ class SoldierController extends Controller
         return Auth::user()->getAccessibleUnits();
     }
 
-    public function menu(Request $request)
-    {
-        $level = $request->query('level');
-        return view('backend.soldiers.menu', compact('level'));
-    }
-
     public function search(Request $request)
     {
         $units = $this->getAccessibleUnits();
         $accessibleUnitIds = Auth::user()->getAccessibleUnitIds();
-        
-        $query = Soldier::query()->whereIn('unit_id', $accessibleUnitIds);
+        $module = $request->get('module', 'soldiers');
 
-        // Lọc theo từ khóa chính
-        if ($request->filled('q')) {
-            $q = $request->q;
-            $query->where(function($sub) use ($q) {
-                $sub->where('full_name', 'like', "%$q%")
-                    ->orWhere('code', 'like', "%$q%")
-                    ->orWhere('position', 'like', "%$q%")
-                    ->orWhere('permanent_residence', 'like', "%$q%")
-                    ->orWhereHas('weapons', function($w) use ($q) {
-                        $w->where('status', 'dang-su-dung')
-                          ->where(function($query) use ($q) {
-                              $weaponFields = ['ak', 'rpd', 'b41', 'm79'];
-                              foreach ($weaponFields as $field) {
-                                  $query->orWhere($field, 'like', "%$q%");
-                              }
-                          });
+        // Determine if any meaningful filters are present per module
+        $hasFilters = false;
+        $q = $request->filled('q');
+        switch ($module) {
+            case 'rewards':
+                $hasFilters = $q || $request->filled('unit_id') || $request->filled('year') || $request->filled('decision_level') || $request->filled('type');
+                break;
+            case 'disciplines':
+                $hasFilters = $q || $request->filled('unit_id') || $request->filled('status') || $request->filled('year');
+                break;
+            case 'training_results':
+                // For training results we don't use the generic keyword search 'q'
+                $hasFilters = $request->filled('unit_id') || $request->filled('year') || $request->filled('month') || $request->filled('result');
+                break;
+            case 'training_logs':
+                $hasFilters = $q || $request->filled('unit_id') || ($request->filled('start_date') && $request->filled('end_date'));
+                break;
+            case 'weapon_equipments':
+                $hasFilters = $q || $request->filled('unit_id') || $request->filled('weapon_type');
+                break;
+            case 'soldiers':
+            default:
+                $hasFilters = $q || $request->filled('unit_id') || $request->filled('rank') || $request->filled('enlistment_year') || $request->filled('professional_level') || $request->filled('weapon_type');
+                break;
+        }
+
+        if (!$hasFilters) {
+            // Prepare auxiliary data used by the view even when no results are shown
+            $ranks = \App\Models\Soldier::whereIn('unit_id', $accessibleUnitIds)->distinct()->pluck('rank')->filter();
+            $enlistmentYears = \App\Models\Soldier::whereIn('unit_id', $accessibleUnitIds)
+                ->selectRaw('YEAR(enlistment_date) as year')
+                ->distinct()
+                ->orderBy('year', 'desc')
+                ->pluck('year')
+                ->filter();
+
+            // Create an empty paginator to avoid undefined variable / method errors in the view
+            $emptyPaginator = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20, 1, [
+                'path' => request()->url(),
+                'query' => request()->query()
+            ]);
+
+            // Return view with placeholders for all module-specific result variables
+            return view('backend.search.index', compact('units', 'ranks', 'enlistmentYears'))
+                ->with([
+                    'module' => $module,
+                    'hasFilters' => false,
+                    'soldiers' => $emptyPaginator,
+                    'rewards' => $emptyPaginator,
+                    'disciplines' => $emptyPaginator,
+                    'trainingResults' => $emptyPaginator,
+                    'trainingLogs' => $emptyPaginator,
+                    'equipments' => $emptyPaginator,
+                ]);
+        }
+
+        switch ($module) {
+            case 'rewards':
+                $query = \App\Models\Reward::with(['soldier', 'unit'])->whereIn('unit_id', $accessibleUnitIds);
+
+                if ($request->filled('q')) {
+                    $q = $request->q;
+                    $query->where(function($qsub) use ($q) {
+                        $qsub->where('reason', 'like', "%$q%")
+                             ->orWhere('decision_number', 'like', "%$q%")
+                             ->orWhere('soldier_name_at_time', 'like', "%$q%");
                     });
-            });
+                }
+
+                if ($request->filled('unit_id')) {
+                    $selectedUnit = \App\Models\Unit::find($request->unit_id);
+                    if ($selectedUnit && in_array($selectedUnit->id, $accessibleUnitIds)) {
+                        $targetUnitIds = $selectedUnit->getAllDescendantIds();
+                        $query->whereIn('unit_id', $targetUnitIds);
+                    }
+                }
+
+                if ($request->filled('year')) {
+                    $query->whereYear('decision_date', $request->year);
+                }
+
+                if ($request->filled('decision_level')) {
+                    $query->where('decision_level', $request->decision_level);
+                }
+
+                if ($request->filled('type')) {
+                    $query->where('type', $request->type);
+                }
+
+                $rewards = $query->orderBy('decision_date', 'desc')->paginate(20);
+                return view('backend.search.index', compact('rewards', 'units'))->with('module', $module);
+
+            case 'disciplines':
+                $query = \App\Models\Discipline::with(['soldier', 'unit'])->whereIn('unit_id', $accessibleUnitIds);
+
+                if ($request->filled('q')) {
+                    $q = $request->q;
+                    $query->where(function($qsub) use ($q) {
+                        $qsub->where('violation_details', 'like', "%$q%")
+                             ->orWhere('work_content', 'like', "%$q%")
+                             ->orWhere('decision_number', 'like', "%$q%")
+                             ->orWhere('soldier_name_at_time', 'like', "%$q%");
+                    });
+                }
+
+                if ($request->filled('unit_id')) {
+                    $selectedUnit = \App\Models\Unit::find($request->unit_id);
+                    if ($selectedUnit && in_array($selectedUnit->id, $accessibleUnitIds)) {
+                        $targetUnitIds = $selectedUnit->getAllDescendantIds();
+                        $query->whereIn('unit_id', $targetUnitIds);
+                    }
+                }
+
+                if ($request->filled('status')) {
+                    $query->where('status', $request->status);
+                }
+
+                if ($request->filled('year')) {
+                    $query->whereYear('decision_date', $request->year);
+                }
+
+                $disciplines = $query->orderBy('decision_date', 'desc')->paginate(20);
+                return view('backend.search.index', compact('disciplines', 'units'))->with('module', $module);
+
+            case 'training_results':
+                $query = \App\Models\TrainingResult::with(['unit'])->whereIn('unit_id', $accessibleUnitIds);
+
+                    // No generic 'q' keyword search for training results - use module-specific filters instead
+                if ($request->filled('unit_id')) {
+                    $selectedUnit = \App\Models\Unit::find($request->unit_id);
+                    if ($selectedUnit && in_array($selectedUnit->id, $accessibleUnitIds)) {
+                        $targetUnitIds = $selectedUnit->getAllDescendantIds();
+                        $query->whereIn('unit_id', $targetUnitIds);
+                    }
+                }
+
+                if ($request->filled('year')) {
+                    $query->whereYear('training_date', $request->year);
+                }
+
+                if ($request->filled('month')) {
+                    $query->whereMonth('training_date', $request->month);
+                }
+
+                if ($request->filled('result')) {
+                    $query->where('result', $request->result);
+                }
+
+                $trainingResults = $query->orderBy('training_date', 'desc')->paginate(20);
+                return view('backend.search.index', compact('trainingResults', 'units'))->with('module', $module);
+
+            case 'training_logs':
+                $query = \App\Models\TrainingLog::with(['soldier', 'unit'])->whereIn('unit_id', $accessibleUnitIds);
+
+                if ($request->filled('q')) {
+                    $q = $request->q;
+                    $query->where(function($qsub) use ($q) {
+                        $qsub->where('training_content', 'like', "%$q%")
+                             ->orWhere('soldier_name_at_time', 'like', "%$q%");
+                    });
+                }
+
+                if ($request->filled('unit_id')) {
+                    $selectedUnit = \App\Models\Unit::find($request->unit_id);
+                    if ($selectedUnit && in_array($selectedUnit->id, $accessibleUnitIds)) {
+                        $targetUnitIds = $selectedUnit->getAllDescendantIds();
+                        $query->whereIn('unit_id', $targetUnitIds);
+                    }
+                }
+
+                if ($request->filled('start_date') && $request->filled('end_date')) {
+                    $query->whereBetween('training_date', [$request->start_date, $request->end_date]);
+                }
+
+                $trainingLogs = $query->orderBy('training_date', 'desc')->paginate(20);
+                return view('backend.search.index', compact('trainingLogs', 'units'))->with('module', $module);
+
+            case 'weapon_equipments':
+                $query = \App\Models\WeaponEquipment::with(['soldier', 'unit'])->whereIn('unit_id', $accessibleUnitIds);
+
+                if ($request->filled('q')) {
+                    $q = $request->q;
+                    $query->where(function($qsub) use ($q) {
+                        $qsub->where('ak', 'like', "%$q%")
+                             ->orWhere('rpd', 'like', "%$q%")
+                             ->orWhere('b41', 'like', "%$q%")
+                             ->orWhere('m79', 'like', "%$q%")
+                             ->orWhereHas('soldier', function($s) use ($q) {
+                                 $s->where('full_name', 'like', "%$q%");
+                             });
+                    });
+                }
+
+                if ($request->filled('unit_id')) {
+                    $selectedUnit = \App\Models\Unit::find($request->unit_id);
+                    if ($selectedUnit && in_array($selectedUnit->id, $accessibleUnitIds)) {
+                        $targetUnitIds = $selectedUnit->getAllDescendantIds();
+                        $query->whereIn('unit_id', $targetUnitIds);
+                    }
+                }
+
+                if ($request->filled('weapon_type')) {
+                    $type = $request->weapon_type;
+                    $query->whereNotNull($type)->where($type, '<>', '');
+                }
+
+                $equipments = $query->orderBy('unit_id')->paginate(20);
+                return view('backend.search.index', compact('equipments', 'units'))->with('module', $module);
+
+            case 'soldiers':
+            default:
+                $query = Soldier::query()->whereIn('unit_id', $accessibleUnitIds);
+
+                // Lọc theo từ khóa chính
+                if ($request->filled('q')) {
+                    $q = $request->q;
+                    $query->where(function($sub) use ($q) {
+                        $sub->where('full_name', 'like', "%$q%")
+                            ->orWhere('code', 'like', "%$q%")
+                            ->orWhere('position', 'like', "%$q%")
+                            ->orWhere('permanent_residence', 'like', "%$q%")
+                            ->orWhereHas('weapons', function($w) use ($q) {
+                                $w->where('status', 'dang-su-dung')
+                                  ->where(function($query) use ($q) {
+                                      $weaponFields = ['ak', 'rpd', 'b41', 'm79'];
+                                      foreach ($weaponFields as $field) {
+                                          $query->orWhere($field, 'like', "%$q%");
+                                      }
+                                  });
+                            });
+                    });
+                }
+
+                // Lọc theo đơn vị (bao gồm cả đơn vị con)
+                if ($request->filled('unit_id')) {
+                    $selectedUnit = \App\Models\Unit::find($request->unit_id);
+                    if ($selectedUnit && in_array($selectedUnit->id, $accessibleUnitIds)) {
+                        $targetUnitIds = $selectedUnit->getAllDescendantIds();
+                        $query->whereIn('unit_id', $targetUnitIds);
+                    }
+                }
+
+                // Lọc theo cấp bậc
+                if ($request->filled('rank')) {
+                    $query->where('rank', $request->rank);
+                }
+
+                // Lọc theo năm nhập ngũ
+                if ($request->filled('enlistment_year')) {
+                    $query->whereYear('enlistment_date', $request->enlistment_year);
+                }
+
+                // Lọc theo trình độ chuyên môn
+                if ($request->filled('professional_level')) {
+                    $query->where('professional_level', 'like', "%" . $request->professional_level . "%");
+                }
+
+                $soldiers = $query->with(['unit', 'weapons' => function($q) {
+                    $q->where('status', 'dang-su-dung');
+                }])->paginate(20);
+
+                // Lấy danh sách cấp bậc & năm cho bộ lọc
+                $ranks = Soldier::whereIn('unit_id', $accessibleUnitIds)->distinct()->pluck('rank')->filter();
+                $enlistmentYears = Soldier::whereIn('unit_id', $accessibleUnitIds)
+                    ->selectRaw('YEAR(enlistment_date) as year')
+                    ->distinct()
+                    ->orderBy('year', 'desc')
+                    ->pluck('year')
+                    ->filter();
+
+                return view('backend.search.index', compact('soldiers', 'units', 'ranks', 'enlistmentYears'))->with('module', $module);
         }
-
-        // Lọc theo đơn vị (bao gồm cả đơn vị con)
-        if ($request->filled('unit_id')) {
-            $selectedUnit = \App\Models\Unit::find($request->unit_id);
-            if ($selectedUnit && in_array($selectedUnit->id, $accessibleUnitIds)) {
-                $targetUnitIds = $selectedUnit->getAllDescendantIds();
-                $query->whereIn('unit_id', $targetUnitIds);
-            }
-        }
-
-        // Lọc theo cấp bậc
-        if ($request->filled('rank')) {
-            $query->where('rank', $request->rank);
-        }
-
-        // Lọc theo năm nhập ngũ
-        if ($request->filled('enlistment_year')) {
-            $query->whereYear('enlistment_date', $request->enlistment_year);
-        }
-
-        // Lọc theo trình độ chuyên môn
-        if ($request->filled('professional_level')) {
-            $query->where('professional_level', 'like', "%" . $request->professional_level . "%");
-        }
-
-        $soldiers = $query->with(['unit', 'weapons' => function($q) {
-            $q->where('status', 'dang-su-dung');
-        }])->paginate(20);
-
-        // Lấy danh sách cấp bậc & năm cho bộ lọc
-        $ranks = Soldier::whereIn('unit_id', $accessibleUnitIds)->distinct()->pluck('rank')->filter();
-        $enlistmentYears = Soldier::whereIn('unit_id', $accessibleUnitIds)
-            ->selectRaw('YEAR(enlistment_date) as year')
-            ->distinct()
-            ->orderBy('year', 'desc')
-            ->pluck('year')
-            ->filter();
-
-        return view('backend.search.index', compact('soldiers', 'units', 'ranks', 'enlistmentYears'));
     }
 }

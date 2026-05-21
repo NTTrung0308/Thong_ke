@@ -16,25 +16,7 @@
     </style>
     <div class="page-header">
         <h3 class="fw-bold mb-3">Quản lý kết quả tập huấn</h3>
-        <ul class="breadcrumbs mb-3">
-            <li class="nav-home">
-                <a href="{{ route('dashboard') }}">
-                    <i class="fas fa-home"></i>
-                </a>
-            </li>
-            <li class="separator">
-                <i class="fas fa-chevron-right"></i>
-            </li>
-            <li class="nav-item">
-                <a href="#">Tập huấn</a>
-            </li>
-            <li class="separator">
-                <i class="fas fa-chevron-right"></i>
-            </li>
-            <li class="nav-item">
-                <a href="#">Danh sách kết quả</a>
-            </li>
-        </ul>
+        @include('backend.include.breadcrumbs', ['activeLabel' => 'Kết quả tập huấn', 'activeRoute' => route('training-results.index')])
     </div>
     <div class="row">
         <div class="col-md-12">

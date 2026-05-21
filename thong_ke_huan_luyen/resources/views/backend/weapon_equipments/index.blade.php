@@ -13,19 +13,7 @@
     </style>
     <div class="page-header">
         <h3 class="fw-bold mb-3">Quản lý Vũ khí - Trang bị</h3>
-        <ul class="breadcrumbs mb-3">
-            <li class="nav-home">
-                <a href="{{ route('dashboard') }}">
-                    <i class="fas fa-home"></i>
-                </a>
-            </li>
-            <li class="separator">
-                <i class="fas fa-arrow-right"></i>
-            </li>
-            <li class="nav-item">
-                <a href="{{ route('weapon-equipments.menu') }}">Vũ khí trang bị</a>
-            </li>
-        </ul>
+        @include('backend.include.breadcrumbs', ['activeLabel' => 'Vũ khí trang bị', 'activeRoute' => route('weapon-equipments.index')])
         <div class="ms-md-auto py-2 py-md-0">
             {{-- <span class="text-muted me-3">Danh sách được tự động cập nhật theo quân nhân</span> --}}
             <a href="{{ route('weapon-equipments.create') }}" class="btn btn-primary btn-round">Thêm trang bị bổ sung</a>

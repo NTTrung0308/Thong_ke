@@ -55,7 +55,9 @@ class TrainingLogController extends Controller
         if ($request->filled('search')) {
             $query->where(function($q) use ($request) {
                 $q->where('training_content', 'like', '%' . $request->search . '%')
-                  ->orWhere('instructor', 'like', '%' . $request->search . '%');
+                  ->orWhere('instructor', 'like', '%' . $request->search . '%')
+                  ->orWhere('soldier_name_at_time', 'like', '%' . $request->search . '%')
+                  ->orWhere('unit_name_at_time', 'like', '%' . $request->search . '%');
             });
         }
 
@@ -148,7 +150,7 @@ class TrainingLogController extends Controller
         $validated = $request->validate([
             'unit_id' => 'required|exists:units,id',
             'soldier_id' => 'nullable|exists:soldiers,id',
-            'training_date' => 'nullable|date',
+            'training_date' => 'required|date',
             'day_of_week' => 'nullable|string',
             'attendance_mon' => 'nullable|in:+,x,-',
             'attendance_tue' => 'nullable|in:+,x,-',
@@ -175,17 +177,23 @@ class TrainingLogController extends Controller
             'attachment' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:20480'
         ]);
 
+        // Đảm bảo day_of_week luôn có giá trị
+        if (empty($validated['day_of_week'])) {
+            $validated['day_of_week'] = $this->getVietnameseDayOfWeek(Carbon::parse($validated['training_date']));
+        }
+
         // Kiểm tra quyền đối với đơn vị đã chọn
-        if (!in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
+        $user = Auth::user();
+        if (!in_array($validated['unit_id'], $user->getAccessibleUnitIds())) {
             return back()->withErrors(['unit_id' => 'Bạn không có quyền thêm nhật ký huấn luyện cho đơn vị này.'])->withInput();
         }
 
-        // Tính toán phần trăm
-        if (isset($validated['test_quanso']) && $validated['test_quanso'] > 0) {
-            $validated['good_percent'] = round(($validated['good_count'] / $validated['test_quanso']) * 100, 2);
-            $validated['fair_percent'] = round(($validated['fair_count'] / $validated['test_quanso']) * 100, 2);
-            $validated['pass_percent'] = round(($validated['pass_count'] / $validated['test_quanso']) * 100, 2);
-            $validated['fail_percent'] = round(($validated['fail_count'] / $validated['test_quanso']) * 100, 2);
+        // Tính toán phần trăm (nếu có dữ liệu kiểm tra)
+        if (!empty($validated['test_quanso']) && $validated['test_quanso'] > 0) {
+            $validated['good_percent'] = round((($validated['good_count'] ?? 0) / $validated['test_quanso']) * 100, 2);
+            $validated['fair_percent'] = round((($validated['fair_count'] ?? 0) / $validated['test_quanso']) * 100, 2);
+            $validated['pass_percent'] = round((($validated['pass_count'] ?? 0) / $validated['test_quanso']) * 100, 2);
+            $validated['fail_percent'] = round((($validated['fail_count'] ?? 0) / $validated['test_quanso']) * 100, 2);
         }
 
         // Tính quân số vắng
@@ -193,17 +201,7 @@ class TrainingLogController extends Controller
             $validated['absent_quanso'] = $validated['required_quanso'] - $validated['actual_quanso'];
         }
 
-        // Lấy tên đơn vị
-        $unit = Unit::find($validated['unit_id']);
-        $validated['unit_name_at_time'] = $unit->name;
-
-        // Lấy tên quân nhân
-        if (!empty($validated['soldier_id'])) {
-            $soldier = Soldier::find($validated['soldier_id']);
-            $validated['soldier_name_at_time'] = $soldier->full_name;
-        }
-
-        // Xử lý file
+        // Xử lý file đính kèm
         if ($request->hasFile('attachment')) {
             $file = $request->file('attachment');
             $fileName = time() . '_' . preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
@@ -218,10 +216,45 @@ class TrainingLogController extends Controller
         $validated['created_by'] = Auth::id();
         $validated['updated_by'] = Auth::id();
 
-        TrainingLog::create($validated);
+        // Áp dụng cho toàn bộ quân nhân trong đơn vị (bao gồm cả đơn vị con)
+        $selectedUnit = Unit::findOrFail($validated['unit_id']);
+        $unitIds = $selectedUnit->getAllDescendantIds();
+        $soldiers = Soldier::whereIn('unit_id', $unitIds)->get();
+
+        if ($soldiers->isEmpty()) {
+            $validated['unit_name_at_time'] = $selectedUnit->name;
+            TrainingLog::create($validated);
+            return redirect()->route('training-logs.index')
+                ->with('success', 'Đã lưu nhật ký huấn luyện cho đơn vị (không có quân nhân).');
+        }
+
+        $count = 0;
+        foreach ($soldiers as $soldier) {
+            $data = $validated;
+            $data['soldier_id'] = $soldier->id;
+            $data['soldier_name_at_time'] = $soldier->full_name;
+            $data['unit_id'] = $soldier->unit_id;
+            $data['unit_name_at_time'] = $soldier->unit->name ?? 'N/A';
+
+            $existingLog = TrainingLog::where('soldier_id', $soldier->id)
+                ->whereDate('training_date', $validated['training_date'])
+                ->first();
+
+            if ($existingLog) {
+                if ($existingLog->attachment && isset($data['attachment'])) {
+                    if (\Illuminate\Support\Facades\File::exists(public_path($existingLog->attachment))) {
+                        \Illuminate\Support\Facades\File::delete(public_path($existingLog->attachment));
+                    }
+                }
+                $existingLog->update($data);
+            } else {
+                TrainingLog::create($data);
+            }
+            $count++;
+        }
 
         return redirect()->route('training-logs.index')
-            ->with('success', 'Thêm nhật ký huấn luyện thành công!');
+            ->with('success', "Đã cập nhật nhật ký huấn luyện cho $count quân nhân thuộc đơn vị " . $selectedUnit->name);
     }
 
     // Xem chi tiết

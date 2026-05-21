@@ -9,7 +9,7 @@
             </li>
             <li class="separator"><i class="fas fa-arrow-right"></i></li>
             <li class="nav-item">
-                <a href="{{ route('weapon-equipments.menu') }}">Vũ khí trang bị</a>
+                <a href="{{ route('weapon-equipments.index') }}">Vũ khí trang bị</a>
             </li>
             <li class="separator"><i class="fas fa-arrow-right"></i></li>
             <li class="nav-item"><a href="#">Chỉnh sửa</a></li>
@@ -285,7 +285,7 @@
                 <div class="card">
                     <div class="card-body">
                         <button type="submit" class="btn btn-primary btn-lg">Cập nhật thông tin</button>
-                        <a href="{{ route('weapon-equipments.menu') }}" class="btn btn-danger btn-lg">Hủy bỏ</a>
+                        <a href="{{ route('weapon-equipments.index') }}" class="btn btn-danger btn-lg">Hủy bỏ</a>
                     </div>
                 </div>
             </div>

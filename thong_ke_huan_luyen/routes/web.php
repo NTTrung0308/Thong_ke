@@ -35,6 +35,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // Dashboard (Bảo vệ bằng middleware auth)
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/api/units-by-level', [App\Http\Controllers\Admin\DashboardController::class, 'getUnitsByLevel'])->name('api.units-by-level');
     Route::get('/api/units-tree', [App\Http\Controllers\Admin\DashboardController::class, 'getTreeData'])->name('api.units-tree');
 
     // Notifications
@@ -52,7 +53,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/activity-logs', [App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('activity-logs.index')->middleware('check.role:chi-huy');
 
     // Soldiers Management
-    Route::get('soldiers/menu', [SoldierController::class, 'menu'])->name('soldiers.menu');
     Route::get('soldiers/export-excel', [SoldierController::class, 'exportExcel'])->name('soldiers.export-excel');
     Route::get('soldiers/export-pdf', [SoldierController::class, 'exportPdf'])->name('soldiers.export-pdf');
     Route::resource('soldiers', SoldierController::class);
@@ -62,7 +62,6 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('units', UnitController::class)->middleware('check.role:chi-huy');
 
     // Weapon & Equipment Management
-    Route::get('weapon-equipments/menu', [WeaponEquipmentController::class, 'menu'])->name('weapon-equipments.menu');
     Route::resource('weapon-equipments', WeaponEquipmentController::class);
 
     // Rewards Management

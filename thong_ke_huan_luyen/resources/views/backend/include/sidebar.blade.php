@@ -43,13 +43,13 @@
                     <h4 class="text-section">Quản lý Nghiệp vụ</h4>
                 </li>
                 <li class="nav-item {{ Request::is('soldiers*') ? 'active' : '' }}">
-                    <a href="{{ route('soldiers.menu') }}">
+                    <a href="{{ route('soldiers.index') }}">
                         <i class="fas fa-users"></i>
                         <p>Danh sách quân nhân</p>
                     </a>
                 </li>
                 <li class="nav-item {{ Request::is('weapon-equipments*') ? 'active' : '' }}">
-                    <a href="{{ route('weapon-equipments.menu') }}">
+                    <a href="{{ route('weapon-equipments.index') }}">
                         <i class="fas fa-shield-alt"></i>
                         <p>Vũ khí trang bị</p>
                     </a>

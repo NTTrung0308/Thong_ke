@@ -1,4 +1,4 @@
-<!-- Dashboard Modal -->
+{{-- <!-- Dashboard Modal -->
 <div class="modal fade" id="dashboardModal" tabindex="-1" aria-labelledby="dashboardModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -49,7 +49,7 @@
 
                                             // Xác định cấp cao nhất mà người dùng có thể xem
                                             $maxLevel = 'trung-doi'; // Mặc định thấp nhất
-                                            
+
                                             if (auth()->user()->hasRole('chi-huy')) {
                                                 $maxLevel = 'chi-huy';
                                             } elseif (auth()->user()->hasRole('trung-doan')) {
@@ -61,7 +61,7 @@
                                             } elseif (auth()->user()->hasRole('trung-doi')) {
                                                 $maxLevel = 'trung-doi';
                                             }
-                                            
+
                                             // Nếu có đơn vị, lấy cấp của đơn vị đó làm giới hạn
                                             if (auth()->user()->unit) {
                                                 $maxLevel = auth()->user()->unit->level;
@@ -125,4 +125,4 @@
         transition: all 0.3s ease;
         box-shadow: 0 5px 15px rgba(0,0,0,0.1) !important;
     }
-</style>
+</style> --}}

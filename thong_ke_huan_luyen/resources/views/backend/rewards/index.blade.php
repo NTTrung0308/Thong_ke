@@ -12,25 +12,7 @@
     </style>
     <div class="page-header">
         <h3 class="fw-bold mb-3">Quản lý khen thưởng</h3>
-        <ul class="breadcrumbs mb-3">
-            <li class="nav-home">
-                <a href="{{ route('dashboard') }}">
-                    <i class="fas fa-home"></i>
-                </a>
-            </li>
-            <li class="separator">
-                <i class="fas fa-chevron-right"></i>
-            </li>
-            <li class="nav-item">
-                <a href="#">Khen thưởng</a>
-            </li>
-            <li class="separator">
-                <i class="fas fa-chevron-right"></i>
-            </li>
-            <li class="nav-item">
-                <a href="#">Danh sách</a>
-            </li>
-        </ul>
+        @include('backend.include.breadcrumbs', ['activeLabel' => 'Khen thưởng', 'activeRoute' => route('rewards.index')])
         <div class="ms-md-auto py-2 py-md-0">
             {{-- <span class="text-muted me-3">Danh sách được tự động cập nhật theo quân nhân</span> --}}
             <a href="{{ route('rewards.report') }}" class="btn btn-info btn-round me-2">
