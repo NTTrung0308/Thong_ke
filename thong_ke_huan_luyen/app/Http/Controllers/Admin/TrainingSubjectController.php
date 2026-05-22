@@ -11,12 +11,23 @@ class TrainingSubjectController extends Controller
 {
     public function index(Request $request)
     {
-        $unitLevel = $request->get('unit_level', 'dai-doi');
+        $unitLevel = $request->get('unit_level', null);
 
-        $subjects = TrainingSubject::where('unit_level', $unitLevel)
-            ->whereNull('parent_id')
-            ->with('children.children')
-            ->get();
+n        $query = TrainingSubject::whereNull('parent_id');
+        if ($unitLevel) {
+            $query->where('unit_level', $unitLevel);
+        }
+
+        $subjects = $query->with(['children' => function($q) use ($unitLevel) {
+            if ($unitLevel) {
+                $q->where('unit_level', $unitLevel);
+            }
+            $q->with(['children' => function($q2) use ($unitLevel) {
+                if ($unitLevel) {
+                    $q2->where('unit_level', $unitLevel);
+                }
+            }]);
+        }])->get();
 
         return response()->json($subjects);
     }

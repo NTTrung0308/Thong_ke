@@ -552,12 +552,81 @@ $(document).ready(function() {
     });
 
     $('#training_date').on('change', function() {
-        const date = new Carbon($(this).val());
-        // Simple day of week mapper
+        const date = new Date($(this).val());
         const days = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
-        const dayName = days[new Date($(this).val()).getDay()];
-        $('#day_of_week').val(dayName);
+        $('#day_of_week').val(days[date.getDay()]);
     });
+
+    // Modal parent loader: populate modal_parent_id according to selected unit_level
+    function loadModalParents(unitLevel) {
+        if (!unitLevel) {
+            $('#modal_parent_id').html('<option value="">-- Là Môn học mới --</option>');
+            return;
+        }
+        $.get(`{{ route('training-subjects.index') }}?unit_level=${unitLevel}`, function(data) {
+            let options = '<option value="">-- Là Môn học mới --</option>';
+            data.forEach(s => {
+                options += `<option value="${s.id}">${s.name}</option>`;
+                if (s.children && s.children.length) {
+                    s.children.forEach(l => {
+                        options += `<option value="${l.id}">— ${l.name}</option>`;
+                        if (l.children && l.children.length) {
+                            l.children.forEach(c => {
+                                options += `<option value="${c.id}">　　- ${c.name}</option>`;
+                            });
+                        }
+                    });
+                }
+            });
+            $('#modal_parent_id').html(options);
+        });
+    }
+
+    $('#modal_unit_level').on('change', function() {
+        loadModalParents($(this).val());
+    });
+
+    $('#addSubjectModal').on('show.bs.modal', function() {
+        const level = $('#modal_unit_level').val();
+        loadModalParents(level);
+    });
+
+    $('#saveSubjectBtn').on('click', function() {
+        const unit_level = $('#modal_unit_level').val();
+        const parent_id = $('#modal_parent_id').val();
+        const name = $('#modal_subject_name').val();
+        if (!name) {
+            Swal.fire('Cảnh báo', 'Tên không được để trống!', 'warning');
+            return;
+        }
+        $.post(`{{ route('training-subjects.store') }}`, {
+            _token: '{{ csrf_token() }}',
+            name: name,
+            parent_id: parent_id,
+            unit_level: unit_level
+        }, function(response) {
+            if (response.success) {
+                Swal.fire('Thành công', response.message, 'success');
+                $('#addSubjectModal').modal('hide');
+                // Refresh modal parent list and main selects if unit matches current selected level
+                loadModalParents(unit_level);
+                const unitDaiDoi = $('#unit_dai_doi').val();
+                const unitTrungDoi = $('#unit_trung_doi').val();
+                const selectedLevel = unitTrungDoi ? 'trung-doi' : (unitDaiDoi ? 'dai-doi' : null);
+                if (selectedLevel === unit_level) {
+                    updateSubjectsBySelectedUnit();
+                    if (parent_id) {
+                        // if parent is a subject or lesson, trigger changes to refresh child lists
+                        $('#subject_id').trigger('change');
+                        $('#lesson_id').trigger('change');
+                    }
+                }
+                $('#modal_subject_name').val('');
+                $('#modal_parent_id').val('');
+            }
+        });
+    });
+
 });
 </script>
 @endsection
