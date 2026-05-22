@@ -54,7 +54,7 @@
                     ],
                     'tieu-doan' => [
                         'label' => 'CẤP TIỂU ĐOÀN',
-                        'icon' => 'fa-fort-awesome',
+                        'icon' => 'fa-building-user',
                         'color' => 'var(--info-gradient)',
                     ],
                     'dai-doi' => ['label' => 'CẤP ĐẠI ĐỘI', 'icon' => 'fa-users', 'color' => 'var(--success-gradient)'],

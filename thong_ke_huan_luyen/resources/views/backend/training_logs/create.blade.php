@@ -97,6 +97,52 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <div class="card shadow-none border">
+                                    <div class="card-body py-2">
+                                        <div class="row align-items-end g-2">
+                                            <div class="col-md-3">
+                                                <div class="form-group p-0 mb-0">
+                                                    <label class="small mb-1">1. Môn học</label>
+                                                    <div class="input-group">
+                                                        <select class="form-select form-control-sm" id="subject_id">
+                                                            <option value="">-- Chọn môn học --</option>
+                                                        </select>
+                                                        <button class="btn btn-outline-primary btn-sm btn-quick-add" type="button" data-type="subject" title="Thêm môn học mới"><i class="fas fa-plus"></i></button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-group p-0 mb-0">
+                                                    <label class="small mb-1">2. Bài</label>
+                                                    <div class="input-group">
+                                                        <select class="form-select form-control-sm" id="lesson_id" disabled>
+                                                            <option value="">-- Chọn bài --</option>
+                                                        </select>
+                                                        <button class="btn btn-outline-primary btn-sm btn-quick-add" type="button" data-type="lesson" title="Thêm bài mới" disabled><i class="fas fa-plus"></i></button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-group p-0 mb-0">
+                                                    <label class="small mb-1">3. Nội dung bài</label>
+                                                    <div class="input-group">
+                                                        <select class="form-select form-control-sm" id="content_id" disabled>
+                                                            <option value="">-- Chọn nội dung --</option>
+                                                        </select>
+                                                        <button class="btn btn-outline-primary btn-sm btn-quick-add" type="button" data-type="content" title="Thêm nội dung mới" disabled><i class="fas fa-plus"></i></button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3 d-flex gap-1">
+                                                <button type="button" class="btn btn-primary btn-sm flex-fill" id="add_to_content">
+                                                    <i class="fas fa-check"></i> Xác nhận chọn
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="col-md-12">
                                 <div class="form-group">
                                     <label for="training_content">Nội dung huấn luyện</label>
@@ -241,24 +287,224 @@
             </div>
         </div>
     </form>
+
+    <!-- Modal Thêm Nội dung Huấn luyện -->
+    <div class="modal fade" id="addSubjectModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Thêm Môn học / Bài / Nội dung</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addSubjectForm">
+                        @csrf
+                        <div class="form-group">
+                            <label>Cấp đơn vị</label>
+                            <select class="form-select" id="modal_unit_level" name="unit_level">
+                                @if(Auth::user()->hasRole('chi-huy') || Auth::user()->hasRole('trung-doan') || Auth::user()->hasRole('tieu-doan') || Auth::user()->hasRole('dai-doi'))
+                                    <option value="dai-doi">Đại đội</option>
+                                @endif
+                                <option value="trung-doi">Trung đội</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Thuộc (Môn/Bài)</label>
+                            <select class="form-select" id="modal_parent_id" name="parent_id">
+                                <option value="">-- Là Môn học mới --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Tên (Môn/Bài/Nội dung)</label>
+                            <input type="text" class="form-control" id="modal_subject_name" name="name" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-primary" id="saveSubjectBtn">Lưu lại</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
 <script src="https://cdn.tiny.cloud/1/8s4hqaa7an28jigjhd5vzvhjwyiid21n0lczimuwgobsmr8m/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 <script>
 $(document).ready(function() {
-      // TinyMCE initialization
-        tinymce.init({
-            selector: '#training_content, #general_evaluation',
-            plugins: 'advlist autolink lists link image charmap preview anchor searchreplace vertical-align visualblocks code fullscreen insertdatetime media table help wordcount',
-            toolbar: 'undo redo | blocks | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
-            language: 'vi',
-            promotion: false,
-            branding: false,
-            height: 300
-        });
+    // TinyMCE initialization
+    tinymce.init({
+        selector: '#training_content, #general_evaluation',
+        plugins: 'advlist autolink lists link image charmap preview anchor searchreplace vertical-align visualblocks code fullscreen insertdatetime media table help wordcount',
+        toolbar: 'undo redo | blocks | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+        language: 'vi',
+        promotion: false,
+        branding: false,
+        height: 300
+    });
 
     const levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
+
+    // Load initial subjects
+    function loadSubjects(level = 'dai-doi') {
+        $.get(`{{ route('training-subjects.index') }}?unit_level=${level}`, function(data) {
+            let options = '<option value="">-- Chọn môn học --</option>';
+            data.forEach(s => {
+                options += `<option value="${s.id}">${s.name}</option>`;
+            });
+            $('#subject_id').html(options);
+            $('#lesson_id').html('<option value="">-- Chọn bài --</option>').prop('disabled', true);
+            $('#content_id').html('<option value="">-- Chọn nội dung --</option>').prop('disabled', true);
+            $('.btn-quick-add[data-type="lesson"], .btn-quick-add[data-type="content"]').prop('disabled', true);
+        });
+    }
+
+    // Load subjects based on selected unit level
+    function updateSubjectsBySelectedUnit() {
+        const unitDaiDoi = $('#unit_dai_doi').val();
+        const unitTrungDoi = $('#unit_trung_doi').val();
+
+        let selectedLevel = '';
+        if (unitTrungDoi) {
+            selectedLevel = 'trung-doi';
+        } else if (unitDaiDoi) {
+            selectedLevel = 'dai-doi';
+        }
+
+        if (selectedLevel) {
+            loadSubjects(selectedLevel);
+            $('.btn-quick-add[data-type="subject"]').prop('disabled', false);
+        } else {
+            $('#subject_id').html('<option value="">-- Chọn môn học --</option>');
+            $('#lesson_id').html('<option value="">-- Chọn bài --</option>').prop('disabled', true);
+            $('#content_id').html('<option value="">-- Chọn nội dung --</option>').prop('disabled', true);
+            $('.btn-quick-add').prop('disabled', true);
+        }
+    }
+    // Initial load
+    updateSubjectsBySelectedUnit();
+
+    $('#subject_id').on('change', function() {
+        const parentId = $(this).val();
+        if (parentId) {
+            const unitDaiDoi = $('#unit_dai_doi').val();
+            const unitTrungDoi = $('#unit_trung_doi').val();
+            let selectedLevel = unitTrungDoi ? 'trung-doi' : 'dai-doi';
+            $.get(`{{ route('training-subjects.children', '') }}/${parentId}?unit_level=${selectedLevel}`, function(data) {
+                let options = '<option value="">-- Chọn bài --</option>';
+                data.forEach(s => {
+                    options += `<option value="${s.id}">${s.name}</option>`;
+                });
+                $('#lesson_id').html(options).prop('disabled', false);
+                $('.btn-quick-add[data-type="lesson"]').prop('disabled', false);
+                $('#content_id').html('<option value="">-- Chọn nội dung --</option>').prop('disabled', true);
+                $('.btn-quick-add[data-type="content"]').prop('disabled', true);
+            });
+        } else {
+            $('#lesson_id').html('<option value="">-- Chọn bài --</option>').prop('disabled', true);
+            $('.btn-quick-add[data-type="lesson"]').prop('disabled', true);
+            $('#content_id').html('<option value="">-- Chọn nội dung --</option>').prop('disabled', true);
+            $('.btn-quick-add[data-type="content"]').prop('disabled', true);
+        }
+    });
+
+    $('#lesson_id').on('change', function() {
+        const parentId = $(this).val();
+        if (parentId) {
+            const unitDaiDoi = $('#unit_dai_doi').val();
+            const unitTrungDoi = $('#unit_trung_doi').val();
+            let selectedLevel = unitTrungDoi ? 'trung-doi' : 'dai-doi';
+            $.get(`{{ route('training-subjects.children', '') }}/${parentId}?unit_level=${selectedLevel}`, function(data) {
+                let options = '<option value="">-- Chọn nội dung --</option>';
+                data.forEach(s => {
+                    options += `<option value="${s.id}">${s.name}</option>`;
+                });
+                $('#content_id').html(options).prop('disabled', false);
+                $('.btn-quick-add[data-type="content"]').prop('disabled', false);
+            });
+        } else {
+            $('#content_id').html('<option value="">-- Chọn nội dung --</option>').prop('disabled', true);
+            $('.btn-quick-add[data-type="content"]').prop('disabled', true);
+        }
+    });
+
+    $('#add_to_content').on('click', function() {
+        const subject = $('#subject_id option:selected').text();
+        const lesson = $('#lesson_id option:selected').val() ? $('#lesson_id option:selected').text() : '';
+        const content = $('#content_id option:selected').val() ? $('#content_id option:selected').text() : '';
+
+        if (!$('#subject_id').val()) {
+            Swal.fire('Cảnh báo', 'Vui lòng chọn ít nhất một môn học', 'warning');
+            return;
+        }
+
+        let textToAdd = `<p><strong>- ${subject}</strong></p>`;
+        if (lesson) textToAdd += `<p>Bài: ${lesson}</p>`;
+        if (content) textToAdd += `<p> ${content}</p>`;
+
+        const editor = tinymce.get('training_content');
+        const currentContent = editor.getContent();
+        editor.setContent(currentContent + textToAdd);
+    });
+
+    // Quick add logic
+    $('.btn-quick-add').on('click', function() {
+        const type = $(this).data('type');
+        let title = 'Thêm môn học mới';
+        let parentId = null;
+
+        const unitDaiDoi = $('#unit_dai_doi').val();
+        const unitTrungDoi = $('#unit_trung_doi').val();
+        let unitLevel = unitTrungDoi ? 'trung-doi' : 'dai-doi';
+        if (type === 'lesson') {
+            title = 'Thêm bài học mới';
+            parentId = $('#subject_id').val();
+            if (!parentId) {
+                Swal.fire('Cảnh báo', 'Vui lòng chọn môn học trước', 'warning');
+                return;
+            }
+        } else if (type === 'content') {
+            title = 'Thêm nội dung bài mới';
+            parentId = $('#lesson_id').val();
+            if (!parentId) {
+                Swal.fire('Cảnh báo', 'Vui lòng chọn bài học trước', 'warning');
+                return;
+            }
+        }
+
+        Swal.fire({
+            title: title,
+            input: 'text',
+            inputPlaceholder: 'Nhập tên...',
+            showCancelButton: true,
+            confirmButtonText: 'Lưu lại',
+            cancelButtonText: 'Hủy',
+            inputValidator: (value) => {
+                if (!value) return 'Tên không được để trống!';
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.post(`{{ route('training-subjects.store') }}`, {
+                    _token: '{{ csrf_token() }}',
+                    name: result.value,
+                    parent_id: parentId,
+                    unit_level: unitLevel
+                }, function(response) {
+                    if (response.success) {
+                        Swal.fire('Thành công', response.message, 'success');
+                        if (type === 'subject') {
+                            updateSubjectsBySelectedUnit();
+                        } else if (type === 'lesson') {
+                            $('#subject_id').trigger('change');
+                        } else if (type === 'content') {
+                            $('#lesson_id').trigger('change');
+                        }
+                    }
+                });
+            }
+        });
+    });
 
     function updateFinalUnitId() {
         let lastId = '';
@@ -282,6 +528,7 @@ $(document).ready(function() {
         }
 
         updateFinalUnitId();
+        updateSubjectsBySelectedUnit();
 
         if (parentId && currentIndex < levels.length - 1) {
             const nextLevel = levels[currentIndex + 1];

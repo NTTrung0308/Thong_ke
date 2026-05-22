@@ -82,6 +82,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('training-logs/report', [TrainingLogController::class, 'report'])->name('training-logs.report');
     Route::resource('training-logs', TrainingLogController::class);
 
+    // Training Subjects API
+    Route::get('training-subjects', [App\Http\Controllers\Admin\TrainingSubjectController::class, 'index'])->name('training-subjects.index');
+    Route::post('training-subjects', [App\Http\Controllers\Admin\TrainingSubjectController::class, 'store'])->name('training-subjects.store');
+    Route::get('training-subjects/children/{parentId}', [App\Http\Controllers\Admin\TrainingSubjectController::class, 'getChildren'])->name('training-subjects.children');
+
     // Profile & Settings
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::put('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
