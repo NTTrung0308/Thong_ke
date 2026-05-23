@@ -41,14 +41,13 @@
 
                 <div>
                     <label for="password" class="block text-sm font-medium text-gray-700">Mật khẩu</label>
-                    <div class="mt-1">
+                    <div class="mt-1 relative">
                         <input type="password" name="password" id="password" required
-                            class="block w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                            class="block w-full rounded-lg border border-gray-200 px-4 py-2 pr-10 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                        <button type="button" id="togglePassword" class="absolute inset-y-0 right-2 flex items-center text-gray-500">
+                            <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        </button>
                     </div>
-                    <label class="inline-flex items-center mt-2">
-                        <input type="checkbox" id="togglePassword" class="h-4 w-4 text-blue-600 rounded border-gray-300">
-                        <span class="ml-2 text-sm text-gray-700">Hiển thị mật khẩu</span>
-                    </label>
                     @error('password')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -79,11 +78,18 @@
 
     <script>
         (function(){
-            var toggle = document.getElementById('togglePassword');
+            var btn = document.getElementById('togglePassword');
             var pwd = document.getElementById('password');
-            if(toggle && pwd){
-                toggle.addEventListener('change', function(){
-                    pwd.type = this.checked ? 'text' : 'password';
+            var eye = document.getElementById('eyeIcon');
+            if(btn && pwd){
+                btn.addEventListener('click', function(){
+                    if(pwd.type === 'password'){
+                        pwd.type = 'text';
+                        eye.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18"/>';
+                    } else {
+                        pwd.type = 'password';
+                        eye.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>';
+                    }
                 });
             }
         })();

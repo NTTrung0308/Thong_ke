@@ -80,10 +80,12 @@
                                     <input type="password" class="form-control" id="password_confirmation"
                                         name="password_confirmation" placeholder="Xác nhận mật khẩu mới">
                                 </div>
-                                <label class="inline-flex items-center mt-2">
-                                    <input type="checkbox" id="togglePasswordUserEdit" class="form-check-input me-2">
-                                    <span class="ml-2">Hiển thị mật khẩu</span>
-                                </label>
+                                <div class="mt-2">
+                                    <button type="button" id="togglePasswordUserEdit" class="btn btn-sm btn-outline-secondary">
+                                        <svg id="eyeIconEdit" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                        <span class="ms-1">Hiển thị</span>
+                                    </button>
+                                </div>
                             </div>
                             <div class="col-md-12">
                                 <div class="form-group">
@@ -118,14 +120,19 @@
 
     <script>
         (function(){
-            var toggle = document.getElementById('togglePasswordUserEdit');
+            var btn = document.getElementById('togglePasswordUserEdit');
             var pwd = document.getElementById('password');
             var pwdc = document.getElementById('password_confirmation');
-            if(toggle){
-                toggle.addEventListener('change', function(){
-                    var type = this.checked ? 'text' : 'password';
+            var eye = document.getElementById('eyeIconEdit');
+            if(btn){
+                btn.addEventListener('click', function(){
+                    var type = (pwd && pwd.type === 'password') ? 'text' : 'password';
                     if(pwd) pwd.type = type;
                     if(pwdc) pwdc.type = type;
+                    if(eye){
+                        if(type === 'text') eye.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18"/>';
+                        else eye.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>';
+                    }
                 });
             }
         })();
