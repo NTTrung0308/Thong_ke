@@ -67,4 +67,53 @@ class Soldier extends Model
     {
         return $this->hasMany(TrainingLog::class, 'soldier_id');
     }
+
+    // --- Scopes ---
+
+    public function scopeFilterByUnit($query, $unitId)
+    {
+        if (!$unitId) return $query;
+        
+        $unit = Unit::find($unitId);
+        if (!$unit) return $query;
+        
+        $descendantIds = $unit->getAllDescendantIds();
+        return $query->whereIn('unit_id', $descendantIds);
+    }
+
+    public function scopeFilterByLevel($query, $level)
+    {
+        if (!$level) return $query;
+        
+        $levelsHierarchy = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
+        $currentIndex = array_search($level, $levelsHierarchy);
+        
+        if ($currentIndex === false) return $query;
+        
+        $targetLevels = array_slice($levelsHierarchy, $currentIndex);
+        return $query->whereHas('unit', function($q) use ($targetLevels) {
+            $q->whereIn('level', $targetLevels);
+        });
+    }
+
+    public function scopeSearchKeywords($query, $q)
+    {
+        if (!$q) return $query;
+        
+        return $query->where(function($sub) use ($q) {
+            $sub->where('full_name', 'like', "%$q%")
+                ->orWhere('code', 'like', "%$q%")
+                ->orWhere('position', 'like', "%$q%")
+                ->orWhere('permanent_residence', 'like', "%$q%")
+                ->orWhereHas('weapons', function($w) use ($q) {
+                    $w->where('status', 'dang-su-dung')
+                      ->where(function($wq) use ($q) {
+                          $wq->orWhere('ak', 'like', "%$q%")
+                             ->orWhere('rpd', 'like', "%$q%")
+                             ->orWhere('b41', 'like', "%$q%")
+                             ->orWhere('m79', 'like', "%$q%");
+                      });
+                });
+        });
+    }
 }

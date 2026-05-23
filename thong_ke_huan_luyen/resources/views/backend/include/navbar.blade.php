@@ -247,10 +247,7 @@
                             <div class="dropdown-title d-flex justify-content-between align-items-center">
                                 Bạn có {{ auth()->user()->unreadNotifications->count() }} thông báo mới
                                 @if(auth()->user()->unreadNotifications->count() > 0)
-                                    <form action="{{ route('notifications.mark-all-as-read') }}" method="POST" class="d-inline">
-                                        @csrf
-                                        <button type="submit" class="btn btn-link btn-sm p-0">Đọc tất cả</button>
-                                    </form>
+                                    <a href="{{ route('notifications.mark-all-as-read') }}" class="small">Đọc tất cả</a>
                                 @endif
                             </div>
                         </li>

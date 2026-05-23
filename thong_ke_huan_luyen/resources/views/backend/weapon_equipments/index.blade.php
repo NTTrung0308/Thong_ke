@@ -16,6 +16,12 @@
         @include('backend.include.breadcrumbs', ['activeLabel' => 'Vũ khí trang bị', 'activeRoute' => route('weapon-equipments.index')])
         <div class="ms-md-auto py-2 py-md-0">
             {{-- <span class="text-muted me-3">Danh sách được tự động cập nhật theo quân nhân</span> --}}
+            <a href="{{ route('weapon-equipments.export-excel', request()->all()) }}" class="btn btn-success btn-round me-2">
+                <i class="fa fa-file-excel"></i> Xuất Excel
+            </a>
+            <a href="{{ route('weapon-equipments.export-pdf', request()->all()) }}" class="btn btn-danger btn-round me-2">
+                <i class="fa fa-file-pdf"></i> Xuất PDF
+            </a>
             <a href="{{ route('weapon-equipments.create') }}" class="btn btn-primary btn-round">Thêm trang bị bổ sung</a>
         </div>
     </div>

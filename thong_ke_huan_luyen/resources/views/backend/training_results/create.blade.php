@@ -108,7 +108,30 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <label for="content">Nội dung tập huấn <span class="text-danger">*</span></label>
+                                    <label class="d-block mb-2">Môn học/Nội dung huấn luyện</label>
+                                    <div class="row g-2">
+                                        <div class="col-md-4">
+                                            <select class="form-select" id="subject_id">
+                                                <option value="">-- Chọn môn học --</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <select class="form-select" id="lesson_id" disabled>
+                                                <option value="">-- Chọn bài --</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <select class="form-select" id="content_id" disabled>
+                                                <option value="">-- Chọn nội dung --</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="training_subject_id" id="final_subject_id" value="{{ old('training_subject_id') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="content">Nội dung tập huấn chi tiết <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('content') is-invalid @enderror" id="content" name="content" value="{{ old('content') }}" required placeholder="Ví dụ: Tập huấn kỹ thuật chiến đấu bộ binh...">
                                     @error('content') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
@@ -261,6 +284,7 @@ $(document).ready(function() {
         }
 
         updateFinalUnitId();
+        updateSubjectsBySelectedUnit();
 
         if (parentId && currentIndex < levels.length - 1) {
             const nextLevel = levels[currentIndex + 1];
@@ -282,6 +306,104 @@ $(document).ready(function() {
             });
         }
     });
+
+    // Training Subjects Logic
+    function loadSubjects(level = 'dai-doi') {
+        $.get(`{{ route('training-subjects.index') }}?unit_level=${level}`, function(data) {
+            let options = '<option value="">-- Chọn môn học --</option>';
+            data.forEach(s => {
+                options += `<option value="${s.id}">${s.name}</option>`;
+            });
+            $('#subject_id').html(options);
+            $('#lesson_id').html('<option value="">-- Chọn bài --</option>').prop('disabled', true);
+            $('#content_id').html('<option value="">-- Chọn nội dung --</option>').prop('disabled', true);
+        });
+    }
+
+    function updateSubjectsBySelectedUnit() {
+        const unitDaiDoi = $('#unit_dai_doi').val();
+        const unitTrungDoi = $('#unit_trung_doi').val();
+
+        let selectedLevel = '';
+        if (unitTrungDoi) {
+            selectedLevel = 'trung-doi';
+        } else if (unitDaiDoi) {
+            selectedLevel = 'dai-doi';
+        }
+
+        if (selectedLevel) {
+            loadSubjects(selectedLevel);
+        } else {
+            $('#subject_id').html('<option value="">-- Chọn môn học --</option>');
+            $('#lesson_id').html('<option value="">-- Chọn bài --</option>').prop('disabled', true);
+            $('#content_id').html('<option value="">-- Chọn nội dung --</option>').prop('disabled', true);
+        }
+    }
+
+    function updateFinalSubjectId() {
+        let lastId = '';
+        if ($('#content_id').val()) {
+            lastId = $('#content_id').val();
+        } else if ($('#lesson_id').val()) {
+            lastId = $('#lesson_id').val();
+        } else if ($('#subject_id').val()) {
+            lastId = $('#subject_id').val();
+        }
+        $('#final_subject_id').val(lastId);
+
+        // Also update content field if empty
+        if (lastId && !$('#content').val()) {
+            let text = $('#subject_id option:selected').text();
+            if ($('#lesson_id').val()) text += ' - ' + $('#lesson_id option:selected').text();
+            if ($('#content_id').val()) text += ' - ' + $('#content_id option:selected').text();
+            $('#content').val(text);
+        }
+    }
+
+    $('#subject_id, #lesson_id, #content_id').on('change', function() {
+        updateFinalSubjectId();
+    });
+
+    $('#subject_id').on('change', function() {
+        const parentId = $(this).val();
+        if (parentId) {
+            const unitDaiDoi = $('#unit_dai_doi').val();
+            const unitTrungDoi = $('#unit_trung_doi').val();
+            let selectedLevel = unitTrungDoi ? 'trung-doi' : 'dai-doi';
+            $.get(`{{ route('training-subjects.children', '') }}/${parentId}?unit_level=${selectedLevel}`, function(data) {
+                let options = '<option value="">-- Chọn bài --</option>';
+                data.forEach(s => {
+                    options += `<option value="${s.id}">${s.name}</option>`;
+                });
+                $('#lesson_id').html(options).prop('disabled', false);
+                $('#content_id').html('<option value="">-- Chọn nội dung --</option>').prop('disabled', true);
+            });
+        } else {
+            $('#lesson_id').html('<option value="">-- Chọn bài --</option>').prop('disabled', true);
+            $('#content_id').html('<option value="">-- Chọn nội dung --</option>').prop('disabled', true);
+        }
+    });
+
+    $('#lesson_id').on('change', function() {
+        const parentId = $(this).val();
+        if (parentId) {
+            const unitDaiDoi = $('#unit_dai_doi').val();
+            const unitTrungDoi = $('#unit_trung_doi').val();
+            let selectedLevel = unitTrungDoi ? 'trung-doi' : 'dai-doi';
+            $.get(`{{ route('training-subjects.children', '') }}/${parentId}?unit_level=${selectedLevel}`, function(data) {
+                let options = '<option value="">-- Chọn nội dung --</option>';
+                data.forEach(s => {
+                    options += `<option value="${s.id}">${s.name}</option>`;
+                });
+                $('#content_id').html(options).prop('disabled', false);
+            });
+        } else {
+            $('#content_id').html('<option value="">-- Chọn nội dung --</option>').prop('disabled', true);
+        }
+    });
+
+    // Initial load
+    updateSubjectsBySelectedUnit();
 });
 </script>
 @endsection

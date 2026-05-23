@@ -15,6 +15,12 @@
         @include('backend.include.breadcrumbs', ['activeLabel' => 'Kỷ luật', 'activeRoute' => route('disciplines.index')])
         <div class="ms-md-auto py-2 py-md-0">
             {{-- <span class="text-muted me-3">Danh sách được tự động cập nhật theo quân nhân</span> --}}
+            <a href="{{ route('disciplines.export-excel', request()->all()) }}" class="btn btn-success btn-round me-2">
+                <i class="fa fa-file-excel"></i> Xuất Excel
+            </a>
+            <a href="{{ route('disciplines.export-pdf', request()->all()) }}" class="btn btn-danger btn-round me-2">
+                <i class="fa fa-file-pdf"></i> Xuất PDF
+            </a>
             <a href="{{ route('disciplines.report') }}" class="btn btn-info btn-round me-2">
                 <i class="fa fa-chart-bar"></i> Báo cáo thống kê
             </a>

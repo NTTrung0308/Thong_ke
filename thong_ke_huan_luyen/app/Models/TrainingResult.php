@@ -15,7 +15,7 @@ class TrainingResult extends Model
     // Tên bảng
     protected $fillable = [
         'unit_id', 'unit_name_at_time',
-        'training_date', 'training_month', 'content',
+        'training_date', 'training_month', 'training_subject_id', 'content',
         'start_time', 'end_time', 'duration_hours',
         'trung_doi_count', 'at_count', 'kdt_count',
         'result', 'result_details', 'passing_rate',
@@ -41,6 +41,11 @@ class TrainingResult extends Model
     ];
 
     // Relationships
+    public function trainingSubject()
+    {
+        return $this->belongsTo(TrainingSubject::class, 'training_subject_id');
+    }
+
     public function unit()
     {
         return $this->belongsTo(Unit::class);

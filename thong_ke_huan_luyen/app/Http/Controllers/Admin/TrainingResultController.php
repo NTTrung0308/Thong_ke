@@ -161,6 +161,7 @@ class TrainingResultController extends Controller
         $validated = $request->validate([
             'unit_id' => 'required|exists:units,id',
             'training_date' => 'required|date',
+            'training_subject_id' => 'nullable|exists:training_subjects,id',
             'content' => 'required|string|max:500',
             'start_time' => 'required',
             'end_time' => 'required|after:start_time',
@@ -279,6 +280,7 @@ class TrainingResultController extends Controller
         $validated = $request->validate([
             'unit_id' => 'required|exists:units,id',
             'training_date' => 'required|date',
+            'training_subject_id' => 'nullable|exists:training_subjects,id',
             'content' => 'required|string|max:500',
             'start_time' => 'required',
             'end_time' => 'required|after:start_time',

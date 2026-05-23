@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Reward;
 use App\Models\Unit;
 use App\Models\Soldier;
+use App\Exports\RewardExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -15,6 +18,53 @@ class RewardController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $rewards = $this->getFilteredRewards($request);
+        return Excel::download(new RewardExport($rewards), 'danh-sach-khen-thuong.xlsx');
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $rewards = $this->getFilteredRewards($request);
+        $pdf = Pdf::loadView('backend.rewards.pdf', compact('rewards'))
+                  ->setPaper('a4', 'landscape');
+        return $pdf->download('danh-sach-khen-thuong.pdf');
+    }
+
+    private function getFilteredRewards(Request $request)
+    {
+        $user = Auth::user();
+        $query = Reward::with(['unit', 'soldier']);
+
+        if (!$user->hasRole('chi-huy')) {
+            $unitIds = $user->getAccessibleUnitIds();
+            $query->whereIn('rewards.unit_id', $unitIds);
+        }
+
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        if ($request->filled('unit_id')) {
+            $query->where('rewards.unit_id', $request->unit_id);
+        }
+
+        if ($request->filled('year')) {
+            $query->whereYear('decision_date', $request->year);
+        }
+
+        if ($request->filled('decision_level')) {
+            $query->where('decision_level', $request->decision_level);
+        }
+
+        return $query->leftJoin('soldiers', 'rewards.soldier_id', '=', 'soldiers.id')
+            ->orderBy('rewards.unit_id')
+            ->orderBy('soldiers.full_name')
+            ->select('rewards.*')
+            ->get();
     }
 
     public function index(Request $request)
@@ -348,7 +398,22 @@ class RewardController extends Controller
 
         $validated['updated_by'] = Auth::id();
 
-        $reward->update($validated);
+        $reward = Reward::create($validated);
+
+        // Gửi thông báo
+        $chiHuyUsers = \App\Models\User::role('chi-huy')->get();
+        $targetUser = $reward->soldier ? \App\Models\User::where('soldier_id', $reward->soldier_id)->first() : null;
+
+        $msg = 'Có quyết định khen thưởng mới cho ' . ($reward->soldier ? $reward->soldier->full_name : $reward->unit_name_at_time);
+        $notification = new \App\Notifications\SystemNotification(
+            'Khen thưởng mới',
+            $msg,
+            'fa-medal',
+            route('rewards.show', $reward->id),
+            'success'
+        );
+        \Illuminate\Support\Facades\Notification::send($chiHuyUsers, $notification);
+        if ($targetUser) $targetUser->notify($notification);
 
         return redirect()->route('rewards.index')
             ->with('success', 'Cập nhật khen thưởng thành công!');

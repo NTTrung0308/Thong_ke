@@ -40,7 +40,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Notifications
     Route::post('/notifications/mark-as-read/{id}', [App\Http\Controllers\Admin\NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
-    Route::post('/notifications/mark-all-as-read', [App\Http\Controllers\Admin\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
+    Route::get('/notifications/mark-all-as-read', [App\Http\Controllers\Admin\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
 
     // Search function
     Route::get('/search', [SoldierController::class, 'search'])->name('search.index');
@@ -52,7 +52,13 @@ Route::middleware(['auth'])->group(function () {
     // Activity Logs - Chỉ dành cho Chỉ huy
     Route::get('/activity-logs', [App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('activity-logs.index')->middleware('check.role:chi-huy');
 
+    // Roles & Permissions Management
+    Route::resource('roles', App\Http\Controllers\Admin\RoleController::class)->middleware('check.role:chi-huy');
+    Route::resource('permissions', App\Http\Controllers\Admin\PermissionController::class)->only(['index', 'store', 'destroy'])->middleware('check.role:chi-huy');
+
     // Soldiers Management
+    Route::post('soldiers/import', [SoldierController::class, 'importExcel'])->name('soldiers.import');
+    Route::get('soldiers/download-template', [SoldierController::class, 'downloadTemplate'])->name('soldiers.download-template');
     Route::get('soldiers/export-excel', [SoldierController::class, 'exportExcel'])->name('soldiers.export-excel');
     Route::get('soldiers/export-pdf', [SoldierController::class, 'exportPdf'])->name('soldiers.export-pdf');
     Route::resource('soldiers', SoldierController::class);
@@ -62,13 +68,19 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('units', UnitController::class)->middleware('check.role:chi-huy');
 
     // Weapon & Equipment Management
+    Route::get('weapon-equipments/export-excel', [WeaponEquipmentController::class, 'exportExcel'])->name('weapon-equipments.export-excel');
+    Route::get('weapon-equipments/export-pdf', [WeaponEquipmentController::class, 'exportPdf'])->name('weapon-equipments.export-pdf');
     Route::resource('weapon-equipments', WeaponEquipmentController::class);
 
     // Rewards Management
+    Route::get('rewards/export-excel', [RewardController::class, 'exportExcel'])->name('rewards.export-excel');
+    Route::get('rewards/export-pdf', [RewardController::class, 'exportPdf'])->name('rewards.export-pdf');
     Route::get('rewards/report', [RewardController::class, 'report'])->name('rewards.report');
     Route::resource('rewards', RewardController::class);
 
     // Discipline Management
+    Route::get('disciplines/export-excel', [DisciplineController::class, 'exportExcel'])->name('disciplines.export-excel');
+    Route::get('disciplines/export-pdf', [DisciplineController::class, 'exportPdf'])->name('disciplines.export-pdf');
     Route::get('disciplines/report', [DisciplineController::class, 'report'])->name('disciplines.report');
     Route::resource('disciplines', DisciplineController::class);
 
@@ -79,13 +91,14 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('training-results', TrainingResultController::class);
 
     // Training Logs Management
+    Route::get('training-logs/export-excel', [TrainingLogController::class, 'exportExcel'])->name('training-logs.export-excel');
+    Route::get('training-logs/export-pdf', [TrainingLogController::class, 'exportPdf'])->name('training-logs.export-pdf');
     Route::get('training-logs/report', [TrainingLogController::class, 'report'])->name('training-logs.report');
     Route::resource('training-logs', TrainingLogController::class);
 
-    // Training Subjects API
-    Route::get('training-subjects', [App\Http\Controllers\Admin\TrainingSubjectController::class, 'index'])->name('training-subjects.index');
-    Route::post('training-subjects', [App\Http\Controllers\Admin\TrainingSubjectController::class, 'store'])->name('training-subjects.store');
+    // Training Subjects Management
     Route::get('training-subjects/children/{parentId}', [App\Http\Controllers\Admin\TrainingSubjectController::class, 'getChildren'])->name('training-subjects.children');
+    Route::resource('training-subjects', App\Http\Controllers\Admin\TrainingSubjectController::class);
 
     // Profile & Settings
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');

@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Discipline;
 use App\Models\Unit;
 use App\Models\Soldier;
+use App\Exports\DisciplineExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -15,6 +18,49 @@ class DisciplineController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $disciplines = $this->getFilteredDisciplines($request);
+        return Excel::download(new DisciplineExport($disciplines), 'danh-sach-ky-luat.xlsx');
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $disciplines = $this->getFilteredDisciplines($request);
+        $pdf = Pdf::loadView('backend.disciplines.pdf', compact('disciplines'))
+                  ->setPaper('a4', 'landscape');
+        return $pdf->download('danh-sach-ky-luat.pdf');
+    }
+
+    private function getFilteredDisciplines(Request $request)
+    {
+        $user = Auth::user();
+        $query = Discipline::with(['unit', 'soldier']);
+
+        if (!$user->hasRole('chi-huy')) {
+            $unitIds = $user->getAccessibleUnitIds();
+            $query->whereIn('disciplines.unit_id', $unitIds);
+        }
+
+        if ($request->filled('unit_id')) {
+            $query->where('disciplines.unit_id', $request->unit_id);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('year')) {
+            $query->whereYear('decision_date', $request->year);
+        }
+
+        return $query->leftJoin('soldiers', 'disciplines.soldier_id', '=', 'soldiers.id')
+            ->orderBy('disciplines.unit_id')
+            ->orderBy('soldiers.full_name')
+            ->select('disciplines.*')
+            ->get();
     }
 
     public function index(Request $request)
@@ -242,7 +288,22 @@ class DisciplineController extends Controller
         $validated['created_by'] = Auth::id();
         $validated['updated_by'] = Auth::id();
 
-        Discipline::create($validated);
+        $discipline = Discipline::create($validated);
+
+        // Gửi thông báo
+        $chiHuyUsers = \App\Models\User::role('chi-huy')->get();
+        $targetUser = $discipline->soldier ? \App\Models\User::where('soldier_id', $discipline->soldier_id)->first() : null;
+        
+        $msg = 'Có quyết định kỷ luật mới cho ' . ($discipline->soldier ? $discipline->soldier->full_name : $discipline->unit_name_at_time);
+        $notification = new \App\Notifications\SystemNotification(
+            'Kỷ luật mới',
+            $msg,
+            'fa-exclamation-triangle',
+            route('disciplines.show', $discipline->id),
+            'danger'
+        );
+        \Illuminate\Support\Facades\Notification::send($chiHuyUsers, $notification);
+        if ($targetUser) $targetUser->notify($notification);
 
         return redirect()->route('disciplines.index')
             ->with('success', 'Thêm kỷ luật thành công!');

@@ -67,6 +67,7 @@
                                         @endforeach
                                     </div>
                                     <input type="hidden" name="unit_id" id="final_unit_id" value="{{ old('unit_id') }}" required>
+                                    <input type="hidden" name="training_subject_id" id="final_subject_id" value="{{ old('training_subject_id') }}">
                                     @error('unit_id')
                                         <div class="text-danger small mt-1">{{ $message }}</div>
                                     @enderror
@@ -384,6 +385,22 @@ $(document).ready(function() {
     }
     // Initial load
     updateSubjectsBySelectedUnit();
+
+    function updateFinalSubjectId() {
+        let lastId = '';
+        if ($('#content_id').val()) {
+            lastId = $('#content_id').val();
+        } else if ($('#lesson_id').val()) {
+            lastId = $('#lesson_id').val();
+        } else if ($('#subject_id').val()) {
+            lastId = $('#subject_id').val();
+        }
+        $('#final_subject_id').val(lastId);
+    }
+
+    $('#subject_id, #lesson_id, #content_id').on('change', function() {
+        updateFinalSubjectId();
+    });
 
     $('#subject_id').on('change', function() {
         const parentId = $(this).val();

@@ -120,7 +120,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="#">
+                                    <a href="{{ route('roles.index') }}">
                                         <span class="sub-item">Vai trò & Quyền</span>
                                     </a>
                                 </li>

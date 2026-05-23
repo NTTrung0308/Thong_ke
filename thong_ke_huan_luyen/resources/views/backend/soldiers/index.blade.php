@@ -22,6 +22,9 @@
                     <div class="d-flex align-items-center">
                         <h4 class="card-title">Danh sách quân nhân</h4>
                         <div class="ms-auto">
+                            <button type="button" class="btn btn-info btn-round me-2" data-bs-toggle="modal" data-bs-target="#importModal">
+                                <i class="fas fa-file-import"></i> Nhập từ Excel
+                            </button>
                             <a href="{{ route('soldiers.export-excel', request()->all()) }}" class="btn btn-success btn-round me-2">
                                 <i class="fas fa-file-excel"></i> Xuất Excel
                             </a>
@@ -35,6 +38,16 @@
                     </div>
                 </div>
                 <div class="card-body">
+                    @if (session('success'))
+                        <div class="alert alert-success">
+                            {{ session('success') }}
+                        </div>
+                    @endif
+                    @if (session('error'))
+                        <div class="alert alert-danger">
+                            {!! session('error') !!}
+                        </div>
+                    @endif
                     <!-- Lọc theo đơn vị (Server-side trigger) -->
                     @if($units->count() > 1)
                     <form action="{{ route('soldiers.index') }}" method="GET" class="mb-4">
@@ -117,6 +130,53 @@
                         </table>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nhập từ Excel -->
+    <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="importModalLabel">Nhập danh sách quân nhân từ Excel</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('soldiers.import') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="form-group mb-3">
+                            <label>Chọn file Excel (.xlsx, .xls, .csv)</label>
+                            <input type="file" name="file" class="form-control" required accept=".xlsx, .xls, .csv">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label>Đơn vị mặc định (nếu trong file không có tên đơn vị)</label>
+                            <select name="unit_id" class="form-select">
+                                <option value="">-- Chọn đơn vị --</option>
+                                @foreach($units as $unit)
+                                    <option value="{{ $unit->id }}">{{ $unit->getFullHierarchyName() }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="alert alert-info">
+                            <p class="mb-1"><i class="fas fa-info-circle me-1"></i> <strong>Lưu ý:</strong></p>
+                            <ul class="small mb-0">
+                                <li>Sử dụng đúng các cột theo file mẫu.</li>
+                                <li>Ngày tháng nhập theo định dạng: dd/mm/yyyy.</li>
+                                <li>Dung lượng file tối đa 10MB.</li>
+                            </ul>
+                        </div>
+                        <div class="text-center">
+                            <a href="{{ route('soldiers.download-template') }}" class="btn btn-link">
+                                <i class="fas fa-download me-1"></i> Tải file Excel mẫu tại đây
+                            </a>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-primary">Bắt đầu nhập</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

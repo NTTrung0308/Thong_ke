@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Soldier;
 use App\Models\Unit;
 use App\Exports\SoldierExport;
+use App\Imports\SoldierImport;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class SoldierController extends Controller
 {
@@ -17,6 +19,56 @@ class SoldierController extends Controller
     {
         // Kiểm tra quyền dựa trên role
         $this->middleware('auth');
+    }
+
+    public function importExcel(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:10240',
+            'unit_id' => 'nullable|exists:units,id'
+        ]);
+
+        try {
+            Excel::import(new SoldierImport($request->unit_id), $request->file('file'));
+            return redirect()->route('soldiers.index')->with('success', 'Nhập dữ liệu quân nhân thành công!');
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+             $failures = $e->failures();
+             $errors = [];
+             foreach ($failures as $failure) {
+                 $errors[] = "Dòng " . $failure->row() . ": " . implode(', ', $failure->errors());
+             }
+             return redirect()->route('soldiers.index')->with('error', 'Lỗi nhập dữ liệu: ' . implode('<br>', $errors));
+        } catch (\Exception $e) {
+            return redirect()->route('soldiers.index')->with('error', 'Đã xảy ra lỗi: ' . $e->getMessage());
+        }
+    }
+
+    public function downloadTemplate()
+    {
+        $headers = [
+            'STT', 'Số hiệu', 'Họ và tên', 'Cấp bậc', 'Chức vụ', 'Đơn vị', 
+            'Ngày sinh', 'Ngày nhập ngũ', 'Ngày vào Đảng/Đoàn', 
+            'Học vấn', 'Ngoại ngữ', 'Trình độ chuyên môn', 
+            'Hộ khẩu thường trú', 'Người báo tin', 'Địa chỉ báo tin', 'Ghi chú'
+        ];
+        
+        $callback = function() use ($headers) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF)); // BOM for UTF-8
+            fputcsv($file, $headers);
+            
+            // Sample row
+            fputcsv($file, [
+                '1', '123456', 'Nguyễn Văn A', 'Binh nhì', 'Chiến sỹ', 'Đại đội 1', 
+                '01/01/2000', '01/02/2024', '01/01/2023', 
+                '12/12', 'Tiếng Anh', 'Đại học', 
+                'Hà Nội', 'Nguyễn Văn B', 'Hà Nội', 'Mẫu nhập liệu'
+            ]);
+            
+            fclose($file);
+        };
+
+        return response()->streamDownload($callback, 'mau-nhap-quan-nhan.csv');
     }
 
     public function exportExcel(Request $request)
@@ -165,52 +217,7 @@ class SoldierController extends Controller
         $validated['created_by'] = Auth::id();
         $validated['updated_by'] = Auth::id();
 
-        $soldier = Soldier::create($validated);
-
-        // Tự động tạo bản ghi vũ khí trang bị cho quân nhân mới
-        \App\Models\WeaponEquipment::create([
-            'soldier_id' => $soldier->id,
-            'unit_id' => $soldier->unit_id,
-            'status' => 'dang-su-dung',
-            'receive_date' => now(),
-            'created_by' => Auth::id(),
-            'updated_by' => Auth::id(),
-        ]);
-
-        // Tự động tạo bản ghi khen thưởng cho quân nhân mới
-        \App\Models\Reward::create([
-            'type' => 'unit',
-            'soldier_id' => $soldier->id,
-            'soldier_name_at_time' => $soldier->full_name,
-            'unit_id' => $soldier->unit_id,
-            'unit_name_at_time' => $soldier->unit->name ?? 'N/A',
-            'created_by' => Auth::id(),
-            'updated_by' => Auth::id(),
-        ]);
-
-        // Tự động tạo bản ghi nhật ký huấn luyện cho quân nhân mới
-        \App\Models\TrainingLog::create([
-            'soldier_id' => $soldier->id,
-            'soldier_name_at_time' => $soldier->full_name,
-            'unit_id' => $soldier->unit_id,
-            'unit_name_at_time' => $soldier->unit->name ?? 'N/A',
-            'training_date' => now(),
-            'day_of_week' => $this->getVietnameseDayOfWeek(now()),
-            'created_by' => Auth::id(),
-            'updated_by' => Auth::id(),
-        ]);
-
-        // Tự động tạo bản ghi kỷ luật cho quân nhân mới
-        \App\Models\Discipline::create([
-            'soldier_id' => $soldier->id,
-            'soldier_name_at_time' => $soldier->full_name,
-            'soldier_rank_at_time' => $soldier->rank,
-            'unit_id' => $soldier->unit_id,
-            'unit_name_at_time' => $soldier->unit->name ?? 'N/A',
-            'status' => 'da-thi-hanh-xong',
-            'created_by' => Auth::id(),
-            'updated_by' => Auth::id(),
-        ]);
+        Soldier::create($validated);
 
         return redirect()->route('soldiers.index')
             ->with('success', 'Thêm quân nhân thành công!');
@@ -560,55 +567,24 @@ class SoldierController extends Controller
 
             case 'soldiers':
             default:
-                $query = Soldier::query()->whereIn('unit_id', $accessibleUnitIds);
-
-                // Lọc theo từ khóa chính
-                if ($request->filled('q')) {
-                    $q = $request->q;
-                    $query->where(function($sub) use ($q) {
-                        $sub->where('full_name', 'like', "%$q%")
-                            ->orWhere('code', 'like', "%$q%")
-                            ->orWhere('position', 'like', "%$q%")
-                            ->orWhere('permanent_residence', 'like', "%$q%")
-                            ->orWhereHas('weapons', function($w) use ($q) {
-                                $w->where('status', 'dang-su-dung')
-                                  ->where(function($query) use ($q) {
-                                      $weaponFields = ['ak', 'rpd', 'b41', 'm79'];
-                                      foreach ($weaponFields as $field) {
-                                          $query->orWhere($field, 'like', "%$q%");
-                                      }
-                                  });
-                            });
-                    });
-                }
-
-                // Lọc theo đơn vị (bao gồm cả đơn vị con)
-                if ($request->filled('unit_id')) {
-                    $selectedUnit = \App\Models\Unit::find($request->unit_id);
-                    if ($selectedUnit && in_array($selectedUnit->id, $accessibleUnitIds)) {
-                        $targetUnitIds = $selectedUnit->getAllDescendantIds();
-                        $query->whereIn('unit_id', $targetUnitIds);
-                    }
-                }
-
-                // Lọc theo cấp bậc
-                if ($request->filled('rank')) {
-                    $query->where('rank', $request->rank);
-                }
-
-                // Lọc theo năm nhập ngũ
-                if ($request->filled('enlistment_year')) {
-                    $query->whereYear('enlistment_date', $request->enlistment_year);
-                }
-
-                // Lọc theo trình độ chuyên môn
-                if ($request->filled('professional_level')) {
-                    $query->where('professional_level', 'like', "%" . $request->professional_level . "%");
-                }
-
-                $soldiers = $query->with(['unit', 'weapons' => function($q) {
-                    $q->where('status', 'dang-su-dung');
-                }])->paginate(20);
+                $soldiers = Soldier::query()
+                    ->whereIn('unit_id', $accessibleUnitIds)
+                    ->searchKeywords($request->q)
+                    ->filterByUnit($request->unit_id)
+                    ->filterByLevel($request->level)
+                    ->when($request->filled('rank'), function($q) use ($request) {
+                        $q->where('rank', $request->rank);
+                    })
+                    ->when($request->filled('enlistment_year'), function($q) use ($request) {
+                        $q->whereYear('enlistment_date', $request->enlistment_year);
+                    })
+                    ->when($request->filled('professional_level'), function($q) use ($request) {
+                        $q->where('professional_level', 'like', "%" . $request->professional_level . "%");
+                    })
+                    ->with(['unit', 'weapons' => function($q) {
+                        $q->where('status', 'dang-su-dung');
+                    }])
+                    ->paginate(20);
 
                 // Lấy danh sách cấp bậc & năm cho bộ lọc
                 $ranks = Soldier::whereIn('unit_id', $accessibleUnitIds)->distinct()->pluck('rank')->filter();

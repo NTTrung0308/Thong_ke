@@ -21,6 +21,9 @@ class NotificationController extends Controller
     public function markAllAsRead()
     {
         Auth::user()->unreadNotifications->markAsRead();
+        if (request()->ajax()) {
+            return response()->json(['success' => true]);
+        }
         return back()->with('success', 'Đã đánh dấu tất cả thông báo là đã đọc.');
     }
 }

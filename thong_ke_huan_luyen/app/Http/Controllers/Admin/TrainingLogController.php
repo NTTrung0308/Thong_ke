@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\TrainingLog;
 use App\Models\Unit;
 use App\Models\Soldier;
+use App\Exports\TrainingLogExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -16,6 +19,52 @@ class TrainingLogController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $logs = $this->getFilteredLogs($request);
+        return Excel::download(new TrainingLogExport($logs), 'nhat-ky-huan-luyen.xlsx');
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $logs = $this->getFilteredLogs($request);
+        $pdf = Pdf::loadView('backend.training_logs.pdf', compact('logs'))
+                  ->setPaper('a4', 'landscape');
+        return $pdf->download('nhat-ky-huan-luyen.pdf');
+    }
+
+    private function getFilteredLogs(Request $request)
+    {
+        $user = Auth::user();
+        $query = TrainingLog::with(['unit', 'soldier']);
+
+        if (!$user->hasRole('chi-huy')) {
+            $unitIds = $user->getAccessibleUnitIds();
+            $query->whereIn('training_logs.unit_id', $unitIds);
+        }
+
+        if ($request->filled('unit_id')) {
+            $query->where('training_logs.unit_id', $request->unit_id);
+        }
+
+        if ($request->filled('start_date')) {
+            $query->whereDate('training_date', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $query->whereDate('training_date', '<=', $request->end_date);
+        }
+
+        if ($request->filled('rating')) {
+            $query->where('rating', $request->rating);
+        }
+
+        return $query->leftJoin('soldiers', 'training_logs.soldier_id', '=', 'soldiers.id')
+            ->orderBy('training_logs.unit_id')
+            ->orderBy('soldiers.full_name')
+            ->select('training_logs.*')
+            ->get();
     }
 
     public function index(Request $request)
@@ -151,6 +200,7 @@ class TrainingLogController extends Controller
             'unit_id' => 'required|exists:units,id',
             'soldier_id' => 'nullable|exists:soldiers,id',
             'training_date' => 'required|date',
+            'training_subject_id' => 'nullable|exists:training_subjects,id',
             'day_of_week' => 'nullable|string',
             'attendance_mon' => 'nullable|in:+,x,-',
             'attendance_tue' => 'nullable|in:+,x,-',
@@ -223,7 +273,20 @@ class TrainingLogController extends Controller
 
         if ($soldiers->isEmpty()) {
             $validated['unit_name_at_time'] = $selectedUnit->name;
-            TrainingLog::create($validated);
+            $trainingLog = TrainingLog::create($validated);
+
+            // Gửi thông báo
+            $chiHuyUsers = \App\Models\User::role('chi-huy')->get();
+            $msg = 'Có nhật ký huấn luyện mới từ ' . $trainingLog->unit_name_at_time . ' ngày ' . $trainingLog->training_date->format('d/m/Y');
+            $notification = new \App\Notifications\SystemNotification(
+                'Nhật ký huấn luyện mới',
+                $msg,
+                'fa-book',
+                route('training-logs.show', $trainingLog->id),
+                'info'
+            );
+            \Illuminate\Support\Facades\Notification::send($chiHuyUsers, $notification);
+
             return redirect()->route('training-logs.index')
                 ->with('success', 'Đã lưu nhật ký huấn luyện cho đơn vị (không có quân nhân).');
         }
@@ -323,6 +386,7 @@ class TrainingLogController extends Controller
             'unit_id' => 'required|exists:units,id',
             'soldier_id' => 'nullable|exists:soldiers,id',
             'training_date' => 'nullable|date',
+            'training_subject_id' => 'nullable|exists:training_subjects,id',
             'day_of_week' => 'nullable|string',
             'attendance_mon' => 'nullable|in:+,x,-',
             'attendance_tue' => 'nullable|in:+,x,-',

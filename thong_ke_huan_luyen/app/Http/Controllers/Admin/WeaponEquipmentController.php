@@ -6,11 +6,50 @@ use App\Http\Controllers\Controller;
 use App\Models\WeaponEquipment;
 use App\Models\Soldier;
 use App\Models\Unit;
+use App\Exports\WeaponEquipmentExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class WeaponEquipmentController extends Controller
 {
+    public function exportExcel(Request $request)
+    {
+        $equipments = $this->getFilteredEquipments($request);
+        return Excel::download(new WeaponEquipmentExport($equipments), 'kiem-ke-vu-khi-trang-bi.xlsx');
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $equipments = $this->getFilteredEquipments($request);
+        $pdf = Pdf::loadView('backend.weapon_equipments.pdf', compact('equipments'))
+                  ->setPaper('a4', 'landscape');
+        return $pdf->download('kiem-ke-vu-khi-trang-bi.pdf');
+    }
+
+    private function getFilteredEquipments(Request $request)
+    {
+        $user = Auth::user();
+        $query = WeaponEquipment::with(['soldier.unit', 'unit']);
+        $accessibleUnitIds = $user->getAccessibleUnitIds();
+        $query->whereIn('weapon_equipment.unit_id', $accessibleUnitIds);
+
+        if ($request->filled('unit_id')) {
+            $selectedUnit = Unit::find($request->unit_id);
+            if ($selectedUnit && in_array($selectedUnit->id, $accessibleUnitIds)) {
+                $targetUnitIds = $selectedUnit->getAllDescendantIds();
+                $query->whereIn('weapon_equipment.unit_id', $targetUnitIds);
+            }
+        }
+
+        return $query->join('soldiers', 'weapon_equipment.soldier_id', '=', 'soldiers.id')
+            ->orderBy('weapon_equipment.unit_id')
+            ->orderBy('soldiers.full_name')
+            ->select('weapon_equipment.*')
+            ->get();
+    }
+
     public function index(Request $request)
     {
         $user = Auth::user();

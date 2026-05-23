@@ -15,7 +15,7 @@ class TrainingLog extends Model
     protected $fillable = [
         'unit_id', 'unit_name_at_time',
         'soldier_id', 'soldier_name_at_time',
-        'training_date', 'day_of_week',
+        'training_date', 'day_of_week', 'training_subject_id',
         'attendance_mon', 'attendance_tue', 'attendance_wed',
         'attendance_thu', 'attendance_fri', 'attendance_sat', 'attendance_sun',
         'training_content',
@@ -48,6 +48,11 @@ class TrainingLog extends Model
     ];
 
     // Relationships
+    public function trainingSubject()
+    {
+        return $this->belongsTo(TrainingSubject::class, 'training_subject_id');
+    }
+
     public function unit()
     {
         return $this->belongsTo(Unit::class);
