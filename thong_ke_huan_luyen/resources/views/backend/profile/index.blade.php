@@ -105,4 +105,19 @@
             </div>
         </div>
     </div>
+
+    <script>
+        (function(){
+            var toggle = document.getElementById('togglePasswordProfile');
+            var pwd = document.getElementById('password');
+            var pwdc = document.getElementById('password_confirmation');
+            if(toggle){
+                toggle.addEventListener('change', function(){
+                    var type = this.checked ? 'text' : 'password';
+                    if(pwd) pwd.type = type;
+                    if(pwdc) pwdc.type = type;
+                });
+            }
+        })();
+    </script>
 @endsection
