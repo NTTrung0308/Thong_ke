@@ -45,6 +45,10 @@
                         <input type="password" name="password" id="password" required
                             class="block w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
                     </div>
+                    <label class="inline-flex items-center mt-2">
+                        <input type="checkbox" id="togglePassword" class="h-4 w-4 text-blue-600 rounded border-gray-300">
+                        <span class="ml-2 text-sm text-gray-700">Hiển thị mật khẩu</span>
+                    </label>
                     @error('password')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -72,4 +76,16 @@
             </div>
         </div>
     </div>
+
+    <script>
+        (function(){
+            var toggle = document.getElementById('togglePassword');
+            var pwd = document.getElementById('password');
+            if(toggle && pwd){
+                toggle.addEventListener('change', function(){
+                    pwd.type = this.checked ? 'text' : 'password';
+                });
+            }
+        })();
+    </script>
 @endsection
