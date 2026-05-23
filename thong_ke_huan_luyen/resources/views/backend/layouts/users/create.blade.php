@@ -79,6 +79,10 @@
                                     <input type="password" class="form-control" id="password_confirmation"
                                         name="password_confirmation" placeholder="Xác nhận mật khẩu" required>
                                 </div>
+                                <label class="inline-flex items-center mt-2">
+                                    <input type="checkbox" id="togglePasswordUserCreate" class="form-check-input me-2">
+                                    <span class="ml-2">Hiển thị mật khẩu</span>
+                                </label>
                             </div>
                             <div class="col-md-12">
                                 <div class="form-group">
@@ -109,4 +113,19 @@
             </div>
         </div>
     </div>
+
+    <script>
+        (function(){
+            var toggle = document.getElementById('togglePasswordUserCreate');
+            var pwd = document.getElementById('password');
+            var pwdc = document.getElementById('password_confirmation');
+            if(toggle){
+                toggle.addEventListener('change', function(){
+                    var type = this.checked ? 'text' : 'password';
+                    if(pwd) pwd.type = type;
+                    if(pwdc) pwdc.type = type;
+                });
+            }
+        })();
+    </script>
 @endsection
