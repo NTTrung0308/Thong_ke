@@ -46,7 +46,16 @@
                         </div>
                         <div class="social-media mb-3">
                             <div class="text-start px-3 small">
-                                <p class="mb-1"><strong>Đơn vị:</strong> {{ $soldier->unit ? $soldier->unit->name : 'N/A' }}</p>
+                                <p class="mb-1"><strong>Đơn vị:</strong>
+                                    @if($soldier->unit)
+                                        @php
+                                            $chain = $soldier->unit->getAncestors()->concat([$soldier->unit])->map(function($u){ return $u->level_label . ' ' . $u->name; })->implode(' → ');
+                                        @endphp
+                                        {{ $chain }}
+                                    @else
+                                        N/A
+                                    @endif
+                                </p>
                                 <p class="mb-1"><strong>Nhập ngũ:</strong> {{ $soldier->enlistment_date ? $soldier->enlistment_date->format('m/Y') : 'N/A' }}</p>
                                 <p class="mb-1"><strong>Trình độ:</strong> {{ $soldier->professional_level ?? 'N/A' }}</p>
                             </div>
@@ -136,7 +145,14 @@
                                         <i class="fas fa-info-circle me-1"></i> Thông tin cơ bản
                                     </h5>
                                     <div class="row px-2">
-                                        <div class="col-6 mb-2"><strong>Đơn vị:</strong> {{ $soldier->unit ? $soldier->unit->name : 'N/A' }}</div>
+                                        <div class="col-12 mb-2"><strong>Đơn vị:</strong>
+                                            @if($soldier->unit)
+                                                @php $chain = $soldier->unit->getAncestors()->concat([$soldier->unit])->map(function($u){ return $u->level_label . ' ' . $u->name; })->implode(' → '); @endphp
+                                                {{ $chain }}
+                                            @else
+                                                N/A
+                                            @endif
+                                        </div>
                                         <div class="col-6 mb-2"><strong>Ngày sinh:</strong> {{ $soldier->birth_date ? $soldier->birth_date->format('d/m/Y') : 'N/A' }}</div>
                                         <div class="col-6 mb-2"><strong>Hộ khẩu:</strong> {{ $soldier->permanent_residence }}</div>
                                         <div class="col-6 mb-2"><strong>Ngày vào Đảng/Đoàn:</strong> {{ $soldier->party_join_date ? $soldier->party_join_date->format('d/m/Y') : 'Chưa vào' }}</div>
