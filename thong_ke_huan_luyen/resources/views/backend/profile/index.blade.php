@@ -93,6 +93,10 @@
                             <input type="password" class="form-control" id="password_confirmation"
                                 name="password_confirmation" required>
                         </div>
+                        <label class="inline-flex items-center mt-2">
+                            <input type="checkbox" id="togglePasswordProfile" class="form-check-input me-2">
+                            <span class="ml-2">Hiển thị mật khẩu mới</span>
+                        </label>
                     </div>
                     <div class="card-action">
                         <button type="submit" class="btn btn-primary">Đổi mật khẩu</button>
