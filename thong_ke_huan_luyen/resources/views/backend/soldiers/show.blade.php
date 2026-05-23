@@ -136,6 +136,7 @@
                                         <i class="fas fa-info-circle me-1"></i> Thông tin cơ bản
                                     </h5>
                                     <div class="row px-2">
+                                        <div class="col-6 mb-2"><strong>Đơn vị:</strong> {{ $soldier->unit ? $soldier->unit->name : 'N/A' }}</div>
                                         <div class="col-6 mb-2"><strong>Ngày sinh:</strong> {{ $soldier->birth_date ? $soldier->birth_date->format('d/m/Y') : 'N/A' }}</div>
                                         <div class="col-6 mb-2"><strong>Hộ khẩu:</strong> {{ $soldier->permanent_residence }}</div>
                                         <div class="col-6 mb-2"><strong>Ngày vào Đảng/Đoàn:</strong> {{ $soldier->party_join_date ? $soldier->party_join_date->format('d/m/Y') : 'Chưa vào' }}</div>
