@@ -49,7 +49,7 @@
                                 <p class="mb-1"><strong>Đơn vị:</strong>
                                     @if($soldier->unit)
                                         @php
-                                            $chain = $soldier->unit->getAncestors()->concat([$soldier->unit])->map(function($u){ return $u->level_label . ' ' . $u->name; })->implode(' → ');
+                                            $chain = $soldier->unit->getAncestors()->concat([$soldier->unit])->map(function($u){ return $u->name; })->implode(', ');
                                         @endphp
                                         {{ $chain }}
                                     @else
@@ -147,7 +147,7 @@
                                     <div class="row px-2">
                                         <div class="col-12 mb-2"><strong>Đơn vị:</strong>
                                             @if($soldier->unit)
-                                                @php $chain = $soldier->unit->getAncestors()->concat([$soldier->unit])->map(function($u){ return $u->level_label . ' ' . $u->name; })->implode(' → '); @endphp
+                                                @php $chain = $soldier->unit->getAncestors()->concat([$soldier->unit])->map(function($u){ return $u->name; })->implode(' → '); @endphp
                                                 {{ $chain }}
                                             @else
                                                 N/A
