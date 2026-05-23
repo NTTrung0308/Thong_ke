@@ -78,6 +78,12 @@
                         <p>Nhật ký huấn luyện</p>
                     </a>
                 </li>
+                <li class="nav-item {{ Request::is('training-subjects*') ? 'active' : '' }}">
+                    <a href="{{ route('training-subjects.index') }}">
+                        <i class="fas fa-list-alt"></i>
+                        <p>Nội dung huấn luyện</p>
+                    </a>
+                </li>
                 @if (auth()->user()->hasRole('chi-huy'))
                     <li class="nav-section">
                         <span class="sidebar-mini-icon">
@@ -96,6 +102,11 @@
                                 <li>
                                     <a href="{{ route('units.index') }}">
                                         <span class="sub-item">Quản lý đơn vị</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('training-subjects.index') }}">
+                                        <span class="sub-item">Nội dung huấn luyện</span>
                                     </a>
                                 </li>
                                 <li>
