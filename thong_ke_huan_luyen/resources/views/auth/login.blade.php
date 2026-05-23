@@ -56,7 +56,7 @@
 
                 <div class="flex items-center justify-between">
                     <label class="inline-flex items-center">
-                        <input type="checkbox" name="remember" class="h-4 w-4 text-blue-600 rounded border-gray-300">
+                        <input type="checkbox" name="remember" id="remember" value="1" {{ old('remember') ? 'checked' : '' }} class="h-4 w-4 text-blue-600 rounded border-gray-300">
                         <span class="ml-2 text-sm text-gray-700">Ghi nhớ đăng nhập</span>
                     </label>
                     <div>
