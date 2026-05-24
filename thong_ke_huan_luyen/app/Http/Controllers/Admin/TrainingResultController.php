@@ -402,14 +402,23 @@ class TrainingResultController extends Controller
 
         // Thống kê theo tháng
         $statsByMonth = [];
+        $resultsKeys = ['xuất_sắc','giỏi','khá','trung_bình','yếu'];
         for ($month = 1; $month <= 12; $month++) {
             $monthTrainings = $trainings->filter(function($item) use ($month) {
                 return $item->training_date && $item->training_date->month == $month;
             });
+
+            // Đếm theo từng xếp loại trong tháng
+            $byResult = [];
+            foreach ($resultsKeys as $rk) {
+                $byResult[$rk] = $monthTrainings->where('result', $rk)->count();
+            }
+
             $statsByMonth[$month] = [
                 'total' => $monthTrainings->count(),
                 'total_hours' => $monthTrainings->sum('duration_hours'),
                 'avg_passing_rate' => $monthTrainings->avg('passing_rate') ?? 0,
+                'by_result' => $byResult,
             ];
         }
 
