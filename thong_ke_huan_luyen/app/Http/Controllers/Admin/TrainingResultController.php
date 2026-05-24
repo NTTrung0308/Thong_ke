@@ -194,7 +194,7 @@ class TrainingResultController extends Controller
                     if ($end->lte($start)) {
                         $validator->errors()->add('end_time', 'Giờ kết thúc phải sau giờ bắt đầu.');
                     }
-                } catch (\\Exception $e) {
+                } catch (\Exception $e) {
                     // let date_format rule handle invalid formats
                 }
             }
@@ -337,7 +337,7 @@ class TrainingResultController extends Controller
                     if ($end->lte($start)) {
                         $validator->errors()->add('end_time', 'Giờ kết thúc phải sau giờ bắt đầu.');
                     }
-                } catch (\\Exception $e) {
+                } catch (\Exception $e) {
                     // let date_format rule handle invalid formats
                 }
             }
