@@ -563,69 +563,92 @@
 
             // --- Charts Implementation ---
 
-            // 1. Statistics Chart (Bar Chart for Units)
+            // 1. Phân tích huấn luyện (stacked counts by result per month + avg passing rate line)
             const ctx = document.getElementById('statisticsChart').getContext('2d');
             const statisticsChart = new Chart(ctx, {
-                type: 'bar',
                 data: {
-                    labels: {!! json_encode($chartUnitNames) !!},
-                    datasets: [{
-                        label: "Quân số",
-                        borderColor: '#177dff',
-                        pointBackgroundColor: 'rgba(23, 125, 255, 0.6)',
-                        pointRadius: 0,
-                        backgroundColor: 'rgba(23, 125, 255, 0.1)',
-                        legendColor: '#177dff',
-                        fill: true,
-                        borderWidth: 2,
-                        data: {!! json_encode($chartUnitCounts) !!}
-                    }]
+                    labels: ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'],
+                    datasets: [
+                        {
+                            label: 'Xuất sắc',
+                            data: [
+                                @for($m=1;$m<=12;$m++) {{ $statsByMonth[$m]['by_result']['xuất_sắc'] }}, @endfor
+                            ],
+                            backgroundColor: '#28a745',
+                            stack: 'Stack 0'
+                        },
+                        {
+                            label: 'Giỏi',
+                            data: [
+                                @for($m=1;$m<=12;$m++) {{ $statsByMonth[$m]['by_result']['giỏi'] }}, @endfor
+                            ],
+                            backgroundColor: '#007bff',
+                            stack: 'Stack 0'
+                        },
+                        {
+                            label: 'Khá',
+                            data: [
+                                @for($m=1;$m<=12;$m++) {{ $statsByMonth[$m]['by_result']['khá'] }}, @endfor
+                            ],
+                            backgroundColor: '#17a2b8',
+                            stack: 'Stack 0'
+                        },
+                        {
+                            label: 'Trung bình',
+                            data: [
+                                @for($m=1;$m<=12;$m++) {{ $statsByMonth[$m]['by_result']['trung_bình'] }}, @endfor
+                            ],
+                            backgroundColor: '#ffc107',
+                            stack: 'Stack 0'
+                        },
+                        {
+                            label: 'Yếu',
+                            data: [
+                                @for($m=1;$m<=12;$m++) {{ $statsByMonth[$m]['by_result']['yếu'] }}, @endfor
+                            ],
+                            backgroundColor: '#dc3545',
+                            stack: 'Stack 0'
+                        },
+                        {
+                            label: 'Tỉ lệ đạt trung bình (%)',
+                            data: [
+                                @for($m=1;$m<=12;$m++) {{ round($statsByMonth[$m]['avg_passing_rate'],2) }}, @endfor
+                            ],
+                            type: 'line',
+                            yAxisID: 'y1',
+                            borderColor: '#343a40',
+                            backgroundColor: '#343a40',
+                            fill: false,
+                            tension: 0.1
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    legend: {
-                        display: false
-                    },
-                    tooltips: {
-                        bodySpacing: 4,
-                        mode: "nearest",
-                        intersect: 0,
-                        position: "nearest",
-                        xPadding: 10,
-                        yPadding: 10,
-                        caretPadding: 10
-                    },
-                    layout: {
-                        padding: {
-                            left: 5,
-                            right: 5,
-                            top: 15,
-                            bottom: 15
+                    scales: {
+                        x: {
+                            stacked: true
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            position: 'left'
+                        },
+                        y1: {
+                            beginAtZero: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            ticks: {
+                                callback: function(value) { return value + '%'; }
+                            }
                         }
                     },
-                    scales: {
-                        yAxes: [{
-                            ticks: {
-                                fontStyle: "500",
-                                beginAtZero: true,
-                                maxTicksLimit: 5,
-                                padding: 10
-                            },
-                            gridLines: {
-                                drawTicks: false,
-                                display: false
-                            }
-                        }],
-                        xAxes: [{
-                            gridLines: {
-                                zeroLineColor: "transparent"
-                            },
-                            ticks: {
-                                padding: 10,
-                                fontStyle: "500"
-                            }
-                        }]
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
                     }
                 }
             });

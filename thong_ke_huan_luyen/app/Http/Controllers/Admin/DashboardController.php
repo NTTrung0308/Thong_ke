@@ -60,6 +60,31 @@ class DashboardController extends Controller
             elseif(str_contains($label, 'yếu')) $resultData[4] += $stat->count;
         }
 
+        // 3b. Thống kê theo tháng cho phân tích (sử dụng cùng dữ liệu năm hiện tại)
+        $trainings = TrainingResult::whereIn('unit_id', $accessibleUnitIds)
+            ->whereYear('training_date', $currentYear)
+            ->get();
+
+        $resultsKeys = ['xuất_sắc','giỏi','khá','trung_bình','yếu'];
+        $statsByMonth = [];
+        for ($month = 1; $month <= 12; $month++) {
+            $monthTrainings = $trainings->filter(function($item) use ($month) {
+                return $item->training_date && $item->training_date->month == $month;
+            });
+
+            $byResult = [];
+            foreach ($resultsKeys as $rk) {
+                $byResult[$rk] = $monthTrainings->where('result', $rk)->count();
+            }
+
+            $statsByMonth[$month] = [
+                'total' => $monthTrainings->count(),
+                'total_hours' => $monthTrainings->sum('duration_hours'),
+                'avg_passing_rate' => $monthTrainings->avg('passing_rate') ?? 0,
+                'by_result' => $byResult,
+            ];
+        }
+
         // 4. Nhật ký hoạt động gần đây (Activity Stream)
         $activities = Activity::with(['causer', 'subject'])
             ->latest()
@@ -68,7 +93,7 @@ class DashboardController extends Controller
 
         return view('backend.dashboard', compact(
             'totalSoldiers', 'totalUnits', 'totalWeapons', 'totalRewards', 'totalDisciplines',
-            'chartUnitNames', 'chartUnitCounts', 'resultLabels', 'resultData', 'activities'
+            'chartUnitNames', 'chartUnitCounts', 'resultLabels', 'resultData', 'activities', 'statsByMonth'
         ));
     }
 
