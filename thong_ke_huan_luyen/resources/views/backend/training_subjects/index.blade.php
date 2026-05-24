@@ -73,12 +73,12 @@
                                                     <i class="fa fa-edit"></i>
                                                 </a>
                                                 <form action="{{ route('training-subjects.destroy', $subject->id) }}"
-                                                    method="POST" style="display: inline-block;">
+                                                    method="POST" style="display: inline-block;" id="delete-form-{{ $subject->id }}">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-link btn-danger"
+                                                    <button type="button" class="btn btn-link btn-danger"
                                                         data-bs-toggle="tooltip" title="Xóa"
-                                                        onclick="return confirm('Bạn có chắc chắn muốn xóa?')">
+                                                        onclick="confirmDelete({{ $subject->id }})">
                                                         <i class="fa fa-times"></i>
                                                     </button>
                                                 </form>
@@ -93,4 +93,33 @@
             </div>
         </div>
     </div>
+@endsection
+
+@section('scripts')
+    <script>
+        $(document).ready(function() {
+            $('#basic-datatables').DataTable({
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Vietnamese.json"
+                }
+            });
+        });
+
+        function confirmDelete(subjectId) {
+            Swal.fire({
+                title: 'Bạn có chắc chắn?',
+                text: "Bạn sẽ không thể hoàn tác hành động này!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Có, xóa nó!',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('delete-form-' + subjectId).submit();
+                }
+            });
+        }
+    </script>
 @endsection

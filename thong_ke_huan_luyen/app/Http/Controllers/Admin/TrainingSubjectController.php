@@ -18,10 +18,17 @@ class TrainingSubjectController extends Controller
     {
         if ($request->ajax() || $request->wantsJson()) {
             $unitLevel = $request->get('unit_level', 'dai-doi');
-            $subjects = TrainingSubject::where('unit_level', $unitLevel)
-                ->whereNull('parent_id')
-                ->with('children.children')
-                ->get();
+            
+            $query = TrainingSubject::whereNull('parent_id')
+                ->with('children.children');
+
+            if ($unitLevel === 'trung-doi') {
+                $query->whereIn('unit_level', ['dai-doi', 'trung-doi']);
+            } else {
+                $query->where('unit_level', $unitLevel);
+            }
+
+            $subjects = $query->get();
 
             return response()->json($subjects);
         }
@@ -36,11 +43,12 @@ class TrainingSubjectController extends Controller
 
     public function create()
     {
-        $subjects = TrainingSubject::whereNull('parent_id')
-            ->orWhereHas('parent', function ($q) {
-                $q->whereNull('parent_id');
-            })
-            ->get();
+        $subjects = TrainingSubject::where(function ($q) {
+            $q->whereNull('parent_id')
+                ->orWhereHas('parent', function ($sq) {
+                    $sq->whereNull('parent_id');
+                });
+        })->orderBy('unit_level')->get();
 
         return view('backend.training_subjects.create', compact('subjects'));
     }
@@ -75,7 +83,9 @@ class TrainingSubjectController extends Controller
                     ->orWhereHas('parent', function ($sq) {
                         $sq->whereNull('parent_id');
                     });
-            })->get();
+            })
+            ->orderBy('unit_level')
+            ->get();
 
         return view('backend.training_subjects.edit', compact('trainingSubject', 'subjects'));
     }
@@ -108,9 +118,13 @@ class TrainingSubjectController extends Controller
     {
         $unitLevel = $request->get('unit_level', null);
         $query = TrainingSubject::where('parent_id', $parentId);
-        if ($unitLevel) {
+        
+        if ($unitLevel === 'trung-doi') {
+            $query->whereIn('unit_level', ['dai-doi', 'trung-doi']);
+        } elseif ($unitLevel) {
             $query->where('unit_level', $unitLevel);
         }
+        
         $children = $query->get();
 
         return response()->json($children);

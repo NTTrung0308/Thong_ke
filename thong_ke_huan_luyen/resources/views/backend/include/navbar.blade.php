@@ -298,6 +298,9 @@
                                         <p class="text-muted">{{ auth()->user()->email }}</p>
                                         <p class="text-muted small">{{ auth()->user()->roles->pluck('name')->implode(', ') }}</p>
                                         <a href="{{ route('profile.index') }}" class="btn btn-xs btn-secondary btn-sm">Xem hồ sơ</a>
+                                        @if(auth()->user()->soldier_id)
+                                            <a href="{{ route('soldiers.show', auth()->user()->soldier_id) }}" class="btn btn-xs btn-info btn-sm">Hồ sơ quân nhân</a>
+                                        @endif
                                     </div>
                                 </div>
                             </li>

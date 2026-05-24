@@ -55,6 +55,18 @@
                             <input type="text" class="form-control" value="{{ $user->roles->pluck('name')->implode(', ') }}" disabled>
                             <small class="form-text text-muted">Liên hệ quản trị viên để thay đổi vai trò.</small>
                         </div>
+                        @if($user->soldier)
+                            <div class="form-group">
+                                <label>Hồ sơ quân nhân liên kết</label>
+                                <div class="alert alert-info d-flex justify-content-between align-items-center mb-0">
+                                    <div>
+                                        <strong>{{ $user->soldier->full_name }}</strong> ({{ $user->soldier->code }})<br>
+                                        <small>{{ $user->soldier->rank }} - {{ $user->soldier->position }}</small>
+                                    </div>
+                                    <a href="{{ route('soldiers.show', $user->soldier->id) }}" class="btn btn-sm btn-primary">Xem hồ sơ quân nhân</a>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                     <div class="card-action">
                         <button type="submit" class="btn btn-success">Cập nhật thông tin</button>

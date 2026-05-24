@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Soldier;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -36,8 +37,10 @@ class UserController extends Controller
     {
         $roles = Role::all();
         $units = $this->getAccessibleUnits();
+        $unitIds = $units->pluck('id')->toArray();
+        $soldiers = Soldier::whereIn('unit_id', $unitIds)->get();
 
-        return view('backend.layouts.users.create', compact('roles', 'units'));
+        return view('backend.layouts.users.create', compact('roles', 'units', 'soldiers'));
     }
 
     public function store(Request $request)
@@ -48,6 +51,7 @@ class UserController extends Controller
             'password' => 'required|string|min:8|confirmed',
             'roles' => 'required|array',
             'unit_id' => 'nullable|exists:units,id',
+            'soldier_id' => 'nullable|exists:soldiers,id',
         ]);
 
         // Kiểm tra quyền gán đơn vị
@@ -64,6 +68,7 @@ class UserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'unit_id' => $request->unit_id,
+            'soldier_id' => $request->soldier_id,
         ]);
 
         $user->assignRole($request->roles);
@@ -86,9 +91,11 @@ class UserController extends Controller
 
         $roles = Role::all();
         $units = $this->getAccessibleUnits();
+        $unitIds = $units->pluck('id')->toArray();
+        $soldiers = Soldier::whereIn('unit_id', $unitIds)->get();
         $userRoles = $user->roles->pluck('name')->toArray();
 
-        return view('backend.layouts.users.edit', compact('user', 'roles', 'userRoles', 'units'));
+        return view('backend.layouts.users.edit', compact('user', 'roles', 'userRoles', 'units', 'soldiers'));
     }
 
     public function update(Request $request, $id)
@@ -109,6 +116,7 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
             'roles' => 'required|array',
             'unit_id' => 'nullable|exists:units,id',
+            'soldier_id' => 'nullable|exists:soldiers,id',
         ]);
 
         // Kiểm tra quyền gán đơn vị
@@ -123,6 +131,7 @@ class UserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'unit_id' => $request->unit_id,
+            'soldier_id' => $request->soldier_id,
         ]);
 
         if ($request->filled('password')) {

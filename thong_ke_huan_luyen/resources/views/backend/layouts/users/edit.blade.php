@@ -56,7 +56,7 @@
                                     <select class="form-control" id="unit_id" name="unit_id">
                                         <option value="">-- Chọn đơn vị --</option>
                                         @foreach($units as $unit)
-                                            <option value="{{ $unit->id }}" {{ old('unit_id', $user->unit_id) == $unit->id ? 'selected' : '' }}>
+                                            <option value="{{ $unit->id }}" {{ (old('unit_id', $user->unit_id) == $unit->id) ? 'selected' : '' }}>
                                                 {{ $unit->name }}
                                             </option>
                                         @endforeach
@@ -65,7 +65,21 @@
                                         <small class="form-text text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
-                            </div>
+                                <div class="form-group @error('soldier_id') has-error @enderror">
+                                    <label for="soldier_id">Quân nhân liên kết (Nếu có)</label>
+                                    <select class="form-control select2" id="soldier_id" name="soldier_id">
+                                        <option value="">-- Chọn quân nhân --</option>
+                                        @foreach($soldiers as $soldier)
+                                            <option value="{{ $soldier->id }}" data-unit-id="{{ $soldier->unit_id }}" {{ (old('soldier_id', $user->soldier_id) == $soldier->id) ? 'selected' : '' }}>
+                                                {{ $soldier->full_name }} ({{ $soldier->unit->name ?? 'N/A' }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('soldier_id')
+                                        <small class="form-text text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                                </div>
                             <div class="col-md-6">
                                 <div class="form-group @error('password') has-error @enderror">
                                     <label for="password">Mật khẩu mới (để trống nếu không đổi)</label>
@@ -118,7 +132,29 @@
         </div>
     </div>
 
+@endsection
+
+@section('scripts')
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
+        $(document).ready(function() {
+            if ($('.select2').length > 0) {
+                $('.select2').select2({
+                    theme: 'bootstrap4',
+                    width: '100%'
+                });
+            }
+
+            $('#soldier_id').on('change', function() {
+                const selectedOption = $(this).find('option:selected');
+                const unitId = selectedOption.data('unit-id');
+                if (unitId) {
+                    $('#unit_id').val(unitId);
+                }
+            });
+        });
+
         (function(){
             var btn = document.getElementById('togglePasswordUserEdit');
             var pwd = document.getElementById('password');
