@@ -581,6 +581,12 @@ class SoldierController extends Controller
                     ->when($request->filled('professional_level'), function($q) use ($request) {
                         $q->where('professional_level', 'like', "%" . $request->professional_level . "%");
                     })
+                    ->when($request->filled('education'), function($q) use ($request) {
+                        $q->where('education', 'like', "%" . $request->education . "%");
+                    })
+                    ->when($request->filled('birth_date'), function($q) use ($request) {
+                        $q->whereDate('birth_date', $request->birth_date);
+                    })
                     ->with(['unit', 'weapons' => function($q) {
                         $q->where('status', 'dang-su-dung');
                     }])

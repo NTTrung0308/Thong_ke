@@ -20,5 +20,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         \App\Models\Soldier::observe(\App\Observers\SoldierObserver::class);
+        \App\Models\Unit::observe(\App\Observers\UnitObserver::class);
     }
 }

@@ -100,18 +100,40 @@ class Soldier extends Model
     {
         if (!$q) return $query;
         
-        return $query->where(function($sub) use ($q) {
+        $searchTerm = mb_strtolower($q);
+
+        return $query->where(function($sub) use ($q, $searchTerm) {
             $sub->where('full_name', 'like', "%$q%")
                 ->orWhere('code', 'like', "%$q%")
                 ->orWhere('position', 'like', "%$q%")
+                ->orWhere('rank', 'like', "%$q%")
+                ->orWhere('education', 'like', "%$q%")
+                ->orWhere('professional_level', 'like', "%$q%")
+                ->orWhereRaw("DATE_FORMAT(birth_date, '%d/%m/%Y') like ?", ["%$q%"])
+                ->orWhere('birth_date', 'like', "%$q%")
                 ->orWhere('permanent_residence', 'like', "%$q%")
-                ->orWhereHas('weapons', function($w) use ($q) {
+                ->orWhereHas('weapons', function($w) use ($q, $searchTerm) {
                     $w->where('status', 'dang-su-dung')
-                      ->where(function($wq) use ($q) {
-                          $wq->orWhere('ak', 'like', "%$q%")
+                      ->where(function($wq) use ($q, $searchTerm) {
+                          // 1. Tìm theo số hiệu súng (like)
+                          $wq->where('ak', 'like', "%$q%")
                              ->orWhere('rpd', 'like', "%$q%")
                              ->orWhere('b41', 'like', "%$q%")
                              ->orWhere('m79', 'like', "%$q%");
+
+                          // 2. Nếu gõ tên loại súng (ví dụ: "ak"), tìm tất cả người được biên chế loại đó
+                          if (in_array($searchTerm, ['ak', 'súng ak', 'tiểu liên ak'])) {
+                              $wq->orWhereNotNull('ak')->where('ak', '!=', '');
+                          }
+                          if (in_array($searchTerm, ['rpd', 'súng rpd', 'trung liên rpd'])) {
+                              $wq->orWhereNotNull('rpd')->where('rpd', '!=', '');
+                          }
+                          if (in_array($searchTerm, ['b41', 'súng b41', 'diệt tăng b41'])) {
+                              $wq->orWhereNotNull('b41')->where('b41', '!=', '');
+                          }
+                          if (in_array($searchTerm, ['m79', 'súng m79', 'phóng lựu m79'])) {
+                              $wq->orWhereNotNull('m79')->where('m79', '!=', '');
+                          }
                       });
                 });
         });

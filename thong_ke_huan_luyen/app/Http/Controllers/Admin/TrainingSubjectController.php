@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\Auth;
 
 class TrainingSubjectController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(TrainingSubject::class, 'training_subject');
+    }
+
     public function index(Request $request)
     {
         if ($request->ajax() || $request->wantsJson()) {

@@ -10,6 +10,13 @@ use App\Http\Controllers\Admin\RewardController;
 use App\Http\Controllers\Admin\DisciplineController;
 use App\Http\Controllers\Admin\TrainingResultController;
 use App\Http\Controllers\Admin\TrainingLogController;
+use App\Http\Controllers\Admin\TrainingSubjectController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\NotificationController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\Ajax\SoldierAjaxController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -34,27 +41,27 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Dashboard (Bảo vệ bằng middleware auth)
 Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/api/units-by-level', [App\Http\Controllers\Admin\DashboardController::class, 'getUnitsByLevel'])->name('api.units-by-level');
-    Route::get('/api/units-tree', [App\Http\Controllers\Admin\DashboardController::class, 'getTreeData'])->name('api.units-tree');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/api/units-by-level', [DashboardController::class, 'getUnitsByLevel'])->name('api.units-by-level');
+    Route::get('/api/units-tree', [DashboardController::class, 'getTreeData'])->name('api.units-tree');
 
     // Notifications
-    Route::post('/notifications/mark-as-read/{id}', [App\Http\Controllers\Admin\NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
-    Route::get('/notifications/mark-all-as-read', [App\Http\Controllers\Admin\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
+    Route::post('/notifications/mark-as-read/{id}', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+    Route::get('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
 
     // Search function
     Route::get('/search', [SoldierController::class, 'search'])->name('search.index');
-    Route::get('/search/quick-view/{soldier}', [App\Http\Controllers\Admin\Ajax\SoldierAjaxController::class, 'quickView'])->name('search.quick-view');
+    Route::get('/search/quick-view/{soldier}', [SoldierAjaxController::class, 'quickView'])->name('search.quick-view');
 
     // Users Management - Chỉ dành cho Chỉ huy
     Route::resource('users', UserController::class)->middleware('check.role:chi-huy');
 
     // Activity Logs - Chỉ dành cho Chỉ huy
-    Route::get('/activity-logs', [App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('activity-logs.index')->middleware('check.role:chi-huy');
+    Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index')->middleware('check.role:chi-huy');
 
     // Roles & Permissions Management
-    Route::resource('roles', App\Http\Controllers\Admin\RoleController::class)->middleware('check.role:chi-huy');
-    Route::resource('permissions', App\Http\Controllers\Admin\PermissionController::class)->only(['index', 'store', 'destroy'])->middleware('check.role:chi-huy');
+    Route::resource('roles', RoleController::class)->middleware('check.role:chi-huy');
+    Route::resource('permissions', PermissionController::class)->only(['index', 'store', 'destroy'])->middleware('check.role:chi-huy');
 
     // Soldiers Management
     Route::post('soldiers/import', [SoldierController::class, 'importExcel'])->name('soldiers.import');
@@ -97,8 +104,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('training-logs', TrainingLogController::class);
 
     // Training Subjects Management
-    Route::get('training-subjects/children/{parentId}', [App\Http\Controllers\Admin\TrainingSubjectController::class, 'getChildren'])->name('training-subjects.children');
-    Route::resource('training-subjects', App\Http\Controllers\Admin\TrainingSubjectController::class);
+    Route::get('training-subjects/children/{parentId}', [TrainingSubjectController::class, 'getChildren'])->name('training-subjects.children');
+    Route::resource('training-subjects', TrainingSubjectController::class);
 
     // Profile & Settings
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');

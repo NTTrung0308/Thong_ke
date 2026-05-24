@@ -90,7 +90,7 @@ use Illuminate\Support\Str;
                     <div class="collapse show" id="filterCollapse">
                         <form action="{{ route('search.index') }}" method="GET" class="row g-3 mb-4">
                                 <input type="hidden" name="module" value="{{ request('module', 'soldiers') }}">
-                            @if(request('module') != 'training_results')
+                            @if(!in_array(request('module', 'soldiers'), ['training_results', 'soldiers']))
                                 <div class="col-md-4">
                                     <label class="form-label fw-bold">Từ khóa</label>
                                     <input type="text" name="q" class="form-control"
@@ -192,13 +192,24 @@ use Illuminate\Support\Str;
                                     </select>
                                 </div>
                             @else
-                                <div class="col-md-2">
-                                    <label class="form-label fw-bold">Cấp bậc</label>
-                                    <select name="rank" class="form-select">
-                                        <option value="">-- Tất cả --</option>
-                                        @foreach ($ranks as $rank)
-                                            <option value="{{ $rank }}" {{ request('rank') == $rank ? 'selected' : '' }}>
-                                                {{ $rank }}
+                                <div class="col-md-5">
+                                    <label class="form-label fw-bold">Tìm kiếm tổng hợp</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="fa fa-search"></i></span>
+                                        <input type="text" name="q" class="form-control border-start-0" 
+                                            placeholder="Nhập tên, số hiệu, học vấn, trình độ, ngày sinh (dd/mm/yyyy)..." 
+                                            value="{{ request('q') }}">
+                                    </div>
+                                    <small class="text-muted">Ví dụ: "Đại học", "Binh nhất", "20/05/2000", "Súng AK"...</small>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">Đơn vị</label>
+                                    <select name="unit_id" class="form-select">
+                                        <option value="">-- Tất cả đơn vị --</option>
+                                        @foreach ($units as $unit)
+                                            <option value="{{ $unit->id }}"
+                                                {{ request('unit_id') == $unit->id ? 'selected' : '' }}>
+                                                {{ $unit->getFullHierarchyName() }}
                                             </option>
                                         @endforeach
                                     </select>
@@ -214,16 +225,11 @@ use Illuminate\Support\Str;
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-bold">Trình độ chuyên môn</label>
-                                    <input type="text" name="professional_level" class="form-control"
-                                        placeholder="Nhập trình độ..." value="{{ request('professional_level') }}">
-                                </div>
                             @endif
 
-                            <div class="col-md-4 d-flex align-items-end gap-2">
+                            <div class="col-md-2 d-flex align-items-end gap-2">
                                 <button type="submit" class="btn btn-primary flex-grow-1">
-                                    <i class="fas fa-search me-1"></i> Tìm kiếm
+                                    <i class="fas fa-search me-1"></i> Tìm
                                 </button>
                                 <a href="{{ route('search.index', ['module' => request('module')]) }}" class="btn btn-secondary">
                                     <i class="fas fa-undo"></i>
