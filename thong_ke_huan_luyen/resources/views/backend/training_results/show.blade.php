@@ -105,7 +105,7 @@
                                         Nội dung tập huấn
                                     </div>
                                     <div class="annoucement-desc">
-                                        {!! html_entity_decode($trainingResult->content, ENT_QUOTES | ENT_HTML5, 'UTF-8') !!}
+                                        {!! $trainingResult->safe_content !!}
                                     </div>
                                 </div>
                             </div>

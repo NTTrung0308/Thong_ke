@@ -126,4 +126,23 @@ class TrainingResult extends Model
     {
         return $query->whereMonth('training_date', $month);
     }
+
+    // Safe HTML output accessor (sanitized)
+    public function getSafeContentAttribute()
+    {
+        if (!$this->content) return '';
+
+        static $purifier = null;
+        if ($purifier === null) {
+            $config = \HTMLPurifier_Config::createDefault();
+            // Allow basic tags and safe attributes
+            $config->set('HTML.Allowed', 'p,br,strong,b,em,i,u,a[href|title|target],ul,ol,li,span,div,table,thead,tbody,tr,th,td,img[src|alt|width|height],h1,h2,h3,h4,h5,h6');
+            $config->set('URI.SafeIframeRegexp', '%^(https?:)?//(www.youtube.com/embed/|player.vimeo.com/video/)%');
+            $config->set('Attr.AllowedFrameTargets', ['_blank']);
+            $purifier = new \HTMLPurifier($config);
+        }
+
+        return $purifier->purify($this->content);
+    }
 }
+
