@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 
 class TrainingResultController extends Controller
@@ -162,13 +163,13 @@ class TrainingResultController extends Controller
     {
         $this->authorize('create', TrainingResult::class);
 
-        $validated = $request->validate([
+        $rules = [
             'unit_id' => 'required|exists:units,id',
             'training_date' => 'required|date',
             'training_subject_id' => 'nullable|exists:training_subjects,id',
             'content' => 'required|string|max:500',
-            'start_time' => 'required',
-            'end_time' => 'required|after:start_time',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i',
             'trung_doi_count' => 'required|integer|min:0',
             'at_count' => 'required|integer|min:0',
             'kdt_count' => 'required|integer|min:0',
@@ -182,7 +183,28 @@ class TrainingResultController extends Controller
             'instructor' => 'nullable|string|max:100',
             'supervisor' => 'nullable|string|max:100',
             'attachment' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:20480',
-        ]);
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        $validator->after(function ($validator) use ($request) {
+            if ($request->filled('start_time') && $request->filled('end_time')) {
+                try {
+                    $start = Carbon::createFromFormat('H:i', $request->input('start_time'));
+                    $end = Carbon::createFromFormat('H:i', $request->input('end_time'));
+                    if ($end->lte($start)) {
+                        $validator->errors()->add('end_time', 'Giờ kết thúc phải sau giờ bắt đầu.');
+                    }
+                } catch (\\Exception $e) {
+                    // let date_format rule handle invalid formats
+                }
+            }
+        });
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $validated = $validator->validated();
 
         // Kiểm tra quyền đối với đơn vị đã chọn
         if (! in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
@@ -284,13 +306,13 @@ class TrainingResultController extends Controller
     {
         $this->authorize('update', $trainingResult);
 
-        $validated = $request->validate([
+        $rules = [
             'unit_id' => 'required|exists:units,id',
             'training_date' => 'required|date',
             'training_subject_id' => 'nullable|exists:training_subjects,id',
             'content' => 'required|string|max:500',
-            'start_time' => 'required',
-            'end_time' => 'required|after:start_time',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i',
             'trung_doi_count' => 'required|integer|min:0',
             'at_count' => 'required|integer|min:0',
             'kdt_count' => 'required|integer|min:0',
@@ -304,7 +326,28 @@ class TrainingResultController extends Controller
             'instructor' => 'nullable|string|max:100',
             'supervisor' => 'nullable|string|max:100',
             'attachment' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:20480',
-        ]);
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        $validator->after(function ($validator) use ($request) {
+            if ($request->filled('start_time') && $request->filled('end_time')) {
+                try {
+                    $start = Carbon::createFromFormat('H:i', $request->input('start_time'));
+                    $end = Carbon::createFromFormat('H:i', $request->input('end_time'));
+                    if ($end->lte($start)) {
+                        $validator->errors()->add('end_time', 'Giờ kết thúc phải sau giờ bắt đầu.');
+                    }
+                } catch (\\Exception $e) {
+                    // let date_format rule handle invalid formats
+                }
+            }
+        });
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $validated = $validator->validated();
 
         // Kiểm tra quyền đối với đơn vị đã chọn (nếu có thay đổi đơn vị)
         if ($trainingResult->unit_id != $validated['unit_id']) {
