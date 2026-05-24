@@ -244,7 +244,10 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="chart-container" style="min-height: 375px">
+                    <div class="chart-container" id="statisticsChartWrap" style="min-height: 375px; position: relative;">
+                        <div id="statisticsSpinner" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.7);z-index:10;display:flex;align-items:center;justify-content:center;">
+                            <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+                        </div>
                         <canvas id="statisticsChart"></canvas>
                     </div>
                     <div id="myChartLegend"></div>
@@ -554,97 +557,127 @@
                 }, 300);
             });
 
+            // Refresh dashboard stats (async)
+            function debounce(fn, wait) {
+                let t;
+                return function() {
+                    const args = arguments;
+                    clearTimeout(t);
+                    t = setTimeout(() => fn.apply(this, args), wait);
+                };
+            }
+
+            const loadStatisticsChartDebounced = debounce(function(unitId, year) {
+                loadStatisticsChart(unitId, year);
+            }, 400);
+
             $('#btn-refresh-dashboard').on('click', function() {
-                $(this).find('i').addClass('fa-spin');
-                setTimeout(() => {
-                    location.reload();
-                }, 500);
+                const $icon = $(this).find('i');
+                $icon.addClass('fa-spin');
+                loadStatisticsChartDebounced(null, new Date().getFullYear());
+                setTimeout(() => $icon.removeClass('fa-spin'), 1200);
             });
 
             // --- Charts Implementation ---
 
-            // 1. Phân tích huấn luyện (stacked counts by result per month + avg passing rate line)
-            const ctx = document.getElementById('statisticsChart').getContext('2d');
-            // Use Chart.js v2-compatible config (most bundled themes use v2)
-            const statisticsChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'],
-                    datasets: [
-                        {
-                            label: 'Xuất sắc',
-                            data: [
-                                @for($m=1;$m<=12;$m++) {{ $statsByMonth[$m]['by_result']['xuất_sắc'] }}, @endfor
-                            ],
-                            backgroundColor: '#28a745'
-                        },
-                        {
-                            label: 'Giỏi',
-                            data: [
-                                @for($m=1;$m<=12;$m++) {{ $statsByMonth[$m]['by_result']['giỏi'] }}, @endfor
-                            ],
-                            backgroundColor: '#007bff'
-                        },
-                        {
-                            label: 'Khá',
-                            data: [
-                                @for($m=1;$m<=12;$m++) {{ $statsByMonth[$m]['by_result']['khá'] }}, @endfor
-                            ],
-                            backgroundColor: '#17a2b8'
-                        },
-                        {
-                            label: 'Trung bình',
-                            data: [
-                                @for($m=1;$m<=12;$m++) {{ $statsByMonth[$m]['by_result']['trung_bình'] }}, @endfor
-                            ],
-                            backgroundColor: '#ffc107'
-                        },
-                        {
-                            label: 'Yếu',
-                            data: [
-                                @for($m=1;$m<=12;$m++) {{ $statsByMonth[$m]['by_result']['yếu'] }}, @endfor
-                            ],
-                            backgroundColor: '#dc3545'
-                        },
-                        {
-                            label: 'Tỉ lệ đạt trung bình (%)',
-                            type: 'line',
-                            data: [
-                                @for($m=1;$m<=12;$m++) {{ round($statsByMonth[$m]['avg_passing_rate'],2) }}, @endfor
-                            ],
-                            borderColor: '#343a40',
-                            backgroundColor: '#343a40',
-                            fill: false,
-                            yAxisID: 'y1'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    tooltips: {
-                        mode: 'index',
-                        intersect: false
-                    },
-                    scales: {
-                        xAxes: [{
-                            stacked: true
-                        }],
-                        yAxes: [{
-                            stacked: true,
-                            ticks: { beginAtZero: true }
-                        }, {
-                            id: 'y1',
-                            position: 'right',
-                            ticks: {
-                                callback: function(value) { return value + '%'; },
-                                beginAtZero: true
-                            },
-                            gridLines: { display: false }
-                        }]
-                    }
+            let statisticsChartInstance = null;
+
+            function showStatisticsLoading(show) {
+                if (show) $('#statisticsSpinner').show(); else $('#statisticsSpinner').hide();
+            }
+
+            function renderStatisticsChart(payload) {
+                const labels = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
+
+                const resultKeys = ['xuất_sắc','giỏi','khá','trung_bình','yếu'];
+                const colors = {
+                    'xuất_sắc': '#28a745',
+                    'giỏi': '#007bff',
+                    'khá': '#17a2b8',
+                    'trung_bình': '#ffc107',
+                    'yếu': '#dc3545'
+                };
+
+                const datasets = resultKeys.map(k => ({
+                    label: k.charAt(0).toUpperCase() + k.slice(1),
+                    data: labels.map((l, idx) => payload.statsByMonth[idx+1].by_result[k] || 0),
+                    backgroundColor: colors[k]
+                }));
+
+                // line for avg passing rate
+                datasets.push({
+                    label: 'Tỉ lệ đạt trung bình (%)',
+                    type: 'line',
+                    data: labels.map((l, idx) => Number((payload.statsByMonth[idx+1].avg_passing_rate || 0).toFixed(2))),
+                    borderColor: '#343a40',
+                    backgroundColor: '#343a40',
+                    fill: false,
+                    yAxisID: 'y1'
+                });
+
+                const ctx = document.getElementById('statisticsChart').getContext('2d');
+                if (statisticsChartInstance) {
+                    statisticsChartInstance.destroy();
                 }
-            });
+
+                statisticsChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: { labels, datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: { duration: 250 },
+                        tooltips: { mode: 'index', intersect: false },
+                        scales: {
+                            xAxes: [{ stacked: true }],
+                            yAxes: [{ stacked: true, ticks: { beginAtZero: true } }, {
+                                id: 'y1', position: 'right', ticks: { callback: function(v){ return v + '%'; }, beginAtZero: true }, gridLines: { display: false }
+                            }]
+                        }
+                    }
+                });
+            }
+
+            function loadStatisticsChart(unitId = null, year = new Date().getFullYear()) {
+                showStatisticsLoading(true);
+                const url = '{{ route('api.dashboard-stats') }}' + '?year=' + year + (unitId ? '&unit_id=' + unitId : '');
+                $.get(url)
+                    .done(function(res) {
+                        renderStatisticsChart(res);
+                    })
+                    .fail(function(err) {
+                        console.error('Failed to load dashboard stats', err);
+                    })
+                    .always(function() {
+                        setTimeout(() => showStatisticsLoading(false), 300);
+                    });
+            }
+
+            // Load on ready
+            loadStatisticsChart();
+
+            // 2. Training Results Chart (Doughnut)
+            const trainingCtxEl = document.getElementById('trainingResultChart');
+            if (trainingCtxEl) {
+                const ctx2 = trainingCtxEl.getContext('2d');
+                const trainingResultChart = new Chart(ctx2, {
+                    type: 'doughnut',
+                    data: {
+                        datasets: [{
+                            data: {!! json_encode($resultData) !!},
+                            backgroundColor: ['#1d7af3', '#59d05d', '#ffad46', '#f3545d', '#8d9498']
+                        }],
+                        labels: {!! json_encode($resultLabels) !!}
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        legend: { display: false },
+                        cutoutPercentage: 70,
+                        animation: { duration: 200 }
+                    }
+                });
+            }
 
             // 2. Training Results Chart (Doughnut)
             const ctx2 = document.getElementById('trainingResultChart').getContext('2d');

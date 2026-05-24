@@ -44,6 +44,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/api/units-by-level', [DashboardController::class, 'getUnitsByLevel'])->name('api.units-by-level');
     Route::get('/api/units-tree', [DashboardController::class, 'getTreeData'])->name('api.units-tree');
+        Route::get('/api/dashboard-stats', [DashboardController::class, 'dashboardStats'])->name('api.dashboard-stats');
 
     // Notifications
     Route::post('/notifications/mark-as-read/{id}', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
