@@ -32,7 +32,7 @@ class DisciplineExport implements FromCollection, WithHeadings, WithMapping
             'Số quyết định',
             'Cấp quyết định',
             'Tình trạng',
-            'Ghi chú'
+            'Ghi chú',
         ];
     }
 
@@ -51,7 +51,7 @@ class DisciplineExport implements FromCollection, WithHeadings, WithMapping
             $discipline->decision_number,
             $discipline->decision_level,
             $discipline->getStatusNameAttribute(),
-            $discipline->result
+            $discipline->result,
         ];
     }
 }

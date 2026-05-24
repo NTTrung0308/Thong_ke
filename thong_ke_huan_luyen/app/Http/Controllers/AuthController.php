@@ -15,6 +15,7 @@ class AuthController extends Controller
         if (Auth::check()) {
             return redirect()->route('soldiers.index');
         }
+
         return view('auth.login');
     }
 
@@ -34,8 +35,8 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             return redirect()->intended(route('dashboard'))
-                             ->with('success', 'Chào mừng bạn quay trở lại!')
-                             ->with('show_dashboard', true);
+                ->with('success', 'Chào mừng bạn quay trở lại!')
+                ->with('show_dashboard', true);
         }
 
         return back()->withErrors([

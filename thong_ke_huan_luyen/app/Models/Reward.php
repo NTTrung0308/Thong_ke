@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Reward extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'type', 'unit_id', 'unit_name_at_time',
@@ -18,7 +18,7 @@ class Reward extends Model
         'reason', 'reward_form', 'decision_date',
         'decision_month', 'decision_level', 'decision_number',
         'signer_name', 'signer_position', 'result',
-        'attachment', 'created_by', 'updated_by'
+        'attachment', 'created_by', 'updated_by',
     ];
 
     public function getActivitylogOptions(): LogOptions

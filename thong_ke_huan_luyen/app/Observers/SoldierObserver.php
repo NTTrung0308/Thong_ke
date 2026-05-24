@@ -2,12 +2,12 @@
 
 namespace App\Observers;
 
-use App\Models\Soldier;
-use App\Models\WeaponEquipment;
-use App\Models\Reward;
-use App\Models\TrainingLog;
 use App\Models\Discipline;
+use App\Models\Reward;
+use App\Models\Soldier;
+use App\Models\TrainingLog;
 use App\Models\User;
+use App\Models\WeaponEquipment;
 use App\Notifications\SystemNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
@@ -73,7 +73,7 @@ class SoldierObserver
         if ($chiHuyUsers->count() > 0) {
             $notification = new SystemNotification(
                 'Quân nhân mới',
-                'Đã thêm mới quân nhân: ' . $soldier->full_name . ' vào đơn vị ' . ($soldier->unit->name ?? 'N/A'),
+                'Đã thêm mới quân nhân: '.$soldier->full_name.' vào đơn vị '.($soldier->unit->name ?? 'N/A'),
                 'fa-user-plus',
                 route('soldiers.show', $soldier->id),
                 'success'
@@ -91,8 +91,9 @@ class SoldierObserver
             'Thursday' => 'Thứ 5',
             'Friday' => 'Thứ 6',
             'Saturday' => 'Thứ 7',
-            'Sunday' => 'Chủ nhật'
+            'Sunday' => 'Chủ nhật',
         ];
+
         return $days[$date->format('l')];
     }
 }

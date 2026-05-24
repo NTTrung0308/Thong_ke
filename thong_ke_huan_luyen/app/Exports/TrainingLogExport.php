@@ -32,7 +32,7 @@ class TrainingLogExport implements FromCollection, WithHeadings, WithMapping
             'Thời gian (Yêu cầu/Thực tế)',
             'Kết quả kiểm tra',
             'Xếp loại',
-            'Nhận xét chung'
+            'Nhận xét chung',
         ];
     }
 
@@ -47,11 +47,11 @@ class TrainingLogExport implements FromCollection, WithHeadings, WithMapping
             $log->soldier_name_at_time,
             $log->unit_name_at_time,
             strip_tags($log->training_content),
-            ($log->required_quanso ?? 0) . '/' . ($log->actual_quanso ?? 0),
-            ($log->required_hours ?? 0) . '/' . ($log->actual_hours ?? 0),
+            ($log->required_quanso ?? 0).'/'.($log->actual_quanso ?? 0),
+            ($log->required_hours ?? 0).'/'.($log->actual_hours ?? 0),
             $log->test_quanso ? "Sát hạch: {$log->test_quanso}" : 'N/A',
             $log->getRatingNameAttribute(),
-            $log->general_evaluation
+            $log->general_evaluation,
         ];
     }
 }

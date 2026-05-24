@@ -16,13 +16,14 @@ class PermissionController extends Controller
     public function index()
     {
         $permissions = Permission::all();
+
         return view('backend.permissions.index', compact('permissions'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|unique:permissions,name'
+            'name' => 'required|unique:permissions,name',
         ]);
 
         Permission::create(['name' => $request->name]);
@@ -33,6 +34,7 @@ class PermissionController extends Controller
     public function destroy(Permission $permission)
     {
         $permission->delete();
+
         return redirect()->route('permissions.index')->with('success', 'Xóa quyền thành công!');
     }
 }

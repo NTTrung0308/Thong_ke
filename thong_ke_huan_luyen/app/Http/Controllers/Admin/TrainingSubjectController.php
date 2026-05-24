@@ -30,17 +30,18 @@ class TrainingSubjectController extends Controller
             ->orderBy('unit_level')
             ->orderBy('parent_id')
             ->get();
-            
+
         return view('backend.training_subjects.index', compact('subjects'));
     }
 
     public function create()
     {
         $subjects = TrainingSubject::whereNull('parent_id')
-            ->orWhereHas('parent', function($q) {
+            ->orWhereHas('parent', function ($q) {
                 $q->whereNull('parent_id');
             })
             ->get();
+
         return view('backend.training_subjects.create', compact('subjects'));
     }
 
@@ -49,7 +50,7 @@ class TrainingSubjectController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'parent_id' => 'nullable|exists:training_subjects,id',
-            'unit_level' => 'required|in:dai-doi,trung-doi'
+            'unit_level' => 'required|in:dai-doi,trung-doi',
         ]);
 
         $validated['created_by'] = Auth::id();
@@ -59,7 +60,7 @@ class TrainingSubjectController extends Controller
             return response()->json([
                 'success' => true,
                 'subject' => $subject,
-                'message' => 'Đã thêm nội dung huấn luyện thành công.'
+                'message' => 'Đã thêm nội dung huấn luyện thành công.',
             ]);
         }
 
@@ -69,13 +70,13 @@ class TrainingSubjectController extends Controller
     public function edit(TrainingSubject $trainingSubject)
     {
         $subjects = TrainingSubject::where('id', '!=', $trainingSubject->id)
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereNull('parent_id')
-                  ->orWhereHas('parent', function($sq) {
-                      $sq->whereNull('parent_id');
-                  });
+                    ->orWhereHas('parent', function ($sq) {
+                        $sq->whereNull('parent_id');
+                    });
             })->get();
-            
+
         return view('backend.training_subjects.edit', compact('trainingSubject', 'subjects'));
     }
 
@@ -84,7 +85,7 @@ class TrainingSubjectController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'parent_id' => 'nullable|exists:training_subjects,id',
-            'unit_level' => 'required|in:dai-doi,trung-doi'
+            'unit_level' => 'required|in:dai-doi,trung-doi',
         ]);
 
         $trainingSubject->update($validated);
@@ -97,8 +98,9 @@ class TrainingSubjectController extends Controller
         if ($trainingSubject->children()->count() > 0) {
             return back()->with('error', 'Không thể xóa vì có nội dung con!');
         }
-        
+
         $trainingSubject->delete();
+
         return redirect()->route('training-subjects.index')->with('success', 'Xóa nội dung huấn luyện thành công.');
     }
 
@@ -110,6 +112,7 @@ class TrainingSubjectController extends Controller
             $query->where('unit_level', $unitLevel);
         }
         $children = $query->get();
+
         return response()->json($children);
     }
 }

@@ -9,7 +9,7 @@ class CheckRole
 {
     public function handle(Request $request, Closure $next, ...$roles)
     {
-        if (!$request->user()) {
+        if (! $request->user()) {
             abort(403, 'Unauthorized');
         }
 

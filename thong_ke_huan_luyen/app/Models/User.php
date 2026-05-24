@@ -6,15 +6,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
-use Spatie\Permission\Traits\HasRoles;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Cache;
+use Laravel\Sanctum\HasApiTokens;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles, LogsActivity;
+    use HasApiTokens, HasFactory, HasRoles, LogsActivity, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -44,7 +44,7 @@ class User extends Authenticatable
 
     public function getAccessibleUnitIds()
     {
-        return Cache::remember("user_{$this->id}_accessible_unit_ids", now()->addHours(1), function() {
+        return Cache::remember("user_{$this->id}_accessible_unit_ids", now()->addHours(1), function () {
             if ($this->hasRole('chi-huy')) {
                 return Unit::pluck('id')->toArray();
             }
@@ -60,7 +60,7 @@ class User extends Authenticatable
                     $levelsHierarchy = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
                     $userLevelIndex = array_search($l, $levelsHierarchy);
                     $allowedLevels = array_slice($levelsHierarchy, $userLevelIndex);
-                    
+
                     return Unit::whereIn('level', $allowedLevels)->pluck('id')->toArray();
                 }
             }
@@ -71,23 +71,24 @@ class User extends Authenticatable
 
     public function getNavigableUnitIds()
     {
-        return Cache::remember("user_{$this->id}_navigable_unit_ids", now()->addHours(1), function() {
+        return Cache::remember("user_{$this->id}_navigable_unit_ids", now()->addHours(1), function () {
             if ($this->hasRole('chi-huy')) {
                 return Unit::pluck('id')->toArray();
             }
 
             $accessibleIds = $this->getAccessibleUnitIds();
             $navigableIds = $accessibleIds;
-            
+
             $units = Unit::whereIn('id', $accessibleIds)->get();
             foreach ($units as $unit) {
                 $ancestors = $unit->getAncestors();
                 foreach ($ancestors as $ancestor) {
-                    if (!in_array($ancestor->id, $navigableIds)) {
+                    if (! in_array($ancestor->id, $navigableIds)) {
                         $navigableIds[] = $ancestor->id;
                     }
                 }
             }
+
             return $navigableIds;
         });
     }
@@ -103,11 +104,11 @@ class User extends Authenticatable
         // Gốc ở đây là đơn vị mà user có quyền truy cập, nhưng parent của nó thì user không có quyền truy cập
         // Hoặc đơn vị đó không có parent (parent_id is null)
         $navigableIds = $this->getNavigableUnitIds();
-        
+
         return Unit::whereIn('id', $navigableIds)
-            ->where(function($query) use ($navigableIds) {
+            ->where(function ($query) use ($navigableIds) {
                 $query->whereNull('parent_id')
-                      ->orWhereNotIn('parent_id', $navigableIds);
+                    ->orWhereNotIn('parent_id', $navigableIds);
             })
             ->orderBy('name')
             ->get();

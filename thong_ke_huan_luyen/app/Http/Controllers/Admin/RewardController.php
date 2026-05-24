@@ -2,16 +2,19 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\RewardExport;
 use App\Http\Controllers\Controller;
 use App\Models\Reward;
-use App\Models\Unit;
 use App\Models\Soldier;
-use App\Exports\RewardExport;
-use Maatwebsite\Excel\Facades\Excel;
+use App\Models\Unit;
+use App\Models\User;
+use App\Notifications\SystemNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Notification;
+use Maatwebsite\Excel\Facades\Excel;
 
 class RewardController extends Controller
 {
@@ -23,6 +26,7 @@ class RewardController extends Controller
     public function exportExcel(Request $request)
     {
         $rewards = $this->getFilteredRewards($request);
+
         return Excel::download(new RewardExport($rewards), 'danh-sach-khen-thuong.xlsx');
     }
 
@@ -30,7 +34,8 @@ class RewardController extends Controller
     {
         $rewards = $this->getFilteredRewards($request);
         $pdf = Pdf::loadView('backend.rewards.pdf', compact('rewards'))
-                  ->setPaper('a4', 'landscape');
+            ->setPaper('a4', 'landscape');
+
         return $pdf->download('danh-sach-khen-thuong.pdf');
     }
 
@@ -39,7 +44,7 @@ class RewardController extends Controller
         $user = Auth::user();
         $query = Reward::with(['unit', 'soldier']);
 
-        if (!$user->hasRole('chi-huy')) {
+        if (! $user->hasRole('chi-huy')) {
             $unitIds = $user->getAccessibleUnitIds();
             $query->whereIn('rewards.unit_id', $unitIds);
         }
@@ -77,7 +82,7 @@ class RewardController extends Controller
         $query = Reward::with(['unit', 'soldier', 'creator']);
 
         // Phân quyền xem theo cấp đơn vị
-        if (!$user->hasRole('chi-huy')) {
+        if (! $user->hasRole('chi-huy')) {
             $unitIds = $user->getAccessibleUnitIds();
             $query->whereIn('rewards.unit_id', $unitIds);
         }
@@ -104,10 +109,10 @@ class RewardController extends Controller
 
         // Tìm kiếm
         if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('reason', 'like', '%' . $request->search . '%')
-                  ->orWhere('reward_form', 'like', '%' . $request->search . '%')
-                  ->orWhere('decision_number', 'like', '%' . $request->search . '%');
+            $query->where(function ($q) use ($request) {
+                $q->where('reason', 'like', '%'.$request->search.'%')
+                    ->orWhere('reward_form', 'like', '%'.$request->search.'%')
+                    ->orWhere('decision_number', 'like', '%'.$request->search.'%');
             });
         }
 
@@ -144,9 +149,9 @@ class RewardController extends Controller
     private function syncWithSoldiers($user)
     {
         $soldierQuery = Soldier::query();
-        
+
         // Chỉ đồng bộ quân nhân thuộc quyền quản lý
-        if (!$user->hasRole('chi-huy')) {
+        if (! $user->hasRole('chi-huy')) {
             $unitIds = $user->getAccessibleUnitIds();
             $soldierQuery->whereIn('unit_id', $unitIds);
         }
@@ -155,7 +160,7 @@ class RewardController extends Controller
         $existingSoldierIds = Reward::pluck('soldier_id')->toArray();
 
         foreach ($soldiers as $soldier) {
-            if (!in_array($soldier->id, $existingSoldierIds)) {
+            if (! in_array($soldier->id, $existingSoldierIds)) {
                 Reward::create([
                     'type' => 'unit',
                     'soldier_id' => $soldier->id,
@@ -182,7 +187,9 @@ class RewardController extends Controller
         if ($roots->count() > 0) {
             $firstRoot = $roots->first();
             $rootLevelIndex = array_search($firstRoot->level, $levels);
-            if ($rootLevelIndex === false) $rootLevelIndex = 0;
+            if ($rootLevelIndex === false) {
+                $rootLevelIndex = 0;
+            }
             $levelOptions[$rootLevelIndex] = $roots;
         }
 
@@ -199,7 +206,7 @@ class RewardController extends Controller
             'Danh hiệu thi đua',
             'Thưởng tiền',
             'Thăng quân hàm',
-            'Nâng lương trước thời hạn'
+            'Nâng lương trước thời hạn',
         ];
 
         return view('backend.rewards.create', compact('type', 'levelOptions', 'hierarchy', 'soldiers', 'decisionLevels', 'rewardForms'));
@@ -222,11 +229,11 @@ class RewardController extends Controller
             'signer_name' => 'nullable|string|max:100',
             'signer_position' => 'nullable|string|max:100',
             'result' => 'nullable|string',
-            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:20480'
+            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:20480',
         ]);
 
         // Kiểm tra quyền đối với đơn vị đã chọn
-        if (!in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
+        if (! in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
             return back()->withErrors(['unit_id' => 'Bạn không có quyền thêm khen thưởng cho đơn vị này.'])->withInput();
         }
 
@@ -235,7 +242,7 @@ class RewardController extends Controller
         $validated['unit_name_at_time'] = $unit->name;
 
         // Lấy tên quân nhân nếu có
-        if (!empty($validated['soldier_id'])) {
+        if (! empty($validated['soldier_id'])) {
             $soldier = Soldier::find($validated['soldier_id']);
             $validated['soldier_name_at_time'] = $soldier->full_name;
         }
@@ -246,13 +253,13 @@ class RewardController extends Controller
         // Xử lý file đính kèm
         if ($request->hasFile('attachment')) {
             $file = $request->file('attachment');
-            $fileName = time() . '_' . preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
+            $fileName = time().'_'.preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
             $destination = public_path('backend/uploads/rewards');
-            if (!\Illuminate\Support\Facades\File::exists($destination)) {
-                \Illuminate\Support\Facades\File::makeDirectory($destination, 0755, true);
+            if (! File::exists($destination)) {
+                File::makeDirectory($destination, 0755, true);
             }
             $file->move($destination, $fileName);
-            $validated['attachment'] = 'backend/uploads/rewards/' . $fileName;
+            $validated['attachment'] = 'backend/uploads/rewards/'.$fileName;
         }
 
         $validated['created_by'] = Auth::id();
@@ -272,6 +279,7 @@ class RewardController extends Controller
     public function show(Reward $reward)
     {
         $this->authorize('view', $reward);
+
         return view('backend.rewards.show', compact('reward'));
     }
 
@@ -283,7 +291,7 @@ class RewardController extends Controller
         $user = Auth::user();
         $navigableIds = $user->getNavigableUnitIds();
         $levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
-        
+
         $hierarchy = array_fill(0, count($levels), null);
         $levelOptions = [];
 
@@ -302,8 +310,10 @@ class RewardController extends Controller
         if ($roots->count() > 0) {
             $firstRoot = $roots->first();
             $rootLevelIndex = array_search($firstRoot->level, $levels);
-            if ($rootLevelIndex === false) $rootLevelIndex = 0;
-            
+            if ($rootLevelIndex === false) {
+                $rootLevelIndex = 0;
+            }
+
             $levelOptions[$rootLevelIndex] = $roots;
         }
 
@@ -314,7 +324,7 @@ class RewardController extends Controller
                     ->whereIn('id', $navigableIds)
                     ->orderBy('name')
                     ->get();
-                
+
                 if ($children->count() > 0) {
                     $levelOptions[$index + 1] = $children;
                 }
@@ -332,7 +342,7 @@ class RewardController extends Controller
             'Danh hiệu thi đua',
             'Thưởng tiền',
             'Thăng quân hàm',
-            'Nâng lương trước thời hạn'
+            'Nâng lương trước thời hạn',
         ];
 
         return view('backend.rewards.edit', compact('reward', 'hierarchy', 'levelOptions', 'soldiers', 'decisionLevels', 'rewardForms'));
@@ -355,12 +365,12 @@ class RewardController extends Controller
             'signer_name' => 'nullable|string|max:100',
             'signer_position' => 'nullable|string|max:100',
             'result' => 'nullable|string',
-            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120'
+            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
         // Kiểm tra quyền đối với đơn vị đã chọn (nếu có thay đổi đơn vị)
         if ($reward->unit_id != $validated['unit_id']) {
-            if (!in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
+            if (! in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
                 return back()->withErrors(['unit_id' => 'Bạn không có quyền chuyển khen thưởng sang đơn vị này.'])->withInput();
             }
         }
@@ -370,7 +380,7 @@ class RewardController extends Controller
         $validated['unit_name_at_time'] = $unit->name;
 
         // Cập nhật tên quân nhân
-        if (!empty($validated['soldier_id'])) {
+        if (! empty($validated['soldier_id'])) {
             $soldier = Soldier::find($validated['soldier_id']);
             $validated['soldier_name_at_time'] = $soldier->full_name;
         } else {
@@ -383,17 +393,17 @@ class RewardController extends Controller
         // Xử lý file mới
         if ($request->hasFile('attachment')) {
             // Xóa file cũ nếu có
-            if ($reward->attachment && \Illuminate\Support\Facades\File::exists(public_path($reward->attachment))) {
-                \Illuminate\Support\Facades\File::delete(public_path($reward->attachment));
+            if ($reward->attachment && File::exists(public_path($reward->attachment))) {
+                File::delete(public_path($reward->attachment));
             }
             $file = $request->file('attachment');
-            $fileName = time() . '_' . preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
+            $fileName = time().'_'.preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
             $destination = public_path('backend/uploads/rewards');
-            if (!\Illuminate\Support\Facades\File::exists($destination)) {
-                \Illuminate\Support\Facades\File::makeDirectory($destination, 0755, true);
+            if (! File::exists($destination)) {
+                File::makeDirectory($destination, 0755, true);
             }
             $file->move($destination, $fileName);
-            $validated['attachment'] = 'backend/uploads/rewards/' . $fileName;
+            $validated['attachment'] = 'backend/uploads/rewards/'.$fileName;
         }
 
         $validated['updated_by'] = Auth::id();
@@ -401,19 +411,21 @@ class RewardController extends Controller
         $reward = Reward::create($validated);
 
         // Gửi thông báo
-        $chiHuyUsers = \App\Models\User::role('chi-huy')->get();
-        $targetUser = $reward->soldier ? \App\Models\User::where('soldier_id', $reward->soldier_id)->first() : null;
+        $chiHuyUsers = User::role('chi-huy')->get();
+        $targetUser = $reward->soldier ? User::where('soldier_id', $reward->soldier_id)->first() : null;
 
-        $msg = 'Có quyết định khen thưởng mới cho ' . ($reward->soldier ? $reward->soldier->full_name : $reward->unit_name_at_time);
-        $notification = new \App\Notifications\SystemNotification(
+        $msg = 'Có quyết định khen thưởng mới cho '.($reward->soldier ? $reward->soldier->full_name : $reward->unit_name_at_time);
+        $notification = new SystemNotification(
             'Khen thưởng mới',
             $msg,
             'fa-medal',
             route('rewards.show', $reward->id),
             'success'
         );
-        \Illuminate\Support\Facades\Notification::send($chiHuyUsers, $notification);
-        if ($targetUser) $targetUser->notify($notification);
+        Notification::send($chiHuyUsers, $notification);
+        if ($targetUser) {
+            $targetUser->notify($notification);
+        }
 
         return redirect()->route('rewards.index')
             ->with('success', 'Cập nhật khen thưởng thành công!');
@@ -425,8 +437,8 @@ class RewardController extends Controller
         $this->authorize('delete', $reward);
 
         // Xóa file đính kèm
-        if ($reward->attachment && \Illuminate\Support\Facades\File::exists(public_path($reward->attachment))) {
-            \Illuminate\Support\Facades\File::delete(public_path($reward->attachment));
+        if ($reward->attachment && File::exists(public_path($reward->attachment))) {
+            File::delete(public_path($reward->attachment));
         }
 
         $reward->delete();
@@ -441,7 +453,7 @@ class RewardController extends Controller
         $user = Auth::user();
         $query = Reward::with('unit');
 
-        if (!$user->hasRole('chi-huy')) {
+        if (! $user->hasRole('chi-huy')) {
             $unitIds = $user->getAccessibleUnitIds();
             $query->whereIn('unit_id', $unitIds);
         }
@@ -451,7 +463,7 @@ class RewardController extends Controller
         $query->whereYear('decision_date', $year);
 
         // Thống kê theo đơn vị
-        $statsByUnit = $query->get()->groupBy('unit.name')->map(function($items) {
+        $statsByUnit = $query->get()->groupBy('unit.name')->map(function ($items) {
             return [
                 'total' => $items->count(),
                 'unit_rewards' => $items->where('type', 'unit')->count(),
@@ -460,12 +472,12 @@ class RewardController extends Controller
         });
 
         // Thống kê theo cấp quyết định
-        $statsByLevel = $query->get()->groupBy('decision_level')->map(function($items) {
+        $statsByLevel = $query->get()->groupBy('decision_level')->map(function ($items) {
             return $items->count();
         });
 
         // Thống kê theo hình thức khen thưởng
-        $statsByForm = $query->get()->groupBy('reward_form')->map(function($items) {
+        $statsByForm = $query->get()->groupBy('reward_form')->map(function ($items) {
             return $items->count();
         });
 

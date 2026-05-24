@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class TrainingResult extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     // Tên bảng
     protected $fillable = [
@@ -21,7 +21,7 @@ class TrainingResult extends Model
         'result', 'result_details', 'passing_rate',
         'evaluation', 'strengths', 'weaknesses', 'recommendations',
         'instructor', 'supervisor',
-        'attachment', 'created_by', 'updated_by'
+        'attachment', 'created_by', 'updated_by',
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -31,13 +31,13 @@ class TrainingResult extends Model
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }
-    
+
     // Định dạng ngày giờ và kiểu dữ liệu
     protected $casts = [
         'training_date' => 'date',
         'start_time' => 'datetime:H:i',
         'end_time' => 'datetime:H:i',
-        'passing_rate' => 'decimal:2'
+        'passing_rate' => 'decimal:2',
     ];
 
     // Relationships
@@ -84,8 +84,9 @@ class TrainingResult extends Model
             'giỏi' => 'Giỏi',
             'khá' => 'Khá',
             'trung_bình' => 'Trung bình',
-            'yếu' => 'Yếu'
+            'yếu' => 'Yếu',
         ];
+
         return $results[$this->result] ?? 'Chưa đánh giá';
     }
 
@@ -96,8 +97,9 @@ class TrainingResult extends Model
             'giỏi' => 'badge-primary',
             'khá' => 'badge-info',
             'trung_bình' => 'badge-warning',
-            'yếu' => 'badge-danger'
+            'yếu' => 'badge-danger',
         ];
+
         return $badges[$this->result] ?? 'badge-secondary';
     }
 
@@ -130,7 +132,9 @@ class TrainingResult extends Model
     // Safe HTML output accessor (sanitized)
     public function getSafeContentAttribute()
     {
-        if (!$this->content) return '';
+        if (! $this->content) {
+            return '';
+        }
 
         static $purifier = null;
         if ($purifier === null) {
@@ -145,4 +149,3 @@ class TrainingResult extends Model
         return $purifier->purify($this->content);
     }
 }
-

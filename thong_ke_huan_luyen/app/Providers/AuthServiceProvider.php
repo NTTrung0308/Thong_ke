@@ -2,20 +2,20 @@
 
 namespace App\Providers;
 
-use App\Models\Soldier;
-use App\Models\WeaponEquipment;
-use App\Models\Reward;
 use App\Models\Discipline;
-use App\Models\TrainingResult;
+use App\Models\Reward;
+use App\Models\Soldier;
 use App\Models\TrainingLog;
+use App\Models\TrainingResult;
 use App\Models\TrainingSubject;
-use App\Policies\SoldierPolicy;
-use App\Policies\WeaponEquipmentPolicy;
-use App\Policies\RewardPolicy;
+use App\Models\WeaponEquipment;
 use App\Policies\DisciplinePolicy;
-use App\Policies\TrainingResultPolicy;
+use App\Policies\RewardPolicy;
+use App\Policies\SoldierPolicy;
 use App\Policies\TrainingLogPolicy;
+use App\Policies\TrainingResultPolicy;
 use App\Policies\TrainingSubjectPolicy;
+use App\Policies\WeaponEquipmentPolicy;
 // use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 

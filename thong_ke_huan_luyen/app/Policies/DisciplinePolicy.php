@@ -2,14 +2,16 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\Discipline;
+use App\Models\User;
 
 class DisciplinePolicy
 {
     public function view(User $user, Discipline $discipline)
     {
-        if ($user->hasRole('chi-huy')) return true;
+        if ($user->hasRole('chi-huy')) {
+            return true;
+        }
 
         // Chỉ được xem kỷ luật của đơn vị mình hoặc cấp dưới
         return $this->isInSameOrSubUnit($user, $discipline);
@@ -23,7 +25,9 @@ class DisciplinePolicy
 
     public function update(User $user, Discipline $discipline)
     {
-        if ($user->hasRole('chi-huy')) return true;
+        if ($user->hasRole('chi-huy')) {
+            return true;
+        }
 
         // Chỉ người cùng đơn vị hoặc cấp trên mới sửa
         return $this->isInSameOrSubUnit($user, $discipline);
@@ -31,7 +35,9 @@ class DisciplinePolicy
 
     public function delete(User $user, Discipline $discipline)
     {
-        if ($user->hasRole('chi-huy')) return true;
+        if ($user->hasRole('chi-huy')) {
+            return true;
+        }
 
         // Cho phép xóa kỷ luật của đơn vị mình hoặc cấp dưới
         return $this->isInSameOrSubUnit($user, $discipline);
@@ -42,9 +48,10 @@ class DisciplinePolicy
         // 1. Nếu user có đơn vị cụ thể, kiểm tra theo cây đơn vị
         if ($user->unit) {
             $allowedUnitIds = $user->unit->getAllDescendantIds();
+
             return in_array($discipline->unit_id, $allowedUnitIds);
         }
-        
+
         // 2. Nếu user không có đơn vị (nhưng có Role), kiểm tra theo cấp bậc Role
         $levels = ['trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
         foreach ($levels as $l) {
@@ -53,7 +60,7 @@ class DisciplinePolicy
                 $userLevelIndex = array_search($l, $levelsHierarchy);
                 $targetLevel = $discipline->unit->level ?? 'trung-doi';
                 $targetLevelIndex = array_search($targetLevel, $levelsHierarchy);
-                
+
                 return $userLevelIndex !== false && $targetLevelIndex !== false && $userLevelIndex <= $targetLevelIndex;
             }
         }

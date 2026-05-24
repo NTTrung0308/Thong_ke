@@ -2,17 +2,20 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\TrainingLogExport;
 use App\Http\Controllers\Controller;
+use App\Models\Soldier;
 use App\Models\TrainingLog;
 use App\Models\Unit;
-use App\Models\Soldier;
-use App\Exports\TrainingLogExport;
-use Maatwebsite\Excel\Facades\Excel;
+use App\Models\User;
+use App\Notifications\SystemNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Notification;
+use Maatwebsite\Excel\Facades\Excel;
 
 class TrainingLogController extends Controller
 {
@@ -24,6 +27,7 @@ class TrainingLogController extends Controller
     public function exportExcel(Request $request)
     {
         $logs = $this->getFilteredLogs($request);
+
         return Excel::download(new TrainingLogExport($logs), 'nhat-ky-huan-luyen.xlsx');
     }
 
@@ -31,7 +35,8 @@ class TrainingLogController extends Controller
     {
         $logs = $this->getFilteredLogs($request);
         $pdf = Pdf::loadView('backend.training_logs.pdf', compact('logs'))
-                  ->setPaper('a4', 'landscape');
+            ->setPaper('a4', 'landscape');
+
         return $pdf->download('nhat-ky-huan-luyen.pdf');
     }
 
@@ -40,7 +45,7 @@ class TrainingLogController extends Controller
         $user = Auth::user();
         $query = TrainingLog::with(['unit', 'soldier']);
 
-        if (!$user->hasRole('chi-huy')) {
+        if (! $user->hasRole('chi-huy')) {
             $unitIds = $user->getAccessibleUnitIds();
             $query->whereIn('training_logs.unit_id', $unitIds);
         }
@@ -77,7 +82,7 @@ class TrainingLogController extends Controller
         $query = TrainingLog::with(['unit', 'soldier', 'creator']);
 
         // Phân quyền xem
-        if (!$user->hasRole('chi-huy')) {
+        if (! $user->hasRole('chi-huy')) {
             $unitIds = $user->getAccessibleUnitIds();
             $query->whereIn('training_logs.unit_id', $unitIds);
         }
@@ -102,11 +107,11 @@ class TrainingLogController extends Controller
 
         // Tìm kiếm
         if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('training_content', 'like', '%' . $request->search . '%')
-                  ->orWhere('instructor', 'like', '%' . $request->search . '%')
-                  ->orWhere('soldier_name_at_time', 'like', '%' . $request->search . '%')
-                  ->orWhere('unit_name_at_time', 'like', '%' . $request->search . '%');
+            $query->where(function ($q) use ($request) {
+                $q->where('training_content', 'like', '%'.$request->search.'%')
+                    ->orWhere('instructor', 'like', '%'.$request->search.'%')
+                    ->orWhere('soldier_name_at_time', 'like', '%'.$request->search.'%')
+                    ->orWhere('unit_name_at_time', 'like', '%'.$request->search.'%');
             });
         }
 
@@ -132,7 +137,7 @@ class TrainingLogController extends Controller
             'giỏi' => 'Giỏi',
             'khá' => 'Khá',
             'trung_bình' => 'Trung bình',
-            'yếu' => 'Yếu'
+            'yếu' => 'Yếu',
         ];
 
         return view('backend.training_logs.index', compact('trainingLogs', 'units', 'ratings', 'stats'));
@@ -141,9 +146,9 @@ class TrainingLogController extends Controller
     private function syncWithSoldiers($user)
     {
         $soldierQuery = Soldier::query();
-        
+
         // Chỉ đồng bộ quân nhân thuộc quyền quản lý
-        if (!$user->hasRole('chi-huy')) {
+        if (! $user->hasRole('chi-huy')) {
             $unitIds = $user->getAccessibleUnitIds();
             $soldierQuery->whereIn('unit_id', $unitIds);
         }
@@ -152,7 +157,7 @@ class TrainingLogController extends Controller
         $existingSoldierIds = TrainingLog::pluck('soldier_id')->toArray();
 
         foreach ($soldiers as $soldier) {
-            if (!in_array($soldier->id, $existingSoldierIds)) {
+            if (! in_array($soldier->id, $existingSoldierIds)) {
                 TrainingLog::create([
                     'soldier_id' => $soldier->id,
                     'soldier_name_at_time' => $soldier->full_name,
@@ -173,16 +178,18 @@ class TrainingLogController extends Controller
         $this->authorize('create', TrainingLog::class);
         $user = Auth::user();
         $levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
-        
+
         $levelOptions = [];
         $roots = $user->getRootAccessibleUnits();
         if ($roots->count() > 0) {
             $firstRoot = $roots->first();
             $rootLevelIndex = array_search($firstRoot->level, $levels);
-            if ($rootLevelIndex === false) $rootLevelIndex = 0;
+            if ($rootLevelIndex === false) {
+                $rootLevelIndex = 0;
+            }
             $levelOptions[$rootLevelIndex] = $roots;
         }
-        
+
         $hierarchy = array_fill(0, count($levels), null);
 
         // Lấy ngày hiện tại
@@ -224,7 +231,7 @@ class TrainingLogController extends Controller
             'notes' => 'nullable|string',
             'instructor' => 'nullable|string|max:100',
             'commander' => 'nullable|string|max:100',
-            'attachment' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:20480'
+            'attachment' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:20480',
         ]);
 
         // Đảm bảo day_of_week luôn có giá trị
@@ -234,12 +241,12 @@ class TrainingLogController extends Controller
 
         // Kiểm tra quyền đối với đơn vị đã chọn
         $user = Auth::user();
-        if (!in_array($validated['unit_id'], $user->getAccessibleUnitIds())) {
+        if (! in_array($validated['unit_id'], $user->getAccessibleUnitIds())) {
             return back()->withErrors(['unit_id' => 'Bạn không có quyền thêm nhật ký huấn luyện cho đơn vị này.'])->withInput();
         }
 
         // Tính toán phần trăm (nếu có dữ liệu kiểm tra)
-        if (!empty($validated['test_quanso']) && $validated['test_quanso'] > 0) {
+        if (! empty($validated['test_quanso']) && $validated['test_quanso'] > 0) {
             $validated['good_percent'] = round((($validated['good_count'] ?? 0) / $validated['test_quanso']) * 100, 2);
             $validated['fair_percent'] = round((($validated['fair_count'] ?? 0) / $validated['test_quanso']) * 100, 2);
             $validated['pass_percent'] = round((($validated['pass_count'] ?? 0) / $validated['test_quanso']) * 100, 2);
@@ -254,13 +261,13 @@ class TrainingLogController extends Controller
         // Xử lý file đính kèm
         if ($request->hasFile('attachment')) {
             $file = $request->file('attachment');
-            $fileName = time() . '_' . preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
+            $fileName = time().'_'.preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
             $destination = public_path('backend/uploads/training-logs');
-            if (!\Illuminate\Support\Facades\File::exists($destination)) {
-                \Illuminate\Support\Facades\File::makeDirectory($destination, 0755, true);
+            if (! File::exists($destination)) {
+                File::makeDirectory($destination, 0755, true);
             }
             $file->move($destination, $fileName);
-            $validated['attachment'] = 'backend/uploads/training-logs/' . $fileName;
+            $validated['attachment'] = 'backend/uploads/training-logs/'.$fileName;
         }
 
         $validated['created_by'] = Auth::id();
@@ -276,16 +283,16 @@ class TrainingLogController extends Controller
             $trainingLog = TrainingLog::create($validated);
 
             // Gửi thông báo
-            $chiHuyUsers = \App\Models\User::role('chi-huy')->get();
-            $msg = 'Có nhật ký huấn luyện mới từ ' . $trainingLog->unit_name_at_time . ' ngày ' . $trainingLog->training_date->format('d/m/Y');
-            $notification = new \App\Notifications\SystemNotification(
+            $chiHuyUsers = User::role('chi-huy')->get();
+            $msg = 'Có nhật ký huấn luyện mới từ '.$trainingLog->unit_name_at_time.' ngày '.$trainingLog->training_date->format('d/m/Y');
+            $notification = new SystemNotification(
                 'Nhật ký huấn luyện mới',
                 $msg,
                 'fa-book',
                 route('training-logs.show', $trainingLog->id),
                 'info'
             );
-            \Illuminate\Support\Facades\Notification::send($chiHuyUsers, $notification);
+            Notification::send($chiHuyUsers, $notification);
 
             return redirect()->route('training-logs.index')
                 ->with('success', 'Đã lưu nhật ký huấn luyện cho đơn vị (không có quân nhân).');
@@ -305,8 +312,8 @@ class TrainingLogController extends Controller
 
             if ($existingLog) {
                 if ($existingLog->attachment && isset($data['attachment'])) {
-                    if (\Illuminate\Support\Facades\File::exists(public_path($existingLog->attachment))) {
-                        \Illuminate\Support\Facades\File::delete(public_path($existingLog->attachment));
+                    if (File::exists(public_path($existingLog->attachment))) {
+                        File::delete(public_path($existingLog->attachment));
                     }
                 }
                 $existingLog->update($data);
@@ -317,7 +324,7 @@ class TrainingLogController extends Controller
         }
 
         return redirect()->route('training-logs.index')
-            ->with('success', "Đã cập nhật nhật ký huấn luyện cho $count quân nhân thuộc đơn vị " . $selectedUnit->name);
+            ->with('success', "Đã cập nhật nhật ký huấn luyện cho $count quân nhân thuộc đơn vị ".$selectedUnit->name);
     }
 
     // Xem chi tiết
@@ -325,6 +332,7 @@ class TrainingLogController extends Controller
     {
         $trainingLog = TrainingLog::findOrFail($id);
         $this->authorize('view', $trainingLog);
+
         return view('backend.training_logs.show', compact('trainingLog'));
     }
 
@@ -336,7 +344,7 @@ class TrainingLogController extends Controller
         $user = Auth::user();
         $navigableIds = $user->getNavigableUnitIds();
         $levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
-        
+
         $hierarchy = array_fill(0, count($levels), null);
         $levelOptions = [];
 
@@ -355,8 +363,10 @@ class TrainingLogController extends Controller
         if ($roots->count() > 0) {
             $firstRoot = $roots->first();
             $rootLevelIndex = array_search($firstRoot->level, $levels);
-            if ($rootLevelIndex === false) $rootLevelIndex = 0;
-            
+            if ($rootLevelIndex === false) {
+                $rootLevelIndex = 0;
+            }
+
             $levelOptions[$rootLevelIndex] = $roots;
         }
 
@@ -367,7 +377,7 @@ class TrainingLogController extends Controller
                     ->whereIn('id', $navigableIds)
                     ->orderBy('name')
                     ->get();
-                
+
                 if ($children->count() > 0) {
                     $levelOptions[$index + 1] = $children;
                 }
@@ -410,12 +420,12 @@ class TrainingLogController extends Controller
             'notes' => 'nullable|string',
             'instructor' => 'nullable|string|max:100',
             'commander' => 'nullable|string|max:100',
-            'attachment' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:20480'
+            'attachment' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:20480',
         ]);
 
         // Kiểm tra quyền đối với đơn vị đã chọn (nếu có thay đổi đơn vị)
         if ($trainingLog->unit_id != $validated['unit_id']) {
-            if (!in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
+            if (! in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
                 return back()->withErrors(['unit_id' => 'Bạn không có quyền chuyển nhật ký huấn luyện sang đơn vị này.'])->withInput();
             }
         }
@@ -438,7 +448,7 @@ class TrainingLogController extends Controller
         $validated['unit_name_at_time'] = $unit->name;
 
         // Cập nhật tên quân nhân
-        if (!empty($validated['soldier_id'])) {
+        if (! empty($validated['soldier_id'])) {
             $soldier = Soldier::find($validated['soldier_id']);
             $validated['soldier_name_at_time'] = $soldier->full_name;
         } else {
@@ -447,17 +457,17 @@ class TrainingLogController extends Controller
 
         // Xử lý file mới
         if ($request->hasFile('attachment')) {
-            if ($trainingLog->attachment && \Illuminate\Support\Facades\File::exists(public_path($trainingLog->attachment))) {
-                \Illuminate\Support\Facades\File::delete(public_path($trainingLog->attachment));
+            if ($trainingLog->attachment && File::exists(public_path($trainingLog->attachment))) {
+                File::delete(public_path($trainingLog->attachment));
             }
             $file = $request->file('attachment');
-            $fileName = time() . '_' . preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
+            $fileName = time().'_'.preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
             $destination = public_path('backend/uploads/training-logs');
-            if (!\Illuminate\Support\Facades\File::exists($destination)) {
-                \Illuminate\Support\Facades\File::makeDirectory($destination, 0755, true);
+            if (! File::exists($destination)) {
+                File::makeDirectory($destination, 0755, true);
             }
             $file->move($destination, $fileName);
-            $validated['attachment'] = 'backend/uploads/training-logs/' . $fileName;
+            $validated['attachment'] = 'backend/uploads/training-logs/'.$fileName;
         }
 
         $validated['updated_by'] = Auth::id();
@@ -473,8 +483,8 @@ class TrainingLogController extends Controller
     {
         $trainingLog = TrainingLog::findOrFail($id);
         $this->authorize('delete', $trainingLog);
-        if ($trainingLog->attachment && \Illuminate\Support\Facades\File::exists(public_path($trainingLog->attachment))) {
-            \Illuminate\Support\Facades\File::delete(public_path($trainingLog->attachment));
+        if ($trainingLog->attachment && File::exists(public_path($trainingLog->attachment))) {
+            File::delete(public_path($trainingLog->attachment));
         }
 
         $trainingLog->delete();
@@ -489,7 +499,7 @@ class TrainingLogController extends Controller
         $user = Auth::user();
         $query = TrainingLog::with('unit');
 
-        if (!$user->hasRole('chi-huy')) {
+        if (! $user->hasRole('chi-huy')) {
             $unitIds = $user->getAccessibleUnitIds();
             $query->whereIn('unit_id', $unitIds);
         }
@@ -523,7 +533,7 @@ class TrainingLogController extends Controller
             'total_pass' => $logs->sum('pass_count'),
             'total_fail' => $logs->sum('fail_count'),
             'attendance_rate' => 0,
-            'time_rate' => 0
+            'time_rate' => 0,
         ];
 
         if ($summary['total_required_quanso'] > 0) {
@@ -534,13 +544,13 @@ class TrainingLogController extends Controller
         }
 
         // Thống kê theo ngày
-        $dailyStats = $logs->groupBy(function($log) {
+        $dailyStats = $logs->groupBy(function ($log) {
             return $log->training_date->format('d/m');
-        })->map(function($items) {
+        })->map(function ($items) {
             return [
                 'count' => $items->count(),
                 'attendance_rate' => $items->avg('attendance_rate'),
-                'time_rate' => $items->avg('time_rate')
+                'time_rate' => $items->avg('time_rate'),
             ];
         });
 
@@ -555,7 +565,7 @@ class TrainingLogController extends Controller
             'logs', 'summary', 'dailyStats', 'units', 'months', 'years'
         ) + [
             'currentMonth' => $month,
-            'currentYear' => $year
+            'currentYear' => $year,
         ]);
     }
 
@@ -569,8 +579,9 @@ class TrainingLogController extends Controller
             'Thursday' => 'Thứ 5',
             'Friday' => 'Thứ 6',
             'Saturday' => 'Thứ 7',
-            'Sunday' => 'Chủ nhật'
+            'Sunday' => 'Chủ nhật',
         ];
+
         return $days[$date->format('l')];
     }
 }

@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Soldier;
 use App\Models\Unit;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class SoldierSeeder extends Seeder
 {
@@ -14,8 +14,9 @@ class SoldierSeeder extends Seeder
         $units = Unit::all();
         $user = User::first();
 
-        if ($units->isEmpty() || !$user) {
+        if ($units->isEmpty() || ! $user) {
             $this->command->error('Vui lòng chạy UnitSeeder và RolePermissionSeeder trước!');
+
             return;
         }
 

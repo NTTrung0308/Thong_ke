@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Unit extends Model
 {
@@ -28,8 +28,9 @@ class Unit extends Model
             'trung-doan' => 'Trung đoàn',
             'tieu-doan' => 'Tiểu đoàn',
             'dai-doi' => 'Đại đội',
-            'trung-doi' => 'Trung đội'
+            'trung-doi' => 'Trung đội',
         ];
+
         return $labels[$this->level] ?? $this->level;
     }
 
@@ -60,11 +61,12 @@ class Unit extends Model
             return [];
         }
         $visited[] = $this->id;
-        
+
         $ids = [$this->id];
         foreach ($this->children as $child) {
             $ids = array_merge($ids, $child->getAllDescendantIds($visited));
         }
+
         return $ids;
     }
 
@@ -74,11 +76,12 @@ class Unit extends Model
         $parent = $this->parent;
         $visited = [$this->id];
 
-        while ($parent && !in_array($parent->id, $visited)) {
+        while ($parent && ! in_array($parent->id, $visited)) {
             $ancestors->push($parent);
             $visited[] = $parent->id;
             $parent = $parent->parent;
         }
+
         return $ancestors->reverse();
     }
 
@@ -88,6 +91,7 @@ class Unit extends Model
         if ($ancestors->isEmpty()) {
             return $this->name;
         }
+
         // Trả về theo thứ tự: Bộ chỉ huy - Trung đoàn - Tiểu đoàn - Đại đội - Trung đội
         return $ancestors->concat([$this])->pluck('name')->implode(' - ');
     }

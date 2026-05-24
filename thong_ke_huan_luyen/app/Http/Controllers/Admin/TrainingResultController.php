@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\TrainingResultExport;
 use App\Http\Controllers\Controller;
 use App\Models\TrainingResult;
 use App\Models\Unit;
-use App\Exports\TrainingResultExport;
-use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\File;
+use Maatwebsite\Excel\Facades\Excel;
 
 class TrainingResultController extends Controller
 {
@@ -23,6 +23,7 @@ class TrainingResultController extends Controller
     public function exportExcel(Request $request)
     {
         $results = $this->getFilteredResults($request);
+
         return Excel::download(new TrainingResultExport($results), 'ket-qua-tap-huan.xlsx');
     }
 
@@ -30,7 +31,8 @@ class TrainingResultController extends Controller
     {
         $results = $this->getFilteredResults($request);
         $pdf = Pdf::loadView('backend.training_results.pdf', compact('results'))
-                  ->setPaper('a4', 'landscape');
+            ->setPaper('a4', 'landscape');
+
         return $pdf->download('ket-qua-tap-huan.pdf');
     }
 
@@ -39,7 +41,7 @@ class TrainingResultController extends Controller
         $user = Auth::user();
         $query = TrainingResult::with(['unit']);
 
-        if (!$user->hasRole('chi-huy')) {
+        if (! $user->hasRole('chi-huy')) {
             $unitIds = $user->getAccessibleUnitIds();
             $query->whereIn('unit_id', $unitIds);
         }
@@ -70,7 +72,7 @@ class TrainingResultController extends Controller
         $query = TrainingResult::with(['unit', 'creator']);
 
         // Phân quyền xem theo cấp đơn vị
-        if (!$user->hasRole('chi-huy')) {
+        if (! $user->hasRole('chi-huy')) {
             $unitIds = $user->getAccessibleUnitIds();
             $query->whereIn('unit_id', $unitIds);
         }
@@ -97,10 +99,10 @@ class TrainingResultController extends Controller
 
         // Tìm kiếm
         if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('content', 'like', '%' . $request->search . '%')
-                  ->orWhere('evaluation', 'like', '%' . $request->search . '%')
-                  ->orWhere('instructor', 'like', '%' . $request->search . '%');
+            $query->where(function ($q) use ($request) {
+                $q->where('content', 'like', '%'.$request->search.'%')
+                    ->orWhere('evaluation', 'like', '%'.$request->search.'%')
+                    ->orWhere('instructor', 'like', '%'.$request->search.'%');
             });
         }
 
@@ -116,7 +118,7 @@ class TrainingResultController extends Controller
         $months = [
             1 => 'Tháng 1', 2 => 'Tháng 2', 3 => 'Tháng 3', 4 => 'Tháng 4',
             5 => 'Tháng 5', 6 => 'Tháng 6', 7 => 'Tháng 7', 8 => 'Tháng 8',
-            9 => 'Tháng 9', 10 => 'Tháng 10', 11 => 'Tháng 11', 12 => 'Tháng 12'
+            9 => 'Tháng 9', 10 => 'Tháng 10', 11 => 'Tháng 11', 12 => 'Tháng 12',
         ];
 
         $results = [
@@ -124,7 +126,7 @@ class TrainingResultController extends Controller
             'giỏi' => 'Giỏi',
             'khá' => 'Khá',
             'trung_bình' => 'Trung bình',
-            'yếu' => 'Yếu'
+            'yếu' => 'Yếu',
         ];
 
         return view('backend.training_results.index', compact(
@@ -138,16 +140,18 @@ class TrainingResultController extends Controller
 
         $user = Auth::user();
         $levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
-        
+
         $levelOptions = [];
         $roots = $user->getRootAccessibleUnits();
         if ($roots->count() > 0) {
             $firstRoot = $roots->first();
             $rootLevelIndex = array_search($firstRoot->level, $levels);
-            if ($rootLevelIndex === false) $rootLevelIndex = 0;
+            if ($rootLevelIndex === false) {
+                $rootLevelIndex = 0;
+            }
             $levelOptions[$rootLevelIndex] = $roots;
         }
-        
+
         $hierarchy = array_fill(0, count($levels), null);
 
         return view('backend.training_results.create', compact('levelOptions', 'hierarchy'));
@@ -177,11 +181,11 @@ class TrainingResultController extends Controller
             'recommendations' => 'nullable|string',
             'instructor' => 'nullable|string|max:100',
             'supervisor' => 'nullable|string|max:100',
-            'attachment' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:20480'
+            'attachment' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:20480',
         ]);
 
         // Kiểm tra quyền đối với đơn vị đã chọn
-        if (!in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
+        if (! in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
             return back()->withErrors(['unit_id' => 'Bạn không có quyền thêm kết quả tập huấn cho đơn vị này.'])->withInput();
         }
 
@@ -198,13 +202,13 @@ class TrainingResultController extends Controller
         // Xử lý file
         if ($request->hasFile('attachment')) {
             $file = $request->file('attachment');
-            $fileName = time() . '_' . preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
+            $fileName = time().'_'.preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
             $destination = public_path('backend/uploads/training-results');
-            if (!\Illuminate\Support\Facades\File::exists($destination)) {
-                \Illuminate\Support\Facades\File::makeDirectory($destination, 0755, true);
+            if (! File::exists($destination)) {
+                File::makeDirectory($destination, 0755, true);
             }
             $file->move($destination, $fileName);
-            $validated['attachment'] = 'backend/uploads/training-results/' . $fileName;
+            $validated['attachment'] = 'backend/uploads/training-results/'.$fileName;
         }
 
         $validated['created_by'] = Auth::id();
@@ -220,6 +224,7 @@ class TrainingResultController extends Controller
     public function show(TrainingResult $trainingResult)
     {
         $this->authorize('view', $trainingResult);
+
         return view('backend.training_results.show', compact('trainingResult'));
     }
 
@@ -231,7 +236,7 @@ class TrainingResultController extends Controller
         $user = Auth::user();
         $navigableIds = $user->getNavigableUnitIds();
         $levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
-        
+
         $hierarchy = array_fill(0, count($levels), null);
         $levelOptions = [];
 
@@ -250,8 +255,10 @@ class TrainingResultController extends Controller
         if ($roots->count() > 0) {
             $firstRoot = $roots->first();
             $rootLevelIndex = array_search($firstRoot->level, $levels);
-            if ($rootLevelIndex === false) $rootLevelIndex = 0;
-            
+            if ($rootLevelIndex === false) {
+                $rootLevelIndex = 0;
+            }
+
             $levelOptions[$rootLevelIndex] = $roots;
         }
 
@@ -262,7 +269,7 @@ class TrainingResultController extends Controller
                     ->whereIn('id', $navigableIds)
                     ->orderBy('name')
                     ->get();
-                
+
                 if ($children->count() > 0) {
                     $levelOptions[$index + 1] = $children;
                 }
@@ -296,12 +303,12 @@ class TrainingResultController extends Controller
             'recommendations' => 'nullable|string',
             'instructor' => 'nullable|string|max:100',
             'supervisor' => 'nullable|string|max:100',
-            'attachment' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:20480'
+            'attachment' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:20480',
         ]);
 
         // Kiểm tra quyền đối với đơn vị đã chọn (nếu có thay đổi đơn vị)
         if ($trainingResult->unit_id != $validated['unit_id']) {
-            if (!in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
+            if (! in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
                 return back()->withErrors(['unit_id' => 'Bạn không có quyền chuyển kết quả tập huấn sang đơn vị này.'])->withInput();
             }
         }
@@ -318,17 +325,17 @@ class TrainingResultController extends Controller
 
         // Xử lý file mới
         if ($request->hasFile('attachment')) {
-            if ($trainingResult->attachment && \Illuminate\Support\Facades\File::exists(public_path($trainingResult->attachment))) {
-                \Illuminate\Support\Facades\File::delete(public_path($trainingResult->attachment));
+            if ($trainingResult->attachment && File::exists(public_path($trainingResult->attachment))) {
+                File::delete(public_path($trainingResult->attachment));
             }
             $file = $request->file('attachment');
-            $fileName = time() . '_' . preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
+            $fileName = time().'_'.preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
             $destination = public_path('backend/uploads/training-results');
-            if (!\Illuminate\Support\Facades\File::exists($destination)) {
-                \Illuminate\Support\Facades\File::makeDirectory($destination, 0755, true);
+            if (! File::exists($destination)) {
+                File::makeDirectory($destination, 0755, true);
             }
             $file->move($destination, $fileName);
-            $validated['attachment'] = 'backend/uploads/training-results/' . $fileName;
+            $validated['attachment'] = 'backend/uploads/training-results/'.$fileName;
         }
 
         $validated['updated_by'] = Auth::id();
@@ -344,8 +351,8 @@ class TrainingResultController extends Controller
     {
         $this->authorize('delete', $trainingResult);
 
-        if ($trainingResult->attachment && \Illuminate\Support\Facades\File::exists(public_path($trainingResult->attachment))) {
-            \Illuminate\Support\Facades\File::delete(public_path($trainingResult->attachment));
+        if ($trainingResult->attachment && File::exists(public_path($trainingResult->attachment))) {
+            File::delete(public_path($trainingResult->attachment));
         }
 
         $trainingResult->delete();
@@ -360,7 +367,7 @@ class TrainingResultController extends Controller
         $user = Auth::user();
         $query = TrainingResult::with('unit');
 
-        if (!$user->hasRole('chi-huy')) {
+        if (! $user->hasRole('chi-huy')) {
             $unitIds = $this->getAccessibleUnitIds($user);
             $query->whereIn('unit_id', $unitIds);
         }
@@ -377,11 +384,11 @@ class TrainingResultController extends Controller
         $trainings = $query->get();
 
         // Thống kê theo đơn vị
-        $statsByUnit = $trainings->groupBy('unit.name')->map(function($items) {
+        $statsByUnit = $trainings->groupBy('unit.name')->map(function ($items) {
             return [
                 'total' => $items->count(),
                 'total_hours' => $items->sum('duration_hours'),
-                'total_participants' => $items->sum(function($item) {
+                'total_participants' => $items->sum(function ($item) {
                     return $item->trung_doi_count + $item->at_count + $item->kdt_count;
                 }),
                 'excellent' => $items->where('result', 'xuất_sắc')->count(),
@@ -402,9 +409,9 @@ class TrainingResultController extends Controller
 
         // Thống kê theo tháng
         $statsByMonth = [];
-        $resultsKeys = ['xuất_sắc','giỏi','khá','trung_bình','yếu'];
+        $resultsKeys = ['xuất_sắc', 'giỏi', 'khá', 'trung_bình', 'yếu'];
         for ($month = 1; $month <= 12; $month++) {
-            $monthTrainings = $trainings->filter(function($item) use ($month) {
+            $monthTrainings = $trainings->filter(function ($item) use ($month) {
                 return $item->training_date && $item->training_date->month == $month;
             });
 

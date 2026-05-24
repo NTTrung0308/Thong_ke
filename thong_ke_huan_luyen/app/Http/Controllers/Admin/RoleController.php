@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
@@ -17,12 +17,14 @@ class RoleController extends Controller
     public function index()
     {
         $roles = Role::with('permissions')->get();
+
         return view('backend.roles.index', compact('roles'));
     }
 
     public function create()
     {
         $permissions = Permission::all();
+
         return view('backend.roles.create', compact('permissions'));
     }
 
@@ -30,11 +32,11 @@ class RoleController extends Controller
     {
         $request->validate([
             'name' => 'required|unique:roles,name',
-            'permissions' => 'nullable|array'
+            'permissions' => 'nullable|array',
         ]);
 
         $role = Role::create(['name' => $request->name]);
-        
+
         if ($request->has('permissions')) {
             $role->syncPermissions($request->permissions);
         }
@@ -46,14 +48,15 @@ class RoleController extends Controller
     {
         $permissions = Permission::all();
         $rolePermissions = $role->permissions->pluck('name')->toArray();
+
         return view('backend.roles.edit', compact('role', 'permissions', 'rolePermissions'));
     }
 
     public function update(Request $request, Role $role)
     {
         $request->validate([
-            'name' => 'required|unique:roles,name,' . $role->id,
-            'permissions' => 'nullable|array'
+            'name' => 'required|unique:roles,name,'.$role->id,
+            'permissions' => 'nullable|array',
         ]);
 
         $role->name = $request->name;
@@ -73,8 +76,9 @@ class RoleController extends Controller
         if ($role->name === 'chi-huy') {
             return back()->with('error', 'Không thể xóa vai trò Chỉ huy!');
         }
-        
+
         $role->delete();
+
         return redirect()->route('roles.index')->with('success', 'Xóa vai trò thành công!');
     }
 }

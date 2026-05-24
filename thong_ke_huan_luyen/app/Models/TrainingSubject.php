@@ -37,6 +37,7 @@ class TrainingSubject extends Model
             array_unshift($path, $parent->name);
             $parent = $parent->parent;
         }
+
         return implode(' > ', $path);
     }
 }

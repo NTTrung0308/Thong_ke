@@ -2,16 +2,19 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\DisciplineExport;
 use App\Http\Controllers\Controller;
 use App\Models\Discipline;
-use App\Models\Unit;
 use App\Models\Soldier;
-use App\Exports\DisciplineExport;
-use Maatwebsite\Excel\Facades\Excel;
+use App\Models\Unit;
+use App\Models\User;
+use App\Notifications\SystemNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Notification;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DisciplineController extends Controller
 {
@@ -23,6 +26,7 @@ class DisciplineController extends Controller
     public function exportExcel(Request $request)
     {
         $disciplines = $this->getFilteredDisciplines($request);
+
         return Excel::download(new DisciplineExport($disciplines), 'danh-sach-ky-luat.xlsx');
     }
 
@@ -30,7 +34,8 @@ class DisciplineController extends Controller
     {
         $disciplines = $this->getFilteredDisciplines($request);
         $pdf = Pdf::loadView('backend.disciplines.pdf', compact('disciplines'))
-                  ->setPaper('a4', 'landscape');
+            ->setPaper('a4', 'landscape');
+
         return $pdf->download('danh-sach-ky-luat.pdf');
     }
 
@@ -39,7 +44,7 @@ class DisciplineController extends Controller
         $user = Auth::user();
         $query = Discipline::with(['unit', 'soldier']);
 
-        if (!$user->hasRole('chi-huy')) {
+        if (! $user->hasRole('chi-huy')) {
             $unitIds = $user->getAccessibleUnitIds();
             $query->whereIn('disciplines.unit_id', $unitIds);
         }
@@ -73,7 +78,7 @@ class DisciplineController extends Controller
         $query = Discipline::with(['unit', 'soldier', 'creator']);
 
         // Phân quyền xem theo cấp đơn vị
-        if (!$user->hasRole('chi-huy')) {
+        if (! $user->hasRole('chi-huy')) {
             $unitIds = $user->getAccessibleUnitIds();
             $query->whereIn('disciplines.unit_id', $unitIds);
         }
@@ -110,15 +115,15 @@ class DisciplineController extends Controller
 
         // Tìm kiếm
         if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('work_content', 'like', '%' . $request->search . '%')
-                  ->orWhere('violation_details', 'like', '%' . $request->search . '%')
-                  ->orWhere('discipline_form', 'like', '%' . $request->search . '%')
-                  ->orWhere('decision_number', 'like', '%' . $request->search . '%')
-                  ->orWhereHas('soldier', function($sq) use ($request) {
-                      $sq->where('full_name', 'like', '%' . $request->search . '%')
-                         ->orWhere('code', 'like', '%' . $request->search . '%');
-                  });
+            $query->where(function ($q) use ($request) {
+                $q->where('work_content', 'like', '%'.$request->search.'%')
+                    ->orWhere('violation_details', 'like', '%'.$request->search.'%')
+                    ->orWhere('discipline_form', 'like', '%'.$request->search.'%')
+                    ->orWhere('decision_number', 'like', '%'.$request->search.'%')
+                    ->orWhereHas('soldier', function ($sq) use ($request) {
+                        $sq->where('full_name', 'like', '%'.$request->search.'%')
+                            ->orWhere('code', 'like', '%'.$request->search.'%');
+                    });
             });
         }
 
@@ -154,14 +159,14 @@ class DisciplineController extends Controller
             'Cách chức',
             'Hạ quân hàm',
             'Tước danh hiệu',
-            'Kỷ luật buộc thôi việc'
+            'Kỷ luật buộc thôi việc',
         ];
 
         $decisionLevels = ['Cấp thường', 'Đại đội', 'Tiểu đoàn', 'Trung đoàn', 'Sư đoàn', 'Quân khu', 'Bộ Quốc phòng'];
         $statuses = [
             'dang-thi-hanh' => 'Đang thi hành',
             'da-thi-hanh-xong' => 'Đã thi hành xong',
-            'duoc-xoa-bo' => 'Được xóa bỏ'
+            'duoc-xoa-bo' => 'Được xóa bỏ',
         ];
 
         return view('backend.disciplines.index', compact(
@@ -175,7 +180,7 @@ class DisciplineController extends Controller
         $soldierQuery = Soldier::query();
 
         // Chỉ đồng bộ quân nhân thuộc quyền quản lý
-        if (!$user->hasRole('chi-huy')) {
+        if (! $user->hasRole('chi-huy')) {
             $unitIds = $user->getAccessibleUnitIds();
             $soldierQuery->whereIn('unit_id', $unitIds);
         }
@@ -184,7 +189,7 @@ class DisciplineController extends Controller
         $existingSoldierIds = Discipline::pluck('soldier_id')->toArray();
 
         foreach ($soldiers as $soldier) {
-            if (!in_array($soldier->id, $existingSoldierIds)) {
+            if (! in_array($soldier->id, $existingSoldierIds)) {
                 Discipline::create([
                     'soldier_id' => $soldier->id,
                     'soldier_name_at_time' => $soldier->full_name,
@@ -205,16 +210,18 @@ class DisciplineController extends Controller
 
         $user = Auth::user();
         $levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
-        
+
         $levelOptions = [];
         $roots = $user->getRootAccessibleUnits();
         if ($roots->count() > 0) {
             $firstRoot = $roots->first();
             $rootLevelIndex = array_search($firstRoot->level, $levels);
-            if ($rootLevelIndex === false) $rootLevelIndex = 0;
+            if ($rootLevelIndex === false) {
+                $rootLevelIndex = 0;
+            }
             $levelOptions[$rootLevelIndex] = $roots;
         }
-        
+
         $hierarchy = array_fill(0, count($levels), null);
 
         $soldiers = Soldier::whereIn('unit_id', $user->getAccessibleUnitIds())->get();
@@ -227,7 +234,7 @@ class DisciplineController extends Controller
             'Cách chức',
             'Hạ quân hàm',
             'Tước danh hiệu',
-            'Kỷ luật buộc thôi việc'
+            'Kỷ luật buộc thôi việc',
         ];
 
         $decisionLevels = ['Cấp thường', 'Đại đội', 'Tiểu đoàn', 'Trung đoàn', 'Sư đoàn', 'Quân khu', 'Bộ Quốc phòng'];
@@ -256,11 +263,11 @@ class DisciplineController extends Controller
             'result' => 'nullable|string',
             'improvement_measures' => 'nullable|string',
             'status' => 'required|in:dang-thi-hanh,da-thi-hanh-xong,duoc-xoa-bo',
-            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:20480'
+            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:20480',
         ]);
 
         // Kiểm tra quyền đối với đơn vị đã chọn
-        if (!in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
+        if (! in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
             return back()->withErrors(['unit_id' => 'Bạn không có quyền thêm kỷ luật cho đơn vị này.'])->withInput();
         }
 
@@ -276,13 +283,13 @@ class DisciplineController extends Controller
         // Xử lý file đính kèm
         if ($request->hasFile('attachment')) {
             $file = $request->file('attachment');
-            $fileName = time() . '_' . preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
+            $fileName = time().'_'.preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
             $destination = public_path('backend/uploads/disciplines');
-            if (!\Illuminate\Support\Facades\File::exists($destination)) {
-                \Illuminate\Support\Facades\File::makeDirectory($destination, 0755, true);
+            if (! File::exists($destination)) {
+                File::makeDirectory($destination, 0755, true);
             }
             $file->move($destination, $fileName);
-            $validated['attachment'] = 'backend/uploads/disciplines/' . $fileName;
+            $validated['attachment'] = 'backend/uploads/disciplines/'.$fileName;
         }
 
         $validated['created_by'] = Auth::id();
@@ -291,19 +298,21 @@ class DisciplineController extends Controller
         $discipline = Discipline::create($validated);
 
         // Gửi thông báo
-        $chiHuyUsers = \App\Models\User::role('chi-huy')->get();
-        $targetUser = $discipline->soldier ? \App\Models\User::where('soldier_id', $discipline->soldier_id)->first() : null;
-        
-        $msg = 'Có quyết định kỷ luật mới cho ' . ($discipline->soldier ? $discipline->soldier->full_name : $discipline->unit_name_at_time);
-        $notification = new \App\Notifications\SystemNotification(
+        $chiHuyUsers = User::role('chi-huy')->get();
+        $targetUser = $discipline->soldier ? User::where('soldier_id', $discipline->soldier_id)->first() : null;
+
+        $msg = 'Có quyết định kỷ luật mới cho '.($discipline->soldier ? $discipline->soldier->full_name : $discipline->unit_name_at_time);
+        $notification = new SystemNotification(
             'Kỷ luật mới',
             $msg,
             'fa-exclamation-triangle',
             route('disciplines.show', $discipline->id),
             'danger'
         );
-        \Illuminate\Support\Facades\Notification::send($chiHuyUsers, $notification);
-        if ($targetUser) $targetUser->notify($notification);
+        Notification::send($chiHuyUsers, $notification);
+        if ($targetUser) {
+            $targetUser->notify($notification);
+        }
 
         return redirect()->route('disciplines.index')
             ->with('success', 'Thêm kỷ luật thành công!');
@@ -313,6 +322,7 @@ class DisciplineController extends Controller
     public function show(Discipline $discipline)
     {
         $this->authorize('view', $discipline);
+
         return view('backend.disciplines.show', compact('discipline'));
     }
 
@@ -324,7 +334,7 @@ class DisciplineController extends Controller
         $user = Auth::user();
         $navigableIds = $user->getNavigableUnitIds();
         $levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
-        
+
         $hierarchy = array_fill(0, count($levels), null);
         $levelOptions = [];
 
@@ -343,8 +353,10 @@ class DisciplineController extends Controller
         if ($roots->count() > 0) {
             $firstRoot = $roots->first();
             $rootLevelIndex = array_search($firstRoot->level, $levels);
-            if ($rootLevelIndex === false) $rootLevelIndex = 0;
-            
+            if ($rootLevelIndex === false) {
+                $rootLevelIndex = 0;
+            }
+
             $levelOptions[$rootLevelIndex] = $roots;
         }
 
@@ -355,7 +367,7 @@ class DisciplineController extends Controller
                     ->whereIn('id', $navigableIds)
                     ->orderBy('name')
                     ->get();
-                
+
                 if ($children->count() > 0) {
                     $levelOptions[$index + 1] = $children;
                 }
@@ -372,14 +384,14 @@ class DisciplineController extends Controller
             'Cách chức',
             'Hạ quân hàm',
             'Tước danh hiệu',
-            'Kỷ luật buộc thôi việc'
+            'Kỷ luật buộc thôi việc',
         ];
 
         $decisionLevels = ['Cấp thường', 'Đại đội', 'Tiểu đoàn', 'Trung đoàn', 'Sư đoàn', 'Quân khu', 'Bộ Quốc phòng'];
         $statuses = [
             'dang-thi-hanh' => 'Đang thi hành',
             'da-thi-hanh-xong' => 'Đã thi hành xong',
-            'duoc-xoa-bo' => 'Được xóa bỏ'
+            'duoc-xoa-bo' => 'Được xóa bỏ',
         ];
 
         return view('backend.disciplines.edit', compact(
@@ -408,12 +420,12 @@ class DisciplineController extends Controller
             'result' => 'nullable|string',
             'improvement_measures' => 'nullable|string',
             'status' => 'required|in:dang-thi-hanh,da-thi-hanh-xong,duoc-xoa-bo',
-            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:20480'
+            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:20480',
         ]);
 
         // Kiểm tra quyền đối với đơn vị đã chọn (nếu có thay đổi đơn vị)
         if ($discipline->unit_id != $validated['unit_id']) {
-            if (!in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
+            if (! in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
                 return back()->withErrors(['unit_id' => 'Bạn không có quyền chuyển kỷ luật sang đơn vị này.'])->withInput();
             }
         }
@@ -429,17 +441,17 @@ class DisciplineController extends Controller
 
         // Xử lý file mới
         if ($request->hasFile('attachment')) {
-            if ($discipline->attachment && \Illuminate\Support\Facades\File::exists(public_path($discipline->attachment))) {
-                \Illuminate\Support\Facades\File::delete(public_path($discipline->attachment));
+            if ($discipline->attachment && File::exists(public_path($discipline->attachment))) {
+                File::delete(public_path($discipline->attachment));
             }
             $file = $request->file('attachment');
-            $fileName = time() . '_' . preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
+            $fileName = time().'_'.preg_replace('/[^A-Za-z0-9_\-.]/', '_', $file->getClientOriginalName());
             $destination = public_path('backend/uploads/disciplines');
-            if (!\Illuminate\Support\Facades\File::exists($destination)) {
-                \Illuminate\Support\Facades\File::makeDirectory($destination, 0755, true);
+            if (! File::exists($destination)) {
+                File::makeDirectory($destination, 0755, true);
             }
             $file->move($destination, $fileName);
-            $validated['attachment'] = 'backend/uploads/disciplines/' . $fileName;
+            $validated['attachment'] = 'backend/uploads/disciplines/'.$fileName;
         }
 
         $validated['updated_by'] = Auth::id();
@@ -448,10 +460,10 @@ class DisciplineController extends Controller
 
         // Gửi thông báo nếu đang thi hành kỷ luật
         if ($discipline->status == 'dang-thi-hanh') {
-            $chiHuys = \App\Models\User::role('chi-huy')->get();
+            $chiHuys = User::role('chi-huy')->get();
             $message = "Quân nhân {$discipline->soldier_name_at_time} ({$discipline->unit_name_at_time}) bị kỷ luật: {$discipline->discipline_form}.";
             foreach ($chiHuys as $chiHuy) {
-                $chiHuy->notify(new \App\Notifications\SystemNotification(
+                $chiHuy->notify(new SystemNotification(
                     'Thông báo: Kỷ luật quân nhân',
                     $message,
                     'fa-exclamation-circle',
@@ -470,8 +482,8 @@ class DisciplineController extends Controller
     {
         $this->authorize('delete', $discipline);
 
-        if ($discipline->attachment && \Illuminate\Support\Facades\File::exists(public_path($discipline->attachment))) {
-            \Illuminate\Support\Facades\File::delete(public_path($discipline->attachment));
+        if ($discipline->attachment && File::exists(public_path($discipline->attachment))) {
+            File::delete(public_path($discipline->attachment));
         }
 
         $discipline->delete();
@@ -486,7 +498,7 @@ class DisciplineController extends Controller
         $user = Auth::user();
         $query = Discipline::with(['unit', 'soldier']);
 
-        if (!$user->hasRole('chi-huy')) {
+        if (! $user->hasRole('chi-huy')) {
             $unitIds = $user->getAccessibleUnitIds();
             $query->whereIn('unit_id', $unitIds);
         }
@@ -503,7 +515,7 @@ class DisciplineController extends Controller
         $disciplines = $query->get();
 
         // Thống kê theo đơn vị
-        $statsByUnit = $disciplines->groupBy('unit_name_at_time')->map(function($items) {
+        $statsByUnit = $disciplines->groupBy('unit_name_at_time')->map(function ($items) {
             return [
                 'total' => $items->count(),
                 'warning' => $items->where('discipline_form', 'Cảnh cáo')->count(),
@@ -514,12 +526,12 @@ class DisciplineController extends Controller
         });
 
         // Thống kê theo hình thức kỷ luật
-        $statsByForm = $disciplines->groupBy('discipline_form')->map(function($items) {
+        $statsByForm = $disciplines->groupBy('discipline_form')->map(function ($items) {
             return $items->count();
         });
 
         // Thống kê theo cấp quyết định
-        $statsByLevel = $disciplines->groupBy('decision_level')->map(function($items) {
+        $statsByLevel = $disciplines->groupBy('decision_level')->map(function ($items) {
             return $items->count();
         });
 
@@ -543,7 +555,7 @@ class DisciplineController extends Controller
             'statsByStatus' => $statsByStatus,
             'units' => $units,
             'currentYear' => $year,
-            'years' => $years
+            'years' => $years,
         ]);
     }
 }

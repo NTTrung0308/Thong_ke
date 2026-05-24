@@ -9,7 +9,10 @@ class WeaponEquipmentPolicy
 {
     public function view(User $user, WeaponEquipment $weapon)
     {
-        if ($user->hasRole('chi-huy')) return true;
+        if ($user->hasRole('chi-huy')) {
+            return true;
+        }
+
         return $this->isInSameOrSubUnit($user, $weapon);
     }
 
@@ -20,13 +23,19 @@ class WeaponEquipmentPolicy
 
     public function update(User $user, WeaponEquipment $weapon)
     {
-        if ($user->hasRole('chi-huy')) return true;
+        if ($user->hasRole('chi-huy')) {
+            return true;
+        }
+
         return $this->isInSameOrSubUnit($user, $weapon);
     }
 
     public function delete(User $user, WeaponEquipment $weapon)
     {
-        if ($user->hasRole('chi-huy')) return true;
+        if ($user->hasRole('chi-huy')) {
+            return true;
+        }
+
         return $this->isInSameOrSubUnit($user, $weapon);
     }
 
@@ -34,9 +43,10 @@ class WeaponEquipmentPolicy
     {
         if ($user->unit) {
             $allowedUnitIds = $user->unit->getAllDescendantIds();
+
             return in_array($weapon->unit_id, $allowedUnitIds);
         }
-        
+
         $levels = ['trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
         foreach ($levels as $l) {
             if ($user->hasRole($l)) {
@@ -44,7 +54,7 @@ class WeaponEquipmentPolicy
                 $userLevelIndex = array_search($l, $levelsHierarchy);
                 $targetLevel = $weapon->unit->level ?? 'trung-doi';
                 $targetLevelIndex = array_search($targetLevel, $levelsHierarchy);
-                
+
                 return $userLevelIndex !== false && $targetLevelIndex !== false && $userLevelIndex <= $targetLevelIndex;
             }
         }

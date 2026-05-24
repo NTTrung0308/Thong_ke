@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Unit;
+use Illuminate\Database\Seeder;
 
 class ChiHuyUnitSeeder extends Seeder
 {
@@ -12,11 +12,11 @@ class ChiHuyUnitSeeder extends Seeder
      */
     public function run(): void
     {
-        if (!Unit::where('level', 'chi-huy')->exists()) {
+        if (! Unit::where('level', 'chi-huy')->exists()) {
             Unit::create([
                 'name' => 'Ban Chỉ huy Trung đoàn',
                 'level' => 'chi-huy',
-                'parent_id' => null
+                'parent_id' => null,
             ]);
         }
     }

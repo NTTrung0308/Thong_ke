@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class TrainingLog extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'unit_id', 'unit_name_at_time',
@@ -28,7 +28,7 @@ class TrainingLog extends Model
         'fail_count', 'fail_percent',
         'rating', 'general_evaluation', 'notes',
         'instructor', 'commander',
-        'attachment', 'created_by', 'updated_by'
+        'attachment', 'created_by', 'updated_by',
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -99,8 +99,9 @@ class TrainingLog extends Model
             'giỏi' => 'Giỏi',
             'khá' => 'Khá',
             'trung_bình' => 'Trung bình',
-            'yếu' => 'Yếu'
+            'yếu' => 'Yếu',
         ];
+
         return $ratings[$this->rating] ?? 'Chưa xếp loại';
     }
 
@@ -111,20 +112,27 @@ class TrainingLog extends Model
             'giỏi' => 'badge-primary',
             'khá' => 'badge-info',
             'trung_bình' => 'badge-warning',
-            'yếu' => 'badge-danger'
+            'yếu' => 'badge-danger',
         ];
+
         return $badges[$this->rating] ?? 'badge-secondary';
     }
 
     public function getAttendanceRateAttribute()
     {
-        if ($this->required_quanso == 0) return 0;
+        if ($this->required_quanso == 0) {
+            return 0;
+        }
+
         return round(($this->actual_quanso / $this->required_quanso) * 100, 2);
     }
 
     public function getTimeRateAttribute()
     {
-        if ($this->required_hours == 0) return 0;
+        if ($this->required_hours == 0) {
+            return 0;
+        }
+
         return round(($this->actual_hours / $this->required_hours) * 100, 2);
     }
 

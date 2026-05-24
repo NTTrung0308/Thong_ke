@@ -3,16 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Soldier;
-use App\Models\Unit;
-use App\Models\TrainingResult;
-use App\Models\WeaponEquipment;
-use App\Models\Reward;
 use App\Models\Discipline;
-use Spatie\Activitylog\Models\Activity;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Reward;
+use App\Models\Soldier;
+use App\Models\TrainingResult;
+use App\Models\Unit;
+use App\Models\WeaponEquipment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Spatie\Activitylog\Models\Activity;
 
 class DashboardController extends Controller
 {
@@ -24,7 +24,7 @@ class DashboardController extends Controller
         // 1. Thống kê tổng quát (Thẻ)
         $totalSoldiers = Soldier::whereIn('unit_id', $accessibleUnitIds)->count();
         $totalUnits = Unit::whereIn('id', $accessibleUnitIds)->count();
-        $totalWeapons = WeaponEquipment::whereHas('soldier', function($q) use ($accessibleUnitIds) {
+        $totalWeapons = WeaponEquipment::whereHas('soldier', function ($q) use ($accessibleUnitIds) {
             $q->whereIn('unit_id', $accessibleUnitIds);
         })->count();
         $totalRewards = Reward::whereIn('unit_id', $accessibleUnitIds)->count();
@@ -37,7 +37,7 @@ class DashboardController extends Controller
             ->orderBy('soldiers_count', 'desc')
             ->take(10)
             ->get();
-        
+
         $chartUnitNames = $unitsForChart->pluck('name');
         $chartUnitCounts = $unitsForChart->pluck('soldiers_count');
 
@@ -48,17 +48,23 @@ class DashboardController extends Controller
             ->selectRaw('result, count(*) as count')
             ->groupBy('result')
             ->get();
-        
+
         $resultLabels = ['Xuất sắc', 'Giỏi', 'Khá', 'Trung bình', 'Yếu'];
         $resultData = [0, 0, 0, 0, 0];
-        
-        foreach($trainingStats as $stat) {
+
+        foreach ($trainingStats as $stat) {
             $label = mb_strtolower($stat->result);
-            if(str_contains($label, 'xuất sắc')) $resultData[0] += $stat->count;
-            elseif(str_contains($label, 'giỏi')) $resultData[1] += $stat->count;
-            elseif(str_contains($label, 'khá')) $resultData[2] += $stat->count;
-            elseif(str_contains($label, 'trung bình')) $resultData[3] += $stat->count;
-            elseif(str_contains($label, 'yếu')) $resultData[4] += $stat->count;
+            if (str_contains($label, 'xuất sắc')) {
+                $resultData[0] += $stat->count;
+            } elseif (str_contains($label, 'giỏi')) {
+                $resultData[1] += $stat->count;
+            } elseif (str_contains($label, 'khá')) {
+                $resultData[2] += $stat->count;
+            } elseif (str_contains($label, 'trung bình')) {
+                $resultData[3] += $stat->count;
+            } elseif (str_contains($label, 'yếu')) {
+                $resultData[4] += $stat->count;
+            }
         }
 
         // 3b. Thống kê theo tháng cho phân tích (sử dụng cùng dữ liệu năm hiện tại)
@@ -66,10 +72,10 @@ class DashboardController extends Controller
             ->whereYear('training_date', $currentYear)
             ->get();
 
-        $resultsKeys = ['xuất_sắc','giỏi','khá','trung_bình','yếu'];
+        $resultsKeys = ['xuất_sắc', 'giỏi', 'khá', 'trung_bình', 'yếu'];
         $statsByMonth = [];
         for ($month = 1; $month <= 12; $month++) {
-            $monthTrainings = $trainings->filter(function($item) use ($month) {
+            $monthTrainings = $trainings->filter(function ($item) use ($month) {
                 return $item->training_date && $item->training_date->month == $month;
             });
 
@@ -102,7 +108,7 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $rootUnits = [];
-        
+
         if ($user->hasRole('chi-huy')) {
             $rootUnits = Unit::whereNull('parent_id')->with('children')->get();
         } else {
@@ -142,9 +148,9 @@ class DashboardController extends Controller
         $year = $request->get('year', date('Y'));
         $unitId = $request->get('unit_id');
 
-        $cacheKey = 'dashboard_stats_' . $user->id . '_' . $year . '_' . ($unitId ?? 'all');
+        $cacheKey = 'dashboard_stats_'.$user->id.'_'.$year.'_'.($unitId ?? 'all');
 
-        $payload = Cache::remember($cacheKey, 60, function() use ($accessibleUnitIds, $year, $unitId) {
+        $payload = Cache::remember($cacheKey, 60, function () use ($accessibleUnitIds, $year, $unitId) {
             $query = TrainingResult::whereIn('unit_id', $accessibleUnitIds)
                 ->whereYear('training_date', $year);
 
@@ -154,10 +160,10 @@ class DashboardController extends Controller
 
             $trainings = $query->get();
 
-            $resultsKeys = ['xuất_sắc','giỏi','khá','trung_bình','yếu'];
+            $resultsKeys = ['xuất_sắc', 'giỏi', 'khá', 'trung_bình', 'yếu'];
             $statsByMonth = [];
             for ($month = 1; $month <= 12; $month++) {
-                $monthTrainings = $trainings->filter(function($item) use ($month) {
+                $monthTrainings = $trainings->filter(function ($item) use ($month) {
                     return $item->training_date && $item->training_date->month == $month;
                 });
 
@@ -198,7 +204,7 @@ class DashboardController extends Controller
         $data = [];
         foreach ($units as $unit) {
             $node = [
-                'text' => $unit->name . " (" . $unit->level . ")",
+                'text' => $unit->name.' ('.$unit->level.')',
                 'id' => $unit->id,
                 'tags' => [$unit->soldiers_count ?? 0],
             ];
@@ -207,6 +213,7 @@ class DashboardController extends Controller
             }
             $data[] = $node;
         }
+
         return $data;
     }
 }

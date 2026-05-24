@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
@@ -13,8 +12,10 @@ class NotificationController extends Controller
         $notification = Auth::user()->notifications()->where('id', $id)->first();
         if ($notification) {
             $notification->markAsRead();
+
             return response()->json(['success' => true]);
         }
+
         return response()->json(['success' => false], 404);
     }
 
@@ -24,6 +25,7 @@ class NotificationController extends Controller
         if (request()->ajax()) {
             return response()->json(['success' => true]);
         }
+
         return back()->with('success', 'Đã đánh dấu tất cả thông báo là đã đọc.');
     }
 }

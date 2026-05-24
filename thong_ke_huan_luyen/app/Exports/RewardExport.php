@@ -32,7 +32,7 @@ class RewardExport implements FromCollection, WithHeadings, WithMapping
             'Số quyết định',
             'Cấp quyết định',
             'Người ký',
-            'Ghi chú'
+            'Ghi chú',
         ];
     }
 
@@ -51,7 +51,7 @@ class RewardExport implements FromCollection, WithHeadings, WithMapping
             $reward->decision_number,
             $reward->decision_level,
             $reward->signer_name,
-            $reward->result
+            $reward->result,
         ];
     }
 }

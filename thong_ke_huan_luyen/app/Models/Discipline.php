@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Discipline extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'unit_id', 'unit_name_at_time',
@@ -22,7 +22,7 @@ class Discipline extends Model
         'execution_date', 'expiry_date',
         'result', 'improvement_measures',
         'attachment', 'status',
-        'created_by', 'updated_by'
+        'created_by', 'updated_by',
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -81,8 +81,9 @@ class Discipline extends Model
         $statuses = [
             'dang-thi-hanh' => 'Đang thi hành',
             'da-thi-hanh-xong' => 'Đã thi hành xong',
-            'duoc-xoa-bo' => 'Được xóa bỏ'
+            'duoc-xoa-bo' => 'Được xóa bỏ',
         ];
+
         return $statuses[$this->status] ?? 'Không xác định';
     }
 
@@ -91,8 +92,9 @@ class Discipline extends Model
         $badges = [
             'dang-thi-hanh' => 'badge-warning',
             'da-thi-hanh-xong' => 'badge-success',
-            'duoc-xoa-bo' => 'badge-secondary'
+            'duoc-xoa-bo' => 'badge-secondary',
         ];
+
         return $badges[$this->status] ?? 'badge-secondary';
     }
 

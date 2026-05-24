@@ -43,7 +43,7 @@ class WeaponEquipmentExport implements FromCollection, WithHeadings, WithMapping
             'Xẻng BB',
             'Cuốc BB',
             'Ngày nhận',
-            'Ghi chú'
+            'Ghi chú',
         ];
     }
 
@@ -73,7 +73,7 @@ class WeaponEquipmentExport implements FromCollection, WithHeadings, WithMapping
             $item->infantry_shovel,
             $item->infantry_pickaxe,
             $item->receive_date ? $item->receive_date->format('d/m/Y') : '',
-            $item->notes
+            $item->notes,
         ];
     }
 }

@@ -2,16 +2,22 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\Soldier;
-use App\Models\Unit;
 use App\Exports\SoldierExport;
+use App\Http\Controllers\Controller;
 use App\Imports\SoldierImport;
-use Maatwebsite\Excel\Facades\Excel;
+use App\Models\Discipline;
+use App\Models\Reward;
+use App\Models\Soldier;
+use App\Models\TrainingLog;
+use App\Models\TrainingResult;
+use App\Models\Unit;
+use App\Models\WeaponEquipment;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Validators\ValidationException;
 
 class SoldierController extends Controller
 {
@@ -25,46 +31,48 @@ class SoldierController extends Controller
     {
         $request->validate([
             'file' => 'required|mimes:xlsx,xls,csv|max:10240',
-            'unit_id' => 'nullable|exists:units,id'
+            'unit_id' => 'nullable|exists:units,id',
         ]);
 
         try {
             Excel::import(new SoldierImport($request->unit_id), $request->file('file'));
+
             return redirect()->route('soldiers.index')->with('success', 'Nhập dữ liệu quân nhân thành công!');
-        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
-             $failures = $e->failures();
-             $errors = [];
-             foreach ($failures as $failure) {
-                 $errors[] = "Dòng " . $failure->row() . ": " . implode(', ', $failure->errors());
-             }
-             return redirect()->route('soldiers.index')->with('error', 'Lỗi nhập dữ liệu: ' . implode('<br>', $errors));
+        } catch (ValidationException $e) {
+            $failures = $e->failures();
+            $errors = [];
+            foreach ($failures as $failure) {
+                $errors[] = 'Dòng '.$failure->row().': '.implode(', ', $failure->errors());
+            }
+
+            return redirect()->route('soldiers.index')->with('error', 'Lỗi nhập dữ liệu: '.implode('<br>', $errors));
         } catch (\Exception $e) {
-            return redirect()->route('soldiers.index')->with('error', 'Đã xảy ra lỗi: ' . $e->getMessage());
+            return redirect()->route('soldiers.index')->with('error', 'Đã xảy ra lỗi: '.$e->getMessage());
         }
     }
 
     public function downloadTemplate()
     {
         $headers = [
-            'STT', 'Số hiệu', 'Họ và tên', 'Cấp bậc', 'Chức vụ', 'Đơn vị', 
-            'Ngày sinh', 'Ngày nhập ngũ', 'Ngày vào Đảng/Đoàn', 
-            'Học vấn', 'Ngoại ngữ', 'Trình độ chuyên môn', 
-            'Hộ khẩu thường trú', 'Người báo tin', 'Địa chỉ báo tin', 'Ghi chú'
+            'STT', 'Số hiệu', 'Họ và tên', 'Cấp bậc', 'Chức vụ', 'Đơn vị',
+            'Ngày sinh', 'Ngày nhập ngũ', 'Ngày vào Đảng/Đoàn',
+            'Học vấn', 'Ngoại ngữ', 'Trình độ chuyên môn',
+            'Hộ khẩu thường trú', 'Người báo tin', 'Địa chỉ báo tin', 'Ghi chú',
         ];
-        
-        $callback = function() use ($headers) {
+
+        $callback = function () use ($headers) {
             $file = fopen('php://output', 'w');
             fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF)); // BOM for UTF-8
             fputcsv($file, $headers);
-            
+
             // Sample row
             fputcsv($file, [
-                '1', '123456', 'Nguyễn Văn A', 'Binh nhì', 'Chiến sỹ', 'Đại đội 1', 
-                '01/01/2000', '01/02/2024', '01/01/2023', 
-                '12/12', 'Tiếng Anh', 'Đại học', 
-                'Hà Nội', 'Nguyễn Văn B', 'Hà Nội', 'Mẫu nhập liệu'
+                '1', '123456', 'Nguyễn Văn A', 'Binh nhì', 'Chiến sỹ', 'Đại đội 1',
+                '01/01/2000', '01/02/2024', '01/01/2023',
+                '12/12', 'Tiếng Anh', 'Đại học',
+                'Hà Nội', 'Nguyễn Văn B', 'Hà Nội', 'Mẫu nhập liệu',
             ]);
-            
+
             fclose($file);
         };
 
@@ -74,6 +82,7 @@ class SoldierController extends Controller
     public function exportExcel(Request $request)
     {
         $soldiers = $this->getFilteredSoldiers($request);
+
         return Excel::download(new SoldierExport($soldiers), 'danh-sach-quan-nhan.xlsx');
     }
 
@@ -81,7 +90,8 @@ class SoldierController extends Controller
     {
         $soldiers = $this->getFilteredSoldiers($request);
         $pdf = Pdf::loadView('backend.soldiers.pdf', compact('soldiers'))
-                  ->setPaper('a4', 'landscape');
+            ->setPaper('a4', 'landscape');
+
         return $pdf->download('danh-sach-quan-nhan.pdf');
     }
 
@@ -106,7 +116,7 @@ class SoldierController extends Controller
             $currentIndex = array_search($request->level, $levels);
             if ($currentIndex !== false) {
                 $targetLevels = array_slice($levels, $currentIndex);
-                $query->whereHas('unit', function($q) use ($targetLevels) {
+                $query->whereHas('unit', function ($q) use ($targetLevels) {
                     $q->whereIn('level', $targetLevels);
                 });
             }
@@ -127,10 +137,10 @@ class SoldierController extends Controller
 
         // Tìm kiếm
         if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('full_name', 'like', '%' . $request->search . '%')
-                  ->orWhere('code', 'like', '%' . $request->search . '%')
-                  ->orWhere('rank', 'like', '%' . $request->search . '%');
+            $query->where(function ($q) use ($request) {
+                $q->where('full_name', 'like', '%'.$request->search.'%')
+                    ->orWhere('code', 'like', '%'.$request->search.'%')
+                    ->orWhere('rank', 'like', '%'.$request->search.'%');
             });
         }
 
@@ -150,10 +160,10 @@ class SoldierController extends Controller
         if ($request->filled('level')) {
             $levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
             $currentIndex = array_search($request->level, $levels);
-            
+
             if ($currentIndex !== false) {
                 $targetLevels = array_slice($levels, $currentIndex);
-                $query->whereHas('unit', function($q) use ($targetLevels) {
+                $query->whereHas('unit', function ($q) use ($targetLevels) {
                     $q->whereIn('level', $targetLevels);
                 });
             }
@@ -171,18 +181,20 @@ class SoldierController extends Controller
         $this->authorize('create', Soldier::class);
         $user = Auth::user();
         $levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
-        
+
         $levelOptions = [];
         $roots = $user->getRootAccessibleUnits();
         if ($roots->count() > 0) {
             $firstRoot = $roots->first();
             $rootLevelIndex = array_search($firstRoot->level, $levels);
-            if ($rootLevelIndex === false) $rootLevelIndex = 0;
+            if ($rootLevelIndex === false) {
+                $rootLevelIndex = 0;
+            }
             $levelOptions[$rootLevelIndex] = $roots;
         }
-        
+
         $hierarchy = array_fill(0, count($levels), null);
-        
+
         return view('backend.soldiers.create', compact('levelOptions', 'hierarchy'));
     }
 
@@ -206,11 +218,11 @@ class SoldierController extends Controller
             'emergency_contact_name' => 'required',
             'emergency_contact_address' => 'required',
             'notes' => 'nullable',
-            'unit_id' => 'required|exists:units,id'
+            'unit_id' => 'required|exists:units,id',
         ]);
 
         // Kiểm tra quyền đối với đơn vị đã chọn
-        if (!in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
+        if (! in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
             return back()->withErrors(['unit_id' => 'Bạn không có quyền thêm quân nhân vào đơn vị này.'])->withInput();
         }
 
@@ -227,9 +239,10 @@ class SoldierController extends Controller
     public function show(Soldier $soldier)
     {
         $this->authorize('view', $soldier);
-        $soldier->load(['unit', 'weapons', 'rewards', 'disciplines', 'trainingLogs' => function($q) {
+        $soldier->load(['unit', 'weapons', 'rewards', 'disciplines', 'trainingLogs' => function ($q) {
             $q->orderBy('training_date', 'desc');
         }]);
+
         return view('backend.soldiers.show', compact('soldier'));
     }
 
@@ -237,11 +250,11 @@ class SoldierController extends Controller
     public function edit(Soldier $soldier)
     {
         $this->authorize('update', $soldier);
-        
+
         $user = Auth::user();
         $navigableIds = $user->getNavigableUnitIds();
         $levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
-        
+
         $hierarchy = array_fill(0, count($levels), null);
         $levelOptions = [];
 
@@ -260,8 +273,10 @@ class SoldierController extends Controller
         if ($roots->count() > 0) {
             $firstRoot = $roots->first();
             $rootLevelIndex = array_search($firstRoot->level, $levels);
-            if ($rootLevelIndex === false) $rootLevelIndex = 0;
-            
+            if ($rootLevelIndex === false) {
+                $rootLevelIndex = 0;
+            }
+
             $levelOptions[$rootLevelIndex] = $roots;
         }
 
@@ -272,13 +287,13 @@ class SoldierController extends Controller
                     ->whereIn('id', $navigableIds)
                     ->orderBy('name')
                     ->get();
-                
+
                 if ($children->count() > 0) {
                     $levelOptions[$index + 1] = $children;
                 }
             }
         }
-        
+
         return view('backend.soldiers.edit', compact('soldier', 'hierarchy', 'levelOptions'));
     }
 
@@ -288,7 +303,7 @@ class SoldierController extends Controller
         $this->authorize('update', $soldier);
 
         $validated = $request->validate([
-            'code' => 'required|unique:soldiers,code,' . $soldier->id,
+            'code' => 'required|unique:soldiers,code,'.$soldier->id,
             'full_name' => 'required',
             'rank' => 'required',
             'position' => 'required',
@@ -302,12 +317,12 @@ class SoldierController extends Controller
             'emergency_contact_name' => 'required',
             'emergency_contact_address' => 'required',
             'notes' => 'nullable',
-            'unit_id' => 'required|exists:units,id'
+            'unit_id' => 'required|exists:units,id',
         ]);
 
         // Kiểm tra quyền đối với đơn vị đã chọn (nếu có thay đổi đơn vị)
         if ($soldier->unit_id != $validated['unit_id']) {
-            if (!in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
+            if (! in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
                 return back()->withErrors(['unit_id' => 'Bạn không có quyền chuyển quân nhân sang đơn vị này.'])->withInput();
             }
         }
@@ -338,8 +353,9 @@ class SoldierController extends Controller
             'Thursday' => 'Thứ 5',
             'Friday' => 'Thứ 6',
             'Saturday' => 'Thứ 7',
-            'Sunday' => 'Chủ nhật'
+            'Sunday' => 'Chủ nhật',
         ];
+
         return $days[$date->format('l')];
     }
 
@@ -382,10 +398,10 @@ class SoldierController extends Controller
                 break;
         }
 
-        if (!$hasFilters) {
+        if (! $hasFilters) {
             // Prepare auxiliary data used by the view even when no results are shown
-            $ranks = \App\Models\Soldier::whereIn('unit_id', $accessibleUnitIds)->distinct()->pluck('rank')->filter();
-            $enlistmentYears = \App\Models\Soldier::whereIn('unit_id', $accessibleUnitIds)
+            $ranks = Soldier::whereIn('unit_id', $accessibleUnitIds)->distinct()->pluck('rank')->filter();
+            $enlistmentYears = Soldier::whereIn('unit_id', $accessibleUnitIds)
                 ->selectRaw('YEAR(enlistment_date) as year')
                 ->distinct()
                 ->orderBy('year', 'desc')
@@ -393,9 +409,9 @@ class SoldierController extends Controller
                 ->filter();
 
             // Create an empty paginator to avoid undefined variable / method errors in the view
-            $emptyPaginator = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20, 1, [
+            $emptyPaginator = new LengthAwarePaginator([], 0, 20, 1, [
                 'path' => request()->url(),
-                'query' => request()->query()
+                'query' => request()->query(),
             ]);
 
             // Return view with placeholders for all module-specific result variables
@@ -414,19 +430,19 @@ class SoldierController extends Controller
 
         switch ($module) {
             case 'rewards':
-                $query = \App\Models\Reward::with(['soldier', 'unit'])->whereIn('unit_id', $accessibleUnitIds);
+                $query = Reward::with(['soldier', 'unit'])->whereIn('unit_id', $accessibleUnitIds);
 
                 if ($request->filled('q')) {
                     $q = $request->q;
-                    $query->where(function($qsub) use ($q) {
+                    $query->where(function ($qsub) use ($q) {
                         $qsub->where('reason', 'like', "%$q%")
-                             ->orWhere('decision_number', 'like', "%$q%")
-                             ->orWhere('soldier_name_at_time', 'like', "%$q%");
+                            ->orWhere('decision_number', 'like', "%$q%")
+                            ->orWhere('soldier_name_at_time', 'like', "%$q%");
                     });
                 }
 
                 if ($request->filled('unit_id')) {
-                    $selectedUnit = \App\Models\Unit::find($request->unit_id);
+                    $selectedUnit = Unit::find($request->unit_id);
                     if ($selectedUnit && in_array($selectedUnit->id, $accessibleUnitIds)) {
                         $targetUnitIds = $selectedUnit->getAllDescendantIds();
                         $query->whereIn('unit_id', $targetUnitIds);
@@ -446,23 +462,24 @@ class SoldierController extends Controller
                 }
 
                 $rewards = $query->orderBy('decision_date', 'desc')->paginate(20);
+
                 return view('backend.search.index', compact('rewards', 'units'))->with('module', $module);
 
             case 'disciplines':
-                $query = \App\Models\Discipline::with(['soldier', 'unit'])->whereIn('unit_id', $accessibleUnitIds);
+                $query = Discipline::with(['soldier', 'unit'])->whereIn('unit_id', $accessibleUnitIds);
 
                 if ($request->filled('q')) {
                     $q = $request->q;
-                    $query->where(function($qsub) use ($q) {
+                    $query->where(function ($qsub) use ($q) {
                         $qsub->where('violation_details', 'like', "%$q%")
-                             ->orWhere('work_content', 'like', "%$q%")
-                             ->orWhere('decision_number', 'like', "%$q%")
-                             ->orWhere('soldier_name_at_time', 'like', "%$q%");
+                            ->orWhere('work_content', 'like', "%$q%")
+                            ->orWhere('decision_number', 'like', "%$q%")
+                            ->orWhere('soldier_name_at_time', 'like', "%$q%");
                     });
                 }
 
                 if ($request->filled('unit_id')) {
-                    $selectedUnit = \App\Models\Unit::find($request->unit_id);
+                    $selectedUnit = Unit::find($request->unit_id);
                     if ($selectedUnit && in_array($selectedUnit->id, $accessibleUnitIds)) {
                         $targetUnitIds = $selectedUnit->getAllDescendantIds();
                         $query->whereIn('unit_id', $targetUnitIds);
@@ -478,14 +495,15 @@ class SoldierController extends Controller
                 }
 
                 $disciplines = $query->orderBy('decision_date', 'desc')->paginate(20);
+
                 return view('backend.search.index', compact('disciplines', 'units'))->with('module', $module);
 
             case 'training_results':
-                $query = \App\Models\TrainingResult::with(['unit'])->whereIn('unit_id', $accessibleUnitIds);
+                $query = TrainingResult::with(['unit'])->whereIn('unit_id', $accessibleUnitIds);
 
-                    // No generic 'q' keyword search for training results - use module-specific filters instead
+                // No generic 'q' keyword search for training results - use module-specific filters instead
                 if ($request->filled('unit_id')) {
-                    $selectedUnit = \App\Models\Unit::find($request->unit_id);
+                    $selectedUnit = Unit::find($request->unit_id);
                     if ($selectedUnit && in_array($selectedUnit->id, $accessibleUnitIds)) {
                         $targetUnitIds = $selectedUnit->getAllDescendantIds();
                         $query->whereIn('unit_id', $targetUnitIds);
@@ -505,21 +523,22 @@ class SoldierController extends Controller
                 }
 
                 $trainingResults = $query->orderBy('training_date', 'desc')->paginate(20);
+
                 return view('backend.search.index', compact('trainingResults', 'units'))->with('module', $module);
 
             case 'training_logs':
-                $query = \App\Models\TrainingLog::with(['soldier', 'unit'])->whereIn('unit_id', $accessibleUnitIds);
+                $query = TrainingLog::with(['soldier', 'unit'])->whereIn('unit_id', $accessibleUnitIds);
 
                 if ($request->filled('q')) {
                     $q = $request->q;
-                    $query->where(function($qsub) use ($q) {
+                    $query->where(function ($qsub) use ($q) {
                         $qsub->where('training_content', 'like', "%$q%")
-                             ->orWhere('soldier_name_at_time', 'like', "%$q%");
+                            ->orWhere('soldier_name_at_time', 'like', "%$q%");
                     });
                 }
 
                 if ($request->filled('unit_id')) {
-                    $selectedUnit = \App\Models\Unit::find($request->unit_id);
+                    $selectedUnit = Unit::find($request->unit_id);
                     if ($selectedUnit && in_array($selectedUnit->id, $accessibleUnitIds)) {
                         $targetUnitIds = $selectedUnit->getAllDescendantIds();
                         $query->whereIn('unit_id', $targetUnitIds);
@@ -531,26 +550,27 @@ class SoldierController extends Controller
                 }
 
                 $trainingLogs = $query->orderBy('training_date', 'desc')->paginate(20);
+
                 return view('backend.search.index', compact('trainingLogs', 'units'))->with('module', $module);
 
             case 'weapon_equipments':
-                $query = \App\Models\WeaponEquipment::with(['soldier', 'unit'])->whereIn('unit_id', $accessibleUnitIds);
+                $query = WeaponEquipment::with(['soldier', 'unit'])->whereIn('unit_id', $accessibleUnitIds);
 
                 if ($request->filled('q')) {
                     $q = $request->q;
-                    $query->where(function($qsub) use ($q) {
+                    $query->where(function ($qsub) use ($q) {
                         $qsub->where('ak', 'like', "%$q%")
-                             ->orWhere('rpd', 'like', "%$q%")
-                             ->orWhere('b41', 'like', "%$q%")
-                             ->orWhere('m79', 'like', "%$q%")
-                             ->orWhereHas('soldier', function($s) use ($q) {
-                                 $s->where('full_name', 'like', "%$q%");
-                             });
+                            ->orWhere('rpd', 'like', "%$q%")
+                            ->orWhere('b41', 'like', "%$q%")
+                            ->orWhere('m79', 'like', "%$q%")
+                            ->orWhereHas('soldier', function ($s) use ($q) {
+                                $s->where('full_name', 'like', "%$q%");
+                            });
                     });
                 }
 
                 if ($request->filled('unit_id')) {
-                    $selectedUnit = \App\Models\Unit::find($request->unit_id);
+                    $selectedUnit = Unit::find($request->unit_id);
                     if ($selectedUnit && in_array($selectedUnit->id, $accessibleUnitIds)) {
                         $targetUnitIds = $selectedUnit->getAllDescendantIds();
                         $query->whereIn('unit_id', $targetUnitIds);
@@ -563,6 +583,7 @@ class SoldierController extends Controller
                 }
 
                 $equipments = $query->orderBy('unit_id')->paginate(20);
+
                 return view('backend.search.index', compact('equipments', 'units'))->with('module', $module);
 
             case 'soldiers':
@@ -572,22 +593,22 @@ class SoldierController extends Controller
                     ->searchKeywords($request->q)
                     ->filterByUnit($request->unit_id)
                     ->filterByLevel($request->level)
-                    ->when($request->filled('rank'), function($q) use ($request) {
+                    ->when($request->filled('rank'), function ($q) use ($request) {
                         $q->where('rank', $request->rank);
                     })
-                    ->when($request->filled('enlistment_year'), function($q) use ($request) {
+                    ->when($request->filled('enlistment_year'), function ($q) use ($request) {
                         $q->whereYear('enlistment_date', $request->enlistment_year);
                     })
-                    ->when($request->filled('professional_level'), function($q) use ($request) {
-                        $q->where('professional_level', 'like', "%" . $request->professional_level . "%");
+                    ->when($request->filled('professional_level'), function ($q) use ($request) {
+                        $q->where('professional_level', 'like', '%'.$request->professional_level.'%');
                     })
-                    ->when($request->filled('education'), function($q) use ($request) {
-                        $q->where('education', 'like', "%" . $request->education . "%");
+                    ->when($request->filled('education'), function ($q) use ($request) {
+                        $q->where('education', 'like', '%'.$request->education.'%');
                     })
-                    ->when($request->filled('birth_date'), function($q) use ($request) {
+                    ->when($request->filled('birth_date'), function ($q) use ($request) {
                         $q->whereDate('birth_date', $request->birth_date);
                     })
-                    ->with(['unit', 'weapons' => function($q) {
+                    ->with(['unit', 'weapons' => function ($q) {
                         $q->where('status', 'dang-su-dung');
                     }])
                     ->paginate(20);

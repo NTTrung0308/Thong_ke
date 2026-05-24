@@ -1,22 +1,22 @@
 <?php
 
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\SoldierController;
-use App\Http\Controllers\Admin\ProfileController;
-use App\Http\Controllers\Admin\UnitController;
-use App\Http\Controllers\Admin\WeaponEquipmentController;
-use App\Http\Controllers\Admin\RewardController;
-use App\Http\Controllers\Admin\DisciplineController;
-use App\Http\Controllers\Admin\TrainingResultController;
-use App\Http\Controllers\Admin\TrainingLogController;
-use App\Http\Controllers\Admin\TrainingSubjectController;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\NotificationController;
-use App\Http\Controllers\Admin\RoleController;
-use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\Ajax\SoldierAjaxController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DisciplineController;
+use App\Http\Controllers\Admin\NotificationController;
+use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\RewardController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\SoldierController;
+use App\Http\Controllers\Admin\TrainingLogController;
+use App\Http\Controllers\Admin\TrainingResultController;
+use App\Http\Controllers\Admin\TrainingSubjectController;
+use App\Http\Controllers\Admin\UnitController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\WeaponEquipmentController;
+use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -44,7 +44,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/api/units-by-level', [DashboardController::class, 'getUnitsByLevel'])->name('api.units-by-level');
     Route::get('/api/units-tree', [DashboardController::class, 'getTreeData'])->name('api.units-tree');
-        Route::get('/api/dashboard-stats', [DashboardController::class, 'dashboardStats'])->name('api.dashboard-stats');
+    Route::get('/api/dashboard-stats', [DashboardController::class, 'dashboardStats'])->name('api.dashboard-stats');
 
     // Notifications
     Route::post('/notifications/mark-as-read/{id}', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');

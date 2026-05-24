@@ -31,7 +31,7 @@ class TrainingResultExport implements FromCollection, WithHeadings, WithMapping
             'Quân số tham gia',
             'Kết quả',
             'Tỷ lệ đạt (%)',
-            'Đánh giá'
+            'Đánh giá',
         ];
     }
 
@@ -49,7 +49,7 @@ class TrainingResultExport implements FromCollection, WithHeadings, WithMapping
             $result->trung_doi_count + $result->at_count + $result->kdt_count,
             $result->result_name,
             $result->passing_rate,
-            $result->evaluation
+            $result->evaluation,
         ];
     }
 }

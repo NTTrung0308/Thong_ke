@@ -2,21 +2,24 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\WeaponEquipmentExport;
 use App\Http\Controllers\Controller;
-use App\Models\WeaponEquipment;
 use App\Models\Soldier;
 use App\Models\Unit;
-use App\Exports\WeaponEquipmentExport;
-use Maatwebsite\Excel\Facades\Excel;
+use App\Models\User;
+use App\Models\WeaponEquipment;
+use App\Notifications\SystemNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 
 class WeaponEquipmentController extends Controller
 {
     public function exportExcel(Request $request)
     {
         $equipments = $this->getFilteredEquipments($request);
+
         return Excel::download(new WeaponEquipmentExport($equipments), 'kiem-ke-vu-khi-trang-bi.xlsx');
     }
 
@@ -24,7 +27,8 @@ class WeaponEquipmentController extends Controller
     {
         $equipments = $this->getFilteredEquipments($request);
         $pdf = Pdf::loadView('backend.weapon_equipments.pdf', compact('equipments'))
-                  ->setPaper('a4', 'landscape');
+            ->setPaper('a4', 'landscape');
+
         return $pdf->download('kiem-ke-vu-khi-trang-bi.pdf');
     }
 
@@ -58,7 +62,7 @@ class WeaponEquipmentController extends Controller
         $this->syncWithSoldiers($user);
 
         $query = WeaponEquipment::with(['soldier.unit', 'unit']);
-        
+
         $accessibleUnitIds = $user->getAccessibleUnitIds();
         $query->whereIn('weapon_equipment.unit_id', $accessibleUnitIds);
 
@@ -96,15 +100,16 @@ class WeaponEquipmentController extends Controller
     {
         $this->authorize('view', $weaponEquipment);
         $weaponEquipment->load(['soldier.unit', 'unit', 'creator', 'updater']);
+
         return view('backend.weapon_equipments.show', compact('weaponEquipment'));
     }
 
     private function syncWithSoldiers($user)
     {
         $soldierQuery = Soldier::query();
-        
+
         // Chỉ đồng bộ quân nhân thuộc quyền quản lý
-        if (!$user->hasRole('chi-huy')) {
+        if (! $user->hasRole('chi-huy')) {
             $unitIds = $user->getAccessibleUnitIds();
             $soldierQuery->whereIn('unit_id', $unitIds);
         }
@@ -113,7 +118,7 @@ class WeaponEquipmentController extends Controller
         $existingSoldierIds = WeaponEquipment::pluck('soldier_id')->toArray();
 
         foreach ($soldiers as $soldier) {
-            if (!in_array($soldier->id, $existingSoldierIds)) {
+            if (! in_array($soldier->id, $existingSoldierIds)) {
                 WeaponEquipment::create([
                     'soldier_id' => $soldier->id,
                     'unit_id' => $soldier->unit_id,
@@ -132,16 +137,18 @@ class WeaponEquipmentController extends Controller
         $user = Auth::user();
         $soldiers = Soldier::whereIn('unit_id', $user->getAccessibleUnitIds())->orderBy('full_name')->get();
         $levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
-        
+
         $levelOptions = [];
         $roots = $user->getRootAccessibleUnits();
         if ($roots->count() > 0) {
             $firstRoot = $roots->first();
             $rootLevelIndex = array_search($firstRoot->level, $levels);
-            if ($rootLevelIndex === false) $rootLevelIndex = 0;
+            if ($rootLevelIndex === false) {
+                $rootLevelIndex = 0;
+            }
             $levelOptions[$rootLevelIndex] = $roots;
         }
-        
+
         $hierarchy = array_fill(0, count($levels), null);
 
         return view('backend.weapon_equipments.create', compact('soldiers', 'levelOptions', 'hierarchy'));
@@ -158,7 +165,7 @@ class WeaponEquipmentController extends Controller
         ]);
 
         // Kiểm tra quyền đối với đơn vị đã chọn
-        if (!in_array($request->unit_id, Auth::user()->getAccessibleUnitIds())) {
+        if (! in_array($request->unit_id, Auth::user()->getAccessibleUnitIds())) {
             return back()->withErrors(['unit_id' => 'Bạn không có quyền thêm vũ khí trang bị cho đơn vị này.'])->withInput();
         }
 
@@ -178,7 +185,7 @@ class WeaponEquipmentController extends Controller
         $soldiers = Soldier::whereIn('unit_id', $user->getAccessibleUnitIds())->orderBy('full_name')->get();
         $navigableIds = $user->getNavigableUnitIds();
         $levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
-        
+
         $hierarchy = array_fill(0, count($levels), null);
         $levelOptions = [];
 
@@ -197,8 +204,10 @@ class WeaponEquipmentController extends Controller
         if ($roots->count() > 0) {
             $firstRoot = $roots->first();
             $rootLevelIndex = array_search($firstRoot->level, $levels);
-            if ($rootLevelIndex === false) $rootLevelIndex = 0;
-            
+            if ($rootLevelIndex === false) {
+                $rootLevelIndex = 0;
+            }
+
             $levelOptions[$rootLevelIndex] = $roots;
         }
 
@@ -209,7 +218,7 @@ class WeaponEquipmentController extends Controller
                     ->whereIn('id', $navigableIds)
                     ->orderBy('name')
                     ->get();
-                
+
                 if ($children->count() > 0) {
                     $levelOptions[$index + 1] = $children;
                 }
@@ -232,7 +241,7 @@ class WeaponEquipmentController extends Controller
 
         // Kiểm tra quyền đối với đơn vị đã chọn (nếu có thay đổi đơn vị)
         if ($weaponEquipment->unit_id != $request->unit_id) {
-            if (!in_array($request->unit_id, Auth::user()->getAccessibleUnitIds())) {
+            if (! in_array($request->unit_id, Auth::user()->getAccessibleUnitIds())) {
                 return back()->withErrors(['unit_id' => 'Bạn không có quyền chuyển vũ khí trang bị sang đơn vị này.'])->withInput();
             }
         }
@@ -244,10 +253,10 @@ class WeaponEquipmentController extends Controller
 
         // Gửi thông báo nếu vũ khí bị hỏng
         if ($weaponEquipment->condition == 'hỏng') {
-            $chiHuys = \App\Models\User::role('chi-huy')->get();
+            $chiHuys = User::role('chi-huy')->get();
             $message = "Vũ khí của quân nhân {$weaponEquipment->soldier->full_name} ({$weaponEquipment->unit->name}) được báo hỏng.";
             foreach ($chiHuys as $chiHuy) {
-                $chiHuy->notify(new \App\Notifications\SystemNotification(
+                $chiHuy->notify(new SystemNotification(
                     'Cảnh báo: Vũ khí hỏng',
                     $message,
                     'fa-exclamation-triangle',
@@ -264,6 +273,7 @@ class WeaponEquipmentController extends Controller
     {
         $this->authorize('delete', $weaponEquipment);
         $weaponEquipment->delete();
+
         return redirect()->route('weapon-equipments.index')->with('success', 'Xóa thành công!');
     }
 }

@@ -3,8 +3,8 @@
 namespace App\Observers;
 
 use App\Models\Unit;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 
 class UnitObserver
 {

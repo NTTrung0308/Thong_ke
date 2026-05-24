@@ -11,12 +11,14 @@ class UnitController extends Controller
     public function index()
     {
         $units = Unit::with('parent')->orderBy('level')->orderBy('name')->get();
+
         return view('backend.units.index', compact('units'));
     }
 
     public function create()
     {
         $parentUnits = Unit::orderBy('name')->get();
+
         return view('backend.units.create', compact('parentUnits'));
     }
 
@@ -36,6 +38,7 @@ class UnitController extends Controller
     public function edit(Unit $unit)
     {
         $parentUnits = Unit::where('id', '!=', $unit->id)->orderBy('name')->get();
+
         return view('backend.units.edit', compact('unit', 'parentUnits'));
     }
 
@@ -44,7 +47,7 @@ class UnitController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'level' => 'required|string|in:chi-huy,trung-doan,tieu-doan,dai-doi,trung-doi',
-            'parent_id' => 'nullable|exists:units,id|not_in:' . $unit->id,
+            'parent_id' => 'nullable|exists:units,id|not_in:'.$unit->id,
         ]);
 
         // Kiểm tra tránh tạo vòng lặp (Cycle)
@@ -90,11 +93,11 @@ class UnitController extends Controller
         $navigableIds = $user->getNavigableUnitIds();
         $query->whereIn('id', $navigableIds);
 
-        $units = $query->orderBy('name')->get()->map(function($unit) {
+        $units = $query->orderBy('name')->get()->map(function ($unit) {
             return [
                 'id' => $unit->id,
                 'name' => $unit->name,
-                'level_label' => $unit->level_label
+                'level_label' => $unit->level_label,
             ];
         });
 

@@ -2,7 +2,6 @@
 
 namespace App\Exports;
 
-use App\Models\Soldier;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -37,7 +36,7 @@ class SoldierExport implements FromCollection, WithHeadings, WithMapping
             'Ngoại ngữ',
             'Chuyên môn',
             'Hộ khẩu thường trú',
-            'Ghi chú'
+            'Ghi chú',
         ];
     }
 
@@ -60,7 +59,7 @@ class SoldierExport implements FromCollection, WithHeadings, WithMapping
             $soldier->foreign_language,
             $soldier->professional_level,
             $soldier->permanent_residence,
-            $soldier->notes
+            $soldier->notes,
         ];
     }
 }

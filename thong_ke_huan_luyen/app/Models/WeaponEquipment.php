@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class WeaponEquipment extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     protected $table = 'weapon_equipment';
 
@@ -23,7 +23,7 @@ class WeaponEquipment extends Model
         'receive_date', 'return_date',
         'received_by', 'returned_by',
         'status', 'notes',
-        'created_by', 'updated_by'
+        'created_by', 'updated_by',
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -64,10 +64,19 @@ class WeaponEquipment extends Model
     public function getWeaponsListAttribute()
     {
         $weapons = [];
-        if ($this->ak) $weapons[] = "AK: {$this->ak}";
-        if ($this->rpd) $weapons[] = "RPD: {$this->rpd}";
-        if ($this->b41) $weapons[] = "B41: {$this->b41}";
-        if ($this->m79) $weapons[] = "M79: {$this->m79}";
+        if ($this->ak) {
+            $weapons[] = "AK: {$this->ak}";
+        }
+        if ($this->rpd) {
+            $weapons[] = "RPD: {$this->rpd}";
+        }
+        if ($this->b41) {
+            $weapons[] = "B41: {$this->b41}";
+        }
+        if ($this->m79) {
+            $weapons[] = "M79: {$this->m79}";
+        }
+
         return implode(', ', $weapons);
     }
 

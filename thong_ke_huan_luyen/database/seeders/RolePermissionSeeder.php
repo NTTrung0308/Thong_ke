@@ -2,17 +2,19 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
+use App\Models\Unit;
 use App\Models\User;
+use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class RolePermissionSeeder extends Seeder
 {
     public function run()
     {
         // Reset cache
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         // ========== 1. ĐỊNH NGHĨA CÁC QUYỀN (PERMISSIONS) ==========
         // Quyền về đơn vị
@@ -47,7 +49,7 @@ class RolePermissionSeeder extends Seeder
         $roleTrungDoan->givePermissionTo([
             'view-unit', 'manage-unit',
             'view-report', 'create-report', 'approve-report', 'export-report',
-            'view-personnel', 'manage-personnel', 'assign-personnel'
+            'view-personnel', 'manage-personnel', 'assign-personnel',
         ]);
 
         // Cấp Tiểu đoàn
@@ -55,7 +57,7 @@ class RolePermissionSeeder extends Seeder
         $roleTieuDoan->givePermissionTo([
             'view-unit', 'manage-unit',
             'view-report', 'create-report', 'export-report',
-            'view-personnel', 'manage-personnel'
+            'view-personnel', 'manage-personnel',
         ]);
 
         // Cấp Đại đội
@@ -63,7 +65,7 @@ class RolePermissionSeeder extends Seeder
         $roleDaiDoi->givePermissionTo([
             'view-unit',
             'view-report', 'create-report', 'export-report',
-            'view-personnel', 'manage-personnel'
+            'view-personnel', 'manage-personnel',
         ]);
 
         // Cấp Trung đội
@@ -71,18 +73,18 @@ class RolePermissionSeeder extends Seeder
         $roleTrungDoi->givePermissionTo([
             'view-unit',
             'view-report', 'create-report',
-            'view-personnel'
+            'view-personnel',
         ]);
 
         // ========== 3. TẠO TÀI KHOẢN MẪU CHO MỖI CẤP ==========
         // Mật khẩu mặc định: 12345678 (nên đổi sau khi chạy seeder)
         $defaultPassword = bcrypt('12345678');
-        
+
         // Lấy một số đơn vị mẫu
-        $unitTrungDoan = \App\Models\Unit::where('level', 'trung-doan')->first();
-        $unitTieuDoan = \App\Models\Unit::where('level', 'tieu-doan')->first();
-        $unitDaiDoi = \App\Models\Unit::where('level', 'dai-doi')->first();
-        $unitTrungDoi = \App\Models\Unit::where('level', 'trung-doi')->first();
+        $unitTrungDoan = Unit::where('level', 'trung-doan')->first();
+        $unitTieuDoan = Unit::where('level', 'tieu-doan')->first();
+        $unitDaiDoi = Unit::where('level', 'dai-doi')->first();
+        $unitTrungDoi = Unit::where('level', 'trung-doi')->first();
 
         // Chỉ huy (Không cần unit_id để xem tất cả)
         $user = User::create([

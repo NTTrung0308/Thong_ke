@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Spatie\Activitylog\Models\Activity;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Spatie\Activitylog\Models\Activity;
 
 class ActivityLogController extends Controller
 {
@@ -17,7 +18,7 @@ class ActivityLogController extends Controller
         }
 
         if ($request->filled('subject_type')) {
-            $query->where('subject_type', 'like', '%' . $request->subject_type);
+            $query->where('subject_type', 'like', '%'.$request->subject_type);
         }
 
         if ($request->filled('causer_id')) {
@@ -34,12 +35,12 @@ class ActivityLogController extends Controller
 
         $activities = $query->paginate(20)->withQueryString();
 
-        $users = \App\Models\User::orderBy('name')->get();
-        
+        $users = User::orderBy('name')->get();
+
         $subjectTypes = Activity::groupBy('subject_type')
             ->whereNotNull('subject_type')
             ->pluck('subject_type')
-            ->map(function($type) {
+            ->map(function ($type) {
                 return str_replace('App\\Models\\', '', $type);
             })->unique();
 

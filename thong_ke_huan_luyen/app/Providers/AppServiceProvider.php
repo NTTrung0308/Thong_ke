@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\Soldier;
+use App\Models\Unit;
+use App\Observers\SoldierObserver;
+use App\Observers\UnitObserver;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,7 +23,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        \App\Models\Soldier::observe(\App\Observers\SoldierObserver::class);
-        \App\Models\Unit::observe(\App\Observers\UnitObserver::class);
+        Soldier::observe(SoldierObserver::class);
+        Unit::observe(UnitObserver::class);
     }
 }
