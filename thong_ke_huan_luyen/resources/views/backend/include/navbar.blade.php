@@ -302,9 +302,9 @@
                                 </div>
                             </li>
                             <li>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="{{ route('profile.index') }}">Hồ sơ của tôi</a>
-                                <a class="dropdown-item" href="{{ route('profile.index') }}">Cài đặt tài khoản</a>
+                                {{-- <div class="dropdown-divider"></div> --}}
+                                {{-- <a class="dropdown-item" href="{{ route('profile.index') }}">Hồ sơ của tôi</a>
+                                <a class="dropdown-item" href="{{ route('profile.index') }}">Cài đặt tài khoản</a> --}}
                                 <div class="dropdown-divider"></div>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf

@@ -38,6 +38,9 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-progress --no-suggest --prefer-dist --no-interaction
 
+      - name: Run PHPStan (static analysis)
+        run: ./vendor/bin/phpstan analyse --configuration=phpstan.neon --memory-limit=2G
+
       - name: Prepare environment
         run: |
           if [ -f .env.example ]; then cp .env.example .env; fi

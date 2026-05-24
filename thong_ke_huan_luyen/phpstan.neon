@@ -1,0 +1,13 @@
+includes:
+  - ./vendor/nunomaduro/larastan/extension.neon
+
+parameters:
+  level: 7
+  paths:
+    - app
+    - routes
+    - database
+  inferPrivatePropertyTypeFromConstructor: true
+  checkMissingIterableValueType: false
+  scanFiles: true
+  ignoreErrors: []
