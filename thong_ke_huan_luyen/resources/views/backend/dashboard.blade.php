@@ -565,7 +565,9 @@
 
             // 1. Phân tích huấn luyện (stacked counts by result per month + avg passing rate line)
             const ctx = document.getElementById('statisticsChart').getContext('2d');
+            // Use Chart.js v2-compatible config (most bundled themes use v2)
             const statisticsChart = new Chart(ctx, {
+                type: 'bar',
                 data: {
                     labels: ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'],
                     datasets: [
@@ -574,81 +576,72 @@
                             data: [
                                 @for($m=1;$m<=12;$m++) {{ $statsByMonth[$m]['by_result']['xuất_sắc'] }}, @endfor
                             ],
-                            backgroundColor: '#28a745',
-                            stack: 'Stack 0'
+                            backgroundColor: '#28a745'
                         },
                         {
                             label: 'Giỏi',
                             data: [
                                 @for($m=1;$m<=12;$m++) {{ $statsByMonth[$m]['by_result']['giỏi'] }}, @endfor
                             ],
-                            backgroundColor: '#007bff',
-                            stack: 'Stack 0'
+                            backgroundColor: '#007bff'
                         },
                         {
                             label: 'Khá',
                             data: [
                                 @for($m=1;$m<=12;$m++) {{ $statsByMonth[$m]['by_result']['khá'] }}, @endfor
                             ],
-                            backgroundColor: '#17a2b8',
-                            stack: 'Stack 0'
+                            backgroundColor: '#17a2b8'
                         },
                         {
                             label: 'Trung bình',
                             data: [
                                 @for($m=1;$m<=12;$m++) {{ $statsByMonth[$m]['by_result']['trung_bình'] }}, @endfor
                             ],
-                            backgroundColor: '#ffc107',
-                            stack: 'Stack 0'
+                            backgroundColor: '#ffc107'
                         },
                         {
                             label: 'Yếu',
                             data: [
                                 @for($m=1;$m<=12;$m++) {{ $statsByMonth[$m]['by_result']['yếu'] }}, @endfor
                             ],
-                            backgroundColor: '#dc3545',
-                            stack: 'Stack 0'
+                            backgroundColor: '#dc3545'
                         },
                         {
                             label: 'Tỉ lệ đạt trung bình (%)',
+                            type: 'line',
                             data: [
                                 @for($m=1;$m<=12;$m++) {{ round($statsByMonth[$m]['avg_passing_rate'],2) }}, @endfor
                             ],
-                            type: 'line',
-                            yAxisID: 'y1',
                             borderColor: '#343a40',
                             backgroundColor: '#343a40',
                             fill: false,
-                            tension: 0.1
+                            yAxisID: 'y1'
                         }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: {
-                        x: {
-                            stacked: true
-                        },
-                        y: {
-                            stacked: true,
-                            beginAtZero: true,
-                            position: 'left'
-                        },
-                        y1: {
-                            beginAtZero: true,
-                            position: 'right',
-                            grid: { drawOnChartArea: false },
-                            ticks: {
-                                callback: function(value) { return value + '%'; }
-                            }
-                        }
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false
                     },
-                    plugins: {
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false
-                        }
+                    scales: {
+                        xAxes: [{
+                            stacked: true
+                        }],
+                        yAxes: [{
+                            stacked: true,
+                            ticks: { beginAtZero: true }
+                        }, {
+                            id: 'y1',
+                            position: 'right',
+                            ticks: {
+                                callback: function(value) { return value + '%'; },
+                                beginAtZero: true
+                            },
+                            gridLines: { display: false }
+                        }]
                     }
                 }
             });
