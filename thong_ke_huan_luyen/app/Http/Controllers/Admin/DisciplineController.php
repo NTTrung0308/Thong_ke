@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Notification;
 use Maatwebsite\Excel\Facades\Excel;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Validator;
 
 class DisciplineController extends Controller
 {
@@ -247,7 +249,7 @@ class DisciplineController extends Controller
     {
         $this->authorize('create', Discipline::class);
 
-        $validated = $request->validate([
+        $rules = [
             'unit_id' => 'required|exists:units,id',
             'soldier_id' => 'required|exists:soldiers,id',
             'work_content' => 'required|string',
@@ -259,12 +261,34 @@ class DisciplineController extends Controller
             'signer_name' => 'nullable|string|max:100',
             'signer_position' => 'nullable|string|max:100',
             'execution_date' => 'nullable|date',
-            'expiry_date' => 'nullable|date|after_or_equal:decision_date',
+            'expiry_date' => 'nullable|date',
             'result' => 'nullable|string',
             'improvement_measures' => 'nullable|string',
             'status' => 'required|in:dang-thi-hanh,da-thi-hanh-xong,duoc-xoa-bo',
             'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:20480',
-        ]);
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+
+        $validator->after(function ($validator) use ($request) {
+            if ($request->filled('expiry_date') && $request->filled('decision_date')) {
+                try {
+                    $decision = Carbon::parse($request->input('decision_date'))->startOfDay();
+                    $expiry = Carbon::parse($request->input('expiry_date'))->startOfDay();
+                    if ($expiry->lt($decision)) {
+                        $validator->errors()->add('expiry_date', 'Ngày hết hạn phải bằng hoặc sau ngày quyết định.');
+                    }
+                } catch (\Exception $e) {
+                    // let date rule handle invalid dates
+                }
+            }
+        });
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $validated = $validator->validated();
 
         // Kiểm tra quyền đối với đơn vị đã chọn
         if (! in_array($validated['unit_id'], Auth::user()->getAccessibleUnitIds())) {
@@ -404,7 +428,7 @@ class DisciplineController extends Controller
     {
         $this->authorize('update', $discipline);
 
-        $validated = $request->validate([
+        $rules = [
             'unit_id' => 'required|exists:units,id',
             'soldier_id' => 'required|exists:soldiers,id',
             'work_content' => 'required|string',
@@ -416,12 +440,34 @@ class DisciplineController extends Controller
             'signer_name' => 'nullable|string|max:100',
             'signer_position' => 'nullable|string|max:100',
             'execution_date' => 'nullable|date',
-            'expiry_date' => 'nullable|date|after_or_equal:decision_date',
+            'expiry_date' => 'nullable|date',
             'result' => 'nullable|string',
             'improvement_measures' => 'nullable|string',
             'status' => 'required|in:dang-thi-hanh,da-thi-hanh-xong,duoc-xoa-bo',
             'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:20480',
-        ]);
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+
+        $validator->after(function ($validator) use ($request) {
+            if ($request->filled('expiry_date') && $request->filled('decision_date')) {
+                try {
+                    $decision = Carbon::parse($request->input('decision_date'))->startOfDay();
+                    $expiry = Carbon::parse($request->input('expiry_date'))->startOfDay();
+                    if ($expiry->lt($decision)) {
+                        $validator->errors()->add('expiry_date', 'Ngày hết hạn phải bằng hoặc sau ngày quyết định.');
+                    }
+                } catch (\Exception $e) {
+                    // let date rule handle invalid dates
+                }
+            }
+        });
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $validated = $validator->validated();
 
         // Kiểm tra quyền đối với đơn vị đã chọn (nếu có thay đổi đơn vị)
         if ($discipline->unit_id != $validated['unit_id']) {

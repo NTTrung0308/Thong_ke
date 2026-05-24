@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Admin;
 
@@ -192,7 +192,7 @@ class TrainingResultController extends Controller
                     $start = Carbon::createFromFormat('H:i', $request->input('start_time'));
                     $end = Carbon::createFromFormat('H:i', $request->input('end_time'));
                     if ($end->lte($start)) {
-                        $validator->errors()->add('end_time', 'Giờ kết thúc phải sau giờ bắt đầu.');
+                        // allow end_time <= start_time (treated as next day)
                     }
                 } catch (\Exception $e) {
                     // let date_format rule handle invalid formats
@@ -212,8 +212,9 @@ class TrainingResultController extends Controller
         }
 
         // Tính số giờ
-        $start = Carbon::parse($validated['start_time']);
-        $end = Carbon::parse($validated['end_time']);
+        $start = Carbon::createFromFormat('H:i', $validated['start_time']);
+        $end = Carbon::createFromFormat('H:i', $validated['end_time']);
+        if ($end->lte($start)) { $end->addDay(); }
         $validated['duration_hours'] = round($end->diffInMinutes($start) / 60, 2);
 
         // Lấy tên đơn vị
@@ -335,7 +336,7 @@ class TrainingResultController extends Controller
                     $start = Carbon::createFromFormat('H:i', $request->input('start_time'));
                     $end = Carbon::createFromFormat('H:i', $request->input('end_time'));
                     if ($end->lte($start)) {
-                        $validator->errors()->add('end_time', 'Giờ kết thúc phải sau giờ bắt đầu.');
+                        // allow end_time <= start_time (treated as next day)
                     }
                 } catch (\Exception $e) {
                     // let date_format rule handle invalid formats
@@ -357,8 +358,9 @@ class TrainingResultController extends Controller
         }
 
         // Tính số giờ
-        $start = Carbon::parse($validated['start_time']);
-        $end = Carbon::parse($validated['end_time']);
+        $start = Carbon::createFromFormat('H:i', $validated['start_time']);
+        $end = Carbon::createFromFormat('H:i', $validated['end_time']);
+        if ($end->lte($start)) { $end->addDay(); }
         $validated['duration_hours'] = round($end->diffInMinutes($start) / 60, 2);
 
         // Cập nhật tên đơn vị

@@ -408,7 +408,7 @@ class RewardController extends Controller
 
         $validated['updated_by'] = Auth::id();
 
-        $reward = Reward::create($validated);
+        $reward->update($validated);
 
         // Gửi thông báo
         $chiHuyUsers = User::role('chi-huy')->get();
