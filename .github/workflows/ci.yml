@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: [8.1]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          extensions: mbstring, bcmath, xml, intl, pcntl
+          ini-values: post_max_size=256M, memory_limit=2G
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install system deps
+        run: sudo apt-get update -y && sudo apt-get install -y sqlite3 libsqlite3-dev
+
+      - name: Install Composer dependencies
+        run: composer install --no-progress --no-suggest --prefer-dist --no-interaction
+
+      - name: Prepare environment
+        run: |
+          if [ -f .env.example ]; then cp .env.example .env; fi
+          php artisan key:generate --ansi || true
+          # Configure sqlite in-memory for tests
+          php -r "file_exists('.env') || copy('.env.example', '.env');"
+          sed -i 's/DB_CONNECTION=.*/DB_CONNECTION=sqlite/' .env || true
+          sed -i 's/DB_DATABASE=.*/DB_DATABASE=:\/\/memory:/' .env || true
+
+      - name: Run migrations
+        run: php artisan migrate --force
+
+      - name: Run Pint (style)
+        run: ./vendor/bin/pint --test || true
+
+      - name: Run Tests
+        run: ./vendor/bin/phpunit --colors=always
+
+      - name: Upload PHPUnit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phpunit-results
+          path: storage/logs
