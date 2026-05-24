@@ -26,6 +26,7 @@ class User extends Authenticatable
         'email',
         'password',
         'unit_id',
+        'soldier_id',
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -40,6 +41,11 @@ class User extends Authenticatable
     public function unit()
     {
         return $this->belongsTo(Unit::class);
+    }
+
+    public function soldier()
+    {
+        return $this->belongsTo(Soldier::class, 'soldier_id');
     }
 
     public function getAccessibleUnitIds()
