@@ -91,13 +91,13 @@ use Illuminate\Support\Str;
                         <form action="{{ route('search.index') }}" method="GET" class="row g-3 mb-4">
                                 <input type="hidden" name="module" value="{{ request('module', 'soldiers') }}">
                             @if(!in_array(request('module', 'soldiers'), ['training_results', 'soldiers']))
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label fw-bold">Từ khóa</label>
                                     <input type="text" name="q" class="form-control"
                                         placeholder="Nhập từ khóa" value="{{ request('q') }}">
                                 </div>
                             @endif
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label fw-bold">Đơn vị</label>
                                 <select name="unit_id" class="form-select">
                                     <option value="">-- Tất cả đơn vị --</option>
@@ -201,18 +201,6 @@ use Illuminate\Support\Str;
                                             value="{{ request('q') }}">
                                     </div>
                                     <small class="text-muted">Ví dụ: "Đại học", "Binh nhất", "20/05/2000", "Súng AK"...</small>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Đơn vị</label>
-                                    <select name="unit_id" class="form-select">
-                                        <option value="">-- Tất cả đơn vị --</option>
-                                        @foreach ($units as $unit)
-                                            <option value="{{ $unit->id }}"
-                                                {{ request('unit_id') == $unit->id ? 'selected' : '' }}>
-                                                {{ $unit->getFullHierarchyName() }}
-                                            </option>
-                                        @endforeach
-                                    </select>
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label fw-bold">Năm nhập ngũ</label>
