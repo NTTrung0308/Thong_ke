@@ -63,6 +63,18 @@ class DisciplineController extends Controller
             $query->whereYear('decision_date', $request->year);
         }
 
+        if ($request->filled('discipline_form')) {
+            $query->where('discipline_form', $request->discipline_form);
+        }
+
+        if ($request->filled('from_date')) {
+            $query->whereDate('decision_date', '>=', $request->from_date);
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate('decision_date', '<=', $request->to_date);
+        }
+
         return $query->leftJoin('soldiers', 'disciplines.soldier_id', '=', 'soldiers.id')
             ->orderBy('disciplines.unit_id')
             ->orderBy('soldiers.full_name')
@@ -113,6 +125,14 @@ class DisciplineController extends Controller
         // Lọc theo năm
         if ($request->filled('year')) {
             $query->whereYear('decision_date', $request->year);
+        }
+
+        // Lọc theo khoảng ngày
+        if ($request->filled('from_date')) {
+            $query->whereDate('decision_date', '>=', $request->from_date);
+        }
+        if ($request->filled('to_date')) {
+            $query->whereDate('decision_date', '<=', $request->to_date);
         }
 
         // Tìm kiếm

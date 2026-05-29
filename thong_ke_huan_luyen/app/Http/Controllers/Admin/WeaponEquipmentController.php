@@ -276,4 +276,48 @@ class WeaponEquipmentController extends Controller
 
         return redirect()->route('weapon-equipments.index')->with('success', 'Xóa thành công!');
     }
+
+    public function bulkAction(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        $action = $request->input('action');
+
+        if (empty($ids)) {
+            return back()->with('error', 'Vui lòng chọn ít nhất một bản ghi.');
+        }
+
+        $equipments = WeaponEquipment::whereIn('id', $ids)->get();
+
+        switch ($action) {
+            case 'update_condition':
+                $condition = $request->input('condition');
+                if (!$condition) return back()->with('error', 'Vui lòng chọn tình trạng.');
+                
+                foreach ($equipments as $item) {
+                    $this->authorize('update', $item);
+                    $item->update(['condition' => $condition, 'updated_by' => Auth::id()]);
+                }
+                return back()->with('success', 'Đã cập nhật tình trạng cho ' . count($ids) . ' bản ghi.');
+
+            case 'update_status':
+                $status = $request->input('status');
+                if (!$status) return back()->with('error', 'Vui lòng chọn trạng thái.');
+
+                foreach ($equipments as $item) {
+                    $this->authorize('update', $item);
+                    $item->update(['status' => $status, 'updated_by' => Auth::id()]);
+                }
+                return back()->with('success', 'Đã cập nhật trạng thái cho ' . count($ids) . ' bản ghi.');
+
+            case 'delete':
+                foreach ($equipments as $item) {
+                    $this->authorize('delete', $item);
+                    $item->delete();
+                }
+                return back()->with('success', 'Đã xóa ' . count($ids) . ' bản ghi thành công.');
+
+            default:
+                return back()->with('error', 'Thao tác không hợp lệ.');
+        }
+    }
 }

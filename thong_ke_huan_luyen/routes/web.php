@@ -65,6 +65,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('permissions', PermissionController::class)->only(['index', 'store', 'destroy'])->middleware('check.role:chi-huy');
 
     // Soldiers Management
+    Route::post('soldiers/bulk-action', [SoldierController::class, 'bulkAction'])->name('soldiers.bulk-action');
     Route::post('soldiers/import', [SoldierController::class, 'importExcel'])->name('soldiers.import');
     Route::get('soldiers/download-template', [SoldierController::class, 'downloadTemplate'])->name('soldiers.download-template');
     Route::get('soldiers/export-excel', [SoldierController::class, 'exportExcel'])->name('soldiers.export-excel');
@@ -76,6 +77,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('units', UnitController::class)->middleware('check.role:chi-huy');
 
     // Weapon & Equipment Management
+    Route::post('weapon-equipments/bulk-action', [WeaponEquipmentController::class, 'bulkAction'])->name('weapon-equipments.bulk-action');
     Route::get('weapon-equipments/export-excel', [WeaponEquipmentController::class, 'exportExcel'])->name('weapon-equipments.export-excel');
     Route::get('weapon-equipments/export-pdf', [WeaponEquipmentController::class, 'exportPdf'])->name('weapon-equipments.export-pdf');
     Route::resource('weapon-equipments', WeaponEquipmentController::class);

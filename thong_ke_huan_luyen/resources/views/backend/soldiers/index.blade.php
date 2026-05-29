@@ -21,7 +21,16 @@
                 <div class="card-header">
                     <div class="d-flex align-items-center">
                         <h4 class="card-title">Danh sách quân nhân</h4>
-                        <div class="ms-auto">
+                        <div class="ms-auto d-flex align-items-center">
+                            <div class="dropdown me-2" id="bulk-actions-wrapper" style="display: none;">
+                                <button class="btn btn-secondary dropdown-toggle btn-round" type="button" id="bulkActionDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-tasks"></i> Thao tác hàng loạt (<span id="selected-count">0</span>)
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="bulkActionDropdown">
+                                    <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="bulkDelete()"><i class="fas fa-trash-alt me-2"></i> Xóa đã chọn</a></li>
+                                    <li><a class="dropdown-item" href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#bulkMoveModal"><i class="fas fa-exchange-alt me-2"></i> Chuyển đơn vị</a></li>
+                                </ul>
+                            </div>
                             <button type="button" class="btn btn-info btn-round me-2" data-bs-toggle="modal" data-bs-target="#importModal">
                                 <i class="fas fa-file-import"></i> Nhập từ Excel
                             </button>
@@ -69,10 +78,22 @@
                     </form>
                     @endif
 
+                    <form id="bulk-action-form" action="{{ route('soldiers.bulk-action') }}" method="POST" style="display: none;">
+                        @csrf
+                        <input type="hidden" name="action" id="bulk-action-type">
+                        <input type="hidden" name="target_unit_id" id="bulk-target-unit-id">
+                        <div id="bulk-selected-ids"></div>
+                    </form>
+
                     <div class="table-responsive">
                         <table id="soldiers-datatables" class="display table table-striped table-hover">
                             <thead>
                                 <tr>
+                                    <th style="width: 40px">
+                                        <div class="form-check p-0">
+                                            <input type="checkbox" class="form-check-input" id="checkAll">
+                                        </div>
+                                    </th>
                                     <th>STT</th>
                                     <th>Họ và tên</th>
                                     <th>Cấp bậc</th>
@@ -93,6 +114,11 @@
                             <tbody>
                                 @foreach($soldiers as $index => $soldier)
                                     <tr>
+                                        <td>
+                                            <div class="form-check p-0">
+                                                <input type="checkbox" class="form-check-input row-checkbox" value="{{ $soldier->id }}">
+                                            </div>
+                                        </td>
                                         <td>{{ $index + 1 }}</td>
                                         <td>{{ $soldier->full_name }}</td>
                                         <td>{{ $soldier->rank }}</td>
@@ -129,6 +155,33 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Chuyển đơn vị hàng loạt -->
+    <div class="modal fade" id="bulkMoveModal" tabindex="-1" aria-labelledby="bulkMoveModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bulkMoveModalLabel">Chuyển đơn vị cho các quân nhân đã chọn</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Chọn đơn vị mới:</label>
+                        <select id="bulk-target-unit-select" class="form-select">
+                            <option value="">-- Chọn đơn vị --</option>
+                            @foreach($units as $unit)
+                                <option value="{{ $unit->id }}">{{ $unit->getFullHierarchyName() }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" onclick="executeBulkMove()">Xác nhận chuyển</button>
                 </div>
             </div>
         </div>
@@ -185,15 +238,71 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            $('#soldiers-datatables').DataTable({
+            var table = $('#soldiers-datatables').DataTable({
                 "pageLength": 10,
                 "language": {
                     "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Vietnamese.json"
                 },
                 "columnDefs": [
-                    { "orderable": false, "targets": 13 } // Vô hiệu hóa sắp xếp cho cột Thao tác
-                ]
+                    { "orderable": false, "targets": [0, 14] } // Vô hiệu hóa sắp xếp cho checkbox và thao tác
+                ],
+                "order": [[1, 'asc']] // Sắp xếp theo STT mặc định
             });
+
+            // Xử lý chọn tất cả
+            $('#checkAll').on('change', function() {
+                $('.row-checkbox').prop('checked', $(this).is(':checked'));
+                updateBulkActionMenu();
+            });
+
+            // Xử lý chọn từng dòng
+            $(document).on('change', '.row-checkbox', function() {
+                updateBulkActionMenu();
+                
+                // Cập nhật trạng thái checkbox "Chọn tất cả"
+                var allChecked = $('.row-checkbox:checked').length === $('.row-checkbox').length;
+                $('#checkAll').prop('checked', allChecked);
+            });
+
+            function updateBulkActionMenu() {
+                var selectedCount = $('.row-checkbox:checked').length;
+                if (selectedCount > 0) {
+                    $('#bulk-actions-wrapper').fadeIn();
+                    $('#selected-count').text(selectedCount);
+                } else {
+                    $('#bulk-actions-wrapper').fadeOut();
+                }
+            }
+
+            window.bulkDelete = function() {
+                if (confirm('Bạn có chắc chắn muốn xóa ' + $('.row-checkbox:checked').length + ' quân nhân đã chọn?')) {
+                    submitBulkAction('delete');
+                }
+            }
+
+            window.executeBulkMove = function() {
+                var targetUnitId = $('#bulk-target-unit-select').val();
+                if (!targetUnitId) {
+                    alert('Vui lòng chọn đơn vị mới.');
+                    return;
+                }
+                $('#bulk-target-unit-id').val(targetUnitId);
+                submitBulkAction('change_unit');
+            }
+
+            function submitBulkAction(action) {
+                var form = $('#bulk-action-form');
+                $('#bulk-action-type').val(action);
+                
+                var container = $('#bulk-selected-ids');
+                container.empty();
+                
+                $('.row-checkbox:checked').each(function() {
+                    container.append('<input type="hidden" name="ids[]" value="' + $(this).val() + '">');
+                });
+                
+                form.submit();
+            }
 
             // Kéo bảng sang ngang bằng chuột
             const slider = document.querySelector('.table-responsive');

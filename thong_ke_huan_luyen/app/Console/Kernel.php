@@ -12,7 +12,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Tự động dọn dẹp nhật ký hoạt động cũ hơn 90 ngày (theo cấu hình config/activitylog.php)
+        $schedule->command('activitylog:clean')->daily();
     }
 
     /**

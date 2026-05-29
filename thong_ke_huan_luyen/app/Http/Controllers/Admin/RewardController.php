@@ -65,6 +65,18 @@ class RewardController extends Controller
             $query->where('decision_level', $request->decision_level);
         }
 
+        if ($request->filled('reward_form')) {
+            $query->where('reward_form', $request->reward_form);
+        }
+
+        if ($request->filled('from_date')) {
+            $query->whereDate('decision_date', '>=', $request->from_date);
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate('decision_date', '<=', $request->to_date);
+        }
+
         return $query->leftJoin('soldiers', 'rewards.soldier_id', '=', 'soldiers.id')
             ->orderBy('rewards.unit_id')
             ->orderBy('soldiers.full_name')
@@ -107,6 +119,19 @@ class RewardController extends Controller
             $query->where('decision_level', $request->decision_level);
         }
 
+        // Lọc theo hình thức khen thưởng
+        if ($request->filled('reward_form')) {
+            $query->where('reward_form', $request->reward_form);
+        }
+
+        // Lọc theo khoảng ngày
+        if ($request->filled('from_date')) {
+            $query->whereDate('decision_date', '>=', $request->from_date);
+        }
+        if ($request->filled('to_date')) {
+            $query->whereDate('decision_date', '<=', $request->to_date);
+        }
+
         // Tìm kiếm
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -143,7 +168,18 @@ class RewardController extends Controller
         // Các cấp quyết định
         $decisionLevels = ['Cấp thường', 'Đại đội', 'Tiểu đoàn', 'Trung đoàn', 'Sư đoàn', 'Quân khu', 'Bộ Quốc phòng'];
 
-        return view('backend.rewards.index', compact('rewards', 'units', 'years', 'decisionLevels', 'stats'));
+        $rewardForms = [
+            'Biểu dương',
+            'Giấy khen',
+            'Bằng khen',
+            'Huân chương',
+            'Danh hiệu thi đua',
+            'Thưởng tiền',
+            'Thăng quân hàm',
+            'Nâng lương trước thời hạn',
+        ];
+
+        return view('backend.rewards.index', compact('rewards', 'units', 'years', 'decisionLevels', 'stats', 'rewardForms'));
     }
 
     private function syncWithSoldiers($user)

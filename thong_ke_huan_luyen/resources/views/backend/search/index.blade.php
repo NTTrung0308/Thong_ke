@@ -90,7 +90,7 @@ use Illuminate\Support\Str;
                     <div class="collapse show" id="filterCollapse">
                         <form action="{{ route('search.index') }}" method="GET" class="row g-3 mb-4">
                                 <input type="hidden" name="module" value="{{ request('module', 'soldiers') }}">
-                            @if(!in_array(request('module', 'soldiers'), ['training_results', 'soldiers']))
+                            @if(!in_array(request('module', 'soldiers'), ['soldiers']))
                                 <div class="col-md-3">
                                     <label class="form-label fw-bold">Từ khóa</label>
                                     <input type="text" name="q" class="form-control"
@@ -113,6 +113,25 @@ use Illuminate\Support\Str;
                             {{-- Module-specific filters --}}
                             @if(request('module') == 'rewards')
                                 <div class="col-md-3">
+                                    <label class="form-label fw-bold">Hình thức khen thưởng</label>
+                                    <select name="reward_form" class="form-select">
+                                        <option value="">-- Tất cả hình thức --</option>
+                                        @foreach($rewardForms ?? [] as $form)
+                                            <option value="{{ $form }}" {{ request('reward_form') == $form ? 'selected' : '' }}>
+                                                {{ $form }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label fw-bold">Từ ngày</label>
+                                    <input type="date" name="from_date" class="form-control" value="{{ request('from_date') }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label fw-bold">Đến ngày</label>
+                                    <input type="date" name="to_date" class="form-control" value="{{ request('to_date') }}">
+                                </div>
+                                <div class="col-md-2">
                                     <label class="form-label fw-bold">Năm quyết định</label>
                                     <input type="number" name="year" class="form-control" value="{{ request('year') }}" placeholder="YYYY">
                                 </div>
@@ -130,14 +149,34 @@ use Illuminate\Support\Str;
                                 </div>
                             @elseif(request('module') == 'disciplines')
                                 <div class="col-md-3">
-                                    <label class="form-label fw-bold">Trạng thái</label>
-                                    <select name="status" class="form-select">
-                                        <option value="">-- Tất cả --</option>
-                                        <option value="dang-thi-hanh" {{ request('status')=='dang-thi-hanh' ? 'selected' : '' }}>Đang thi hành</option>
-                                        <option value="da-thi-hanh-xong" {{ request('status')=='da-thi-hanh-xong' ? 'selected' : '' }}>Đã thi hành xong</option>
+                                    <label class="form-label fw-bold">Hình thức kỷ luật</label>
+                                    <select name="discipline_form" class="form-select">
+                                        <option value="">-- Tất cả hình thức --</option>
+                                        @foreach($disciplineForms ?? [] as $form)
+                                            <option value="{{ $form }}" {{ request('discipline_form') == $form ? 'selected' : '' }}>
+                                                {{ $form }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 <div class="col-md-3">
+                                    <label class="form-label fw-bold">Trạng thái</label>
+                                    <select name="status" class="form-select">
+                                        <option value="">-- Tất cả trạng thái --</option>
+                                        @foreach($statuses ?? [] as $val => $lbl)
+                                            <option value="{{ $val }}" {{ request('status')==$val ? 'selected' : '' }}>{{ $lbl }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label fw-bold">Từ ngày</label>
+                                    <input type="date" name="from_date" class="form-control" value="{{ request('from_date') }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label fw-bold">Đến ngày</label>
+                                    <input type="date" name="to_date" class="form-control" value="{{ request('to_date') }}">
+                                </div>
+                                <div class="col-md-2">
                                     <label class="form-label fw-bold">Năm quyết định</label>
                                     <input type="number" name="year" class="form-control" value="{{ request('year') }}" placeholder="YYYY">
                                 </div>

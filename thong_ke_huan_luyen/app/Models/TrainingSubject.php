@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TrainingSubject extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = ['name', 'parent_id', 'unit_level', 'created_by'];
 
@@ -24,6 +25,21 @@ class TrainingSubject extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function getAllDescendantIds($visited = [])
+    {
+        if (in_array($this->id, $visited)) {
+            return [];
+        }
+        $visited[] = $this->id;
+
+        $ids = [$this->id];
+        foreach ($this->children as $child) {
+            $ids = array_merge($ids, $child->getAllDescendantIds($visited));
+        }
+
+        return $ids;
     }
 
     /**

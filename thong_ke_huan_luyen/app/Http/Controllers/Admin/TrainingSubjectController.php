@@ -57,7 +57,7 @@ class TrainingSubjectController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:training_subjects,id',
+            'parent_id' => 'nullable|exists:training_subjects,id,deleted_at,NULL',
             'unit_level' => 'required|in:dai-doi,trung-doi',
         ]);
 
@@ -94,9 +94,22 @@ class TrainingSubjectController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:training_subjects,id',
+            'parent_id' => 'nullable|exists:training_subjects,id,deleted_at,NULL',
             'unit_level' => 'required|in:dai-doi,trung-doi',
         ]);
+
+        // Kiểm tra tránh tạo vòng lặp (Cycle)
+        if ($request->parent_id) {
+            if ($request->parent_id == $trainingSubject->id) {
+                return back()->withErrors(['parent_id' => 'Không thể chọn chính nó làm mục cha.'])->withInput();
+            }
+            
+            $parent = TrainingSubject::find($request->parent_id);
+            $descendantIds = $trainingSubject->getAllDescendantIds();
+            if (in_array($parent->id, $descendantIds)) {
+                return back()->withErrors(['parent_id' => 'Không thể chọn mục con làm mục cha (tạo vòng lặp).'])->withInput();
+            }
+        }
 
         $trainingSubject->update($validated);
 
@@ -105,13 +118,10 @@ class TrainingSubjectController extends Controller
 
     public function destroy(TrainingSubject $trainingSubject)
     {
-        if ($trainingSubject->children()->count() > 0) {
-            return back()->with('error', 'Không thể xóa vì có nội dung con!');
-        }
-
+        // Nhờ có TrainingSubjectObserver, việc xóa sẽ tự động xóa mềm các nội dung con.
         $trainingSubject->delete();
 
-        return redirect()->route('training-subjects.index')->with('success', 'Xóa nội dung huấn luyện thành công.');
+        return redirect()->route('training-subjects.index')->with('success', 'Xóa nội dung huấn luyện và các mục con thành công.');
     }
 
     public function getChildren(Request $request, $parentId)

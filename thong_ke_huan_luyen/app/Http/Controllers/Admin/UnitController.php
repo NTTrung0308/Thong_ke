@@ -27,7 +27,7 @@ class UnitController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'level' => 'required|string|in:chi-huy,trung-doan,tieu-doan,dai-doi,trung-doi',
-            'parent_id' => 'nullable|exists:units,id',
+            'parent_id' => 'nullable|exists:units,id,deleted_at,NULL',
         ]);
 
         Unit::create($request->all());
@@ -47,7 +47,7 @@ class UnitController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'level' => 'required|string|in:chi-huy,trung-doan,tieu-doan,dai-doi,trung-doi',
-            'parent_id' => 'nullable|exists:units,id|not_in:'.$unit->id,
+            'parent_id' => 'nullable|exists:units,id,deleted_at,NULL|not_in:'.$unit->id,
         ]);
 
         // Kiểm tra tránh tạo vòng lặp (Cycle)
@@ -66,17 +66,10 @@ class UnitController extends Controller
 
     public function destroy(Unit $unit)
     {
-        if ($unit->children()->count() > 0) {
-            return back()->with('error', 'Không thể xóa đơn vị này vì có đơn vị con!');
-        }
-
-        if ($unit->soldiers()->count() > 0) {
-            return back()->with('error', 'Không thể xóa đơn vị này vì có quân nhân thuộc biên chế!');
-        }
-
+        // Nhờ có UnitObserver, việc xóa đơn vị sẽ tự động xóa mềm các đơn vị con và quân nhân liên quan.
         $unit->delete();
 
-        return redirect()->route('units.index')->with('success', 'Xóa đơn vị thành công!');
+        return redirect()->route('units.index')->with('success', 'Xóa đơn vị và các dữ liệu liên quan thành công!');
     }
 
     public function getChildren(Request $request, $parentId = null)

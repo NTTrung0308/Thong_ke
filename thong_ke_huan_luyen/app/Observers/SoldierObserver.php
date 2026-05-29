@@ -82,6 +82,31 @@ class SoldierObserver
         }
     }
 
+    /**
+     * Handle the Soldier "deleting" event to cascade soft deletes.
+     */
+    public function deleting(Soldier $soldier): void
+    {
+        // Xóa mềm các bản ghi liên quan
+        $soldier->weapons()->delete();
+        $soldier->rewards()->delete();
+        $soldier->disciplines()->delete();
+        $soldier->trainingLogs()->delete();
+    }
+
+    /**
+     * Handle the Soldier "restoring" event.
+     */
+    public function restoring(Soldier $soldier): void
+    {
+        // Khôi phục các bản ghi liên quan bị xóa cùng lúc
+        // (Sử dụng thời gian deleted_at để đảm bảo chỉ khôi phục những bản ghi bị xóa do cascade)
+        $soldier->weapons()->onlyTrashed()->where('deleted_at', '>=', $soldier->deleted_at)->restore();
+        $soldier->rewards()->onlyTrashed()->where('deleted_at', '>=', $soldier->deleted_at)->restore();
+        $soldier->disciplines()->onlyTrashed()->where('deleted_at', '>=', $soldier->deleted_at)->restore();
+        $soldier->trainingLogs()->onlyTrashed()->where('deleted_at', '>=', $soldier->deleted_at)->restore();
+    }
+
     private function getVietnameseDayOfWeek($date)
     {
         $days = [

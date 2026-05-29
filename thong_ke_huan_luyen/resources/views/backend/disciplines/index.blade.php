@@ -130,6 +130,12 @@
                     <!-- Bộ lọc -->
                     <form method="GET" action="{{ route('disciplines.index') }}" class="mb-4">
                         <div class="row">
+                            {{-- <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Tìm kiếm chung</label>
+                                    <input type="text" name="search" class="form-control" placeholder="Quân nhân, số quyết định, nội dung..." value="{{ request('search') }}">
+                                </div>
+                            </div> --}}
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label>Đơn vị</label>
@@ -143,11 +149,11 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label>Hình thức</label>
                                     <select name="discipline_form" class="form-control" onchange="this.form.submit()">
-                                        <option value="">Tất cả</option>
+                                        <option value="">Tất cả hình thức</option>
                                         @foreach($disciplineForms as $form)
                                             <option value="{{ $form }}" {{ request('discipline_form') == $form ? 'selected' : '' }}>
                                                 {{ $form }}
@@ -156,6 +162,21 @@
                                     </select>
                                 </div>
                             </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Trạng thái</label>
+                                    <select name="status" class="form-control" onchange="this.form.submit()">
+                                        <option value="">Tất cả trạng thái</option>
+                                        @foreach($statuses as $value => $label)
+                                            <option value="{{ $value }}" {{ request('status') == $value ? 'selected' : '' }}>
+                                                {{ $label }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
                             <div class="col-md-2">
                                 <div class="form-group">
                                     <label>Năm</label>
@@ -169,17 +190,26 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-3">
                                 <div class="form-group">
-                                    <label>Trạng thái</label>
-                                    <select name="status" class="form-control" onchange="this.form.submit()">
-                                        <option value="">Tất cả</option>
-                                        @foreach($statuses as $value => $label)
-                                            <option value="{{ $value }}" {{ request('status') == $value ? 'selected' : '' }}>
-                                                {{ $label }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <label>Từ ngày</label>
+                                    <input type="date" name="from_date" class="form-control" value="{{ request('from_date') }}" onchange="this.form.submit()">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Đến ngày</label>
+                                    <input type="date" name="to_date" class="form-control" value="{{ request('to_date') }}" onchange="this.form.submit()">
+                                </div>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fa fa-search"></i> Tìm kiếm
+                                    </button>
+                                    <a href="{{ route('disciplines.index') }}" class="btn btn-secondary ms-2">
+                                        <i class="fa fa-redo"></i> Xóa lọc
+                                    </a>
                                 </div>
                             </div>
                         </div>

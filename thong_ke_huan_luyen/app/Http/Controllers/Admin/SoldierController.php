@@ -344,6 +344,50 @@ class SoldierController extends Controller
             ->with('success', 'Xóa quân nhân thành công!');
     }
 
+    public function bulkAction(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        $action = $request->input('action');
+
+        if (empty($ids)) {
+            return back()->with('error', 'Vui lòng chọn ít nhất một quân nhân.');
+        }
+
+        $soldiers = Soldier::whereIn('id', $ids)->get();
+
+        switch ($action) {
+            case 'delete':
+                foreach ($soldiers as $soldier) {
+                    $this->authorize('delete', $soldier);
+                    $soldier->delete();
+                }
+                return back()->with('success', 'Đã xóa ' . count($ids) . ' quân nhân thành công.');
+
+            case 'change_unit':
+                $newUnitId = $request->input('target_unit_id');
+                if (!$newUnitId) {
+                    return back()->with('error', 'Vui lòng chọn đơn vị mới.');
+                }
+
+                // Kiểm tra quyền đối với đơn vị mới
+                if (!in_array($newUnitId, Auth::user()->getAccessibleUnitIds())) {
+                    return back()->with('error', 'Bạn không có quyền chuyển quân nhân sang đơn vị này.');
+                }
+
+                foreach ($soldiers as $soldier) {
+                    $this->authorize('update', $soldier);
+                    $soldier->update([
+                        'unit_id' => $newUnitId,
+                        'updated_by' => Auth::id()
+                    ]);
+                }
+                return back()->with('success', 'Đã chuyển ' . count($ids) . ' quân nhân sang đơn vị mới.');
+
+            default:
+                return back()->with('error', 'Thao tác không hợp lệ.');
+        }
+    }
+
     private function getVietnameseDayOfWeek($date)
     {
         $days = [
@@ -377,14 +421,13 @@ class SoldierController extends Controller
         $q = $request->filled('q');
         switch ($module) {
             case 'rewards':
-                $hasFilters = $q || $request->filled('unit_id') || $request->filled('year') || $request->filled('decision_level') || $request->filled('type');
+                $hasFilters = $q || $request->filled('unit_id') || $request->filled('year') || $request->filled('decision_level') || $request->filled('type') || $request->filled('reward_form') || $request->filled('from_date') || $request->filled('to_date');
                 break;
             case 'disciplines':
-                $hasFilters = $q || $request->filled('unit_id') || $request->filled('status') || $request->filled('year');
+                $hasFilters = $q || $request->filled('unit_id') || $request->filled('status') || $request->filled('year') || $request->filled('discipline_form') || $request->filled('from_date') || $request->filled('to_date');
                 break;
             case 'training_results':
-                // For training results we don't use the generic keyword search 'q'
-                $hasFilters = $request->filled('unit_id') || $request->filled('year') || $request->filled('month') || $request->filled('result');
+                $hasFilters = $q || $request->filled('unit_id') || $request->filled('year') || $request->filled('month') || $request->filled('result');
                 break;
             case 'training_logs':
                 $hasFilters = $q || $request->filled('unit_id') || ($request->filled('start_date') && $request->filled('end_date'));
@@ -415,7 +458,35 @@ class SoldierController extends Controller
             ]);
 
             // Return view with placeholders for all module-specific result variables
-            return view('backend.search.index', compact('units', 'ranks', 'enlistmentYears'))
+            $rewardForms = [
+                'Biểu dương',
+                'Giấy khen',
+                'Bằng khen',
+                'Huân chương',
+                'Danh hiệu thi đua',
+                'Thưởng tiền',
+                'Thăng quân hàm',
+                'Nâng lương trước thời hạn',
+            ];
+
+            $disciplineForms = [
+                'Khiển trách',
+                'Cảnh cáo',
+                'Hạ bậc lương',
+                'Giáng chức',
+                'Cách chức',
+                'Hạ quân hàm',
+                'Tước danh hiệu',
+                'Kỷ luật buộc thôi việc',
+            ];
+
+            $statuses = [
+                'dang-thi-hanh' => 'Đang thi hành',
+                'da-thi-hanh-xong' => 'Đã thi hành xong',
+                'duoc-xoa-bo' => 'Được xóa bỏ',
+            ];
+
+            return view('backend.search.index', compact('units', 'ranks', 'enlistmentYears', 'rewardForms', 'disciplineForms', 'statuses'))
                 ->with([
                     'module' => $module,
                     'hasFilters' => false,
@@ -461,9 +532,32 @@ class SoldierController extends Controller
                     $query->where('type', $request->type);
                 }
 
+                if ($request->filled('reward_form')) {
+                    $query->where('reward_form', $request->reward_form);
+                }
+
+                if ($request->filled('from_date')) {
+                    $query->whereDate('decision_date', '>=', $request->from_date);
+                }
+
+                if ($request->filled('to_date')) {
+                    $query->whereDate('decision_date', '<=', $request->to_date);
+                }
+
                 $rewards = $query->orderBy('decision_date', 'desc')->paginate(20);
 
-                return view('backend.search.index', compact('rewards', 'units'))->with('module', $module);
+                $rewardForms = [
+                    'Biểu dương',
+                    'Giấy khen',
+                    'Bằng khen',
+                    'Huân chương',
+                    'Danh hiệu thi đua',
+                    'Thưởng tiền',
+                    'Thăng quân hàm',
+                    'Nâng lương trước thời hạn',
+                ];
+
+                return view('backend.search.index', compact('rewards', 'units', 'rewardForms'))->with('module', $module);
 
             case 'disciplines':
                 $query = Discipline::with(['soldier', 'unit'])->whereIn('unit_id', $accessibleUnitIds);
@@ -494,14 +588,54 @@ class SoldierController extends Controller
                     $query->whereYear('decision_date', $request->year);
                 }
 
+                if ($request->filled('discipline_form')) {
+                    $query->where('discipline_form', $request->discipline_form);
+                }
+
+                if ($request->filled('from_date')) {
+                    $query->whereDate('decision_date', '>=', $request->from_date);
+                }
+
+                if ($request->filled('to_date')) {
+                    $query->whereDate('decision_date', '<=', $request->to_date);
+                }
+
                 $disciplines = $query->orderBy('decision_date', 'desc')->paginate(20);
 
-                return view('backend.search.index', compact('disciplines', 'units'))->with('module', $module);
+                $disciplineForms = [
+                    'Khiển trách',
+                    'Cảnh cáo',
+                    'Hạ bậc lương',
+                    'Giáng chức',
+                    'Cách chức',
+                    'Hạ quân hàm',
+                    'Tước danh hiệu',
+                    'Kỷ luật buộc thôi việc',
+                ];
+
+                $statuses = [
+                    'dang-thi-hanh' => 'Đang thi hành',
+                    'da-thi-hanh-xong' => 'Đã thi hành xong',
+                    'duoc-xoa-bo' => 'Được xóa bỏ',
+                ];
+
+                return view('backend.search.index', compact('disciplines', 'units', 'disciplineForms', 'statuses'))->with('module', $module);
 
             case 'training_results':
                 $query = TrainingResult::with(['unit'])->whereIn('unit_id', $accessibleUnitIds);
 
-                // No generic 'q' keyword search for training results - use module-specific filters instead
+                if ($request->filled('q')) {
+                    $q = $request->q;
+                    $query->where(function ($qsub) use ($q) {
+                        $qsub->where('content', 'like', "%$q%")
+                            ->orWhere('evaluation', 'like', "%$q%")
+                            ->orWhere('strengths', 'like', "%$q%")
+                            ->orWhere('weaknesses', 'like', "%$q%")
+                            ->orWhere('instructor', 'like', "%$q%")
+                            ->orWhere('supervisor', 'like', "%$q%");
+                    });
+                }
+
                 if ($request->filled('unit_id')) {
                     $selectedUnit = Unit::find($request->unit_id);
                     if ($selectedUnit && in_array($selectedUnit->id, $accessibleUnitIds)) {
