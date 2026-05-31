@@ -19,6 +19,7 @@
         </div>
     </div>
 
+
     <div class="container-fluid py-2">
         <!-- Breadcrumb điều hướng -->
         <div id="navigation-breadcrumb" class="mb-4 d-none animate__animated animate__fadeIn">
@@ -251,6 +252,24 @@
                         <canvas id="statisticsChart"></canvas>
                     </div>
                     <div id="myChartLegend"></div>
+
+                    <div class="table-responsive mt-4">
+                        <table class="table table-sm table-hover table-bordered text-center" id="training-summary-table">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Tháng</th>
+                                    <th>Tổng số buổi</th>
+                                    <th>Giỏi/Xuất sắc</th>
+                                    <th>Khá</th>
+                                    <th>Đạt</th>
+                                    <th>% Đạt TB</th>
+                                </tr>
+                            </thead>
+                            <tbody id="training-summary-body">
+                                <tr><td colspan="6">Đang tải dữ liệu...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -588,7 +607,6 @@
 
             function renderStatisticsChart(payload) {
                 const labels = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
-
                 const resultKeys = ['xuất_sắc','giỏi','khá','trung_bình','yếu'];
                 const colors = {
                     'xuất_sắc': '#28a745',
@@ -599,20 +617,21 @@
                 };
 
                 const datasets = resultKeys.map(k => ({
-                    label: k.charAt(0).toUpperCase() + k.slice(1),
+                    label: k.charAt(0).toUpperCase() + k.slice(1).replace('_', ' '),
                     data: labels.map((l, idx) => payload.statsByMonth[idx+1].by_result[k] || 0),
                     backgroundColor: colors[k]
                 }));
 
                 // line for avg passing rate
                 datasets.push({
-                    label: 'Tỉ lệ đạt trung bình (%)',
+                    label: 'Tỉ lệ đạt TB (%)',
                     type: 'line',
-                    data: labels.map((l, idx) => Number((payload.statsByMonth[idx+1].avg_passing_rate || 0).toFixed(2))),
+                    data: labels.map((l, idx) => Number((payload.statsByMonth[idx+1].avg_passing_rate || 0).toFixed(1))),
                     borderColor: '#343a40',
                     backgroundColor: '#343a40',
                     fill: false,
-                    yAxisID: 'y1'
+                    yAxisID: 'y1',
+                    tension: 0.3
                 });
 
                 const ctx = document.getElementById('statisticsChart').getContext('2d');
@@ -626,16 +645,50 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        animation: { duration: 250 },
+                        animation: { duration: 500 },
                         tooltips: { mode: 'index', intersect: false },
+                        legend: { position: 'bottom' },
                         scales: {
                             xAxes: [{ stacked: true }],
-                            yAxes: [{ stacked: true, ticks: { beginAtZero: true } }, {
-                                id: 'y1', position: 'right', ticks: { callback: function(v){ return v + '%'; }, beginAtZero: true }, gridLines: { display: false }
+                            yAxes: [{
+                                stacked: true,
+                                ticks: { beginAtZero: true },
+                                scaleLabel: { display: true, labelString: 'Số buổi' }
+                            }, {
+                                id: 'y1',
+                                position: 'right',
+                                ticks: { callback: function(v){ return v + '%'; }, beginAtZero: true, max: 100 },
+                                gridLines: { display: false },
+                                scaleLabel: { display: true, labelString: 'Tỉ lệ đạt' }
                             }]
                         }
                     }
                 });
+
+                // Populate Table
+                let tableHtml = '';
+                let hasData = false;
+                for(let i=1; i<=12; i++) {
+                    const stat = payload.statsByMonth[i];
+                    if (stat.total > 0) {
+                        hasData = true;
+                        const goodExcellent = (stat.by_result['xuất_sắc'] || 0) + (stat.by_result['giỏi'] || 0);
+                        tableHtml += `
+                            <tr>
+                                <td class="fw-bold">Tháng ${i}</td>
+                                <td>${stat.total}</td>
+                                <td class="text-success fw-bold">${goodExcellent}</td>
+                                <td class="text-info">${stat.by_result['khá'] || 0}</td>
+                                <td class="text-primary">${stat.by_result['trung_bình'] || 0}</td>
+                                <td class="fw-bold text-dark">${Number(stat.avg_passing_rate).toFixed(1)}%</td>
+                            </tr>
+                        `;
+                    }
+                }
+                if (!hasData) {
+                    tableHtml = '<tr><td colspan="6" class="text-muted py-3">Chưa có dữ liệu huấn luyện trong năm nay</td></tr>';
+                }
+                $('#training-summary-body').html(tableHtml);
             }
 
             function loadStatisticsChart(unitId = null, year = new Date().getFullYear()) {
@@ -647,6 +700,7 @@
                     })
                     .fail(function(err) {
                         console.error('Failed to load dashboard stats', err);
+                        $('#training-summary-body').html('<tr><td colspan="6" class="text-danger">Lỗi khi tải dữ liệu</td></tr>');
                     })
                     .always(function() {
                         setTimeout(() => showStatisticsLoading(false), 300);
@@ -656,11 +710,11 @@
             // Load on ready
             loadStatisticsChart();
 
-            // 2. Training Results Chart (Doughnut)
+            // 2. Training Results Chart (Doughnut) - ONLY if element exists
             const trainingCtxEl = document.getElementById('trainingResultChart');
             if (trainingCtxEl) {
                 const ctx2 = trainingCtxEl.getContext('2d');
-                const trainingResultChart = new Chart(ctx2, {
+                new Chart(ctx2, {
                     type: 'doughnut',
                     data: {
                         datasets: [{
@@ -674,31 +728,10 @@
                         maintainAspectRatio: false,
                         legend: { display: false },
                         cutoutPercentage: 70,
-                        animation: { duration: 200 }
+                        animation: { duration: 500 }
                     }
                 });
             }
-
-            // 2. Training Results Chart (Doughnut)
-            const ctx2 = document.getElementById('trainingResultChart').getContext('2d');
-            const trainingResultChart = new Chart(ctx2, {
-                type: 'doughnut',
-                data: {
-                    datasets: [{
-                        data: {!! json_encode($resultData) !!},
-                        backgroundColor: ['#1d7af3', '#59d05d', '#ffad46', '#f3545d', '#8d9498']
-                    }],
-                    labels: {!! json_encode($resultLabels) !!}
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    legend: {
-                        display: false
-                    },
-                    cutoutPercentage: 70
-                }
-            });
         });
     </script>
 

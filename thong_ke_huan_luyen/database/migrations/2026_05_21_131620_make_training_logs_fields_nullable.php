@@ -11,10 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('training_logs', function (Blueprint $table) {
-            $table->text('training_content')->nullable()->change();
-            $table->enum('rating', ['xuất_sắc', 'giỏi', 'khá', 'trung_bình', 'yếu'])->nullable()->default(null)->change();
-        });
+        // Sử dụng Raw SQL vì Doctrine DBAL gặp lỗi với ENUM
+        DB::statement("ALTER TABLE training_logs MODIFY COLUMN training_content TEXT NULL");
+        DB::statement("ALTER TABLE training_logs MODIFY COLUMN rating ENUM('xuất_sắc', 'giỏi', 'khá', 'trung_bình', 'yếu') NULL DEFAULT NULL");
     }
 
     /**
@@ -22,9 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('training_logs', function (Blueprint $table) {
-            $table->text('training_content')->nullable(false)->change();
-            $table->enum('rating', ['xuất_sắc', 'giỏi', 'khá', 'trung_bình', 'yếu'])->nullable(false)->default('trung_bình')->change();
-        });
+        DB::statement("ALTER TABLE training_logs MODIFY COLUMN training_content TEXT NOT NULL");
+        DB::statement("ALTER TABLE training_logs MODIFY COLUMN rating ENUM('xuất_sắc', 'giỏi', 'khá', 'trung_bình', 'yếu') NOT NULL DEFAULT 'trung_bình'");
     }
 };

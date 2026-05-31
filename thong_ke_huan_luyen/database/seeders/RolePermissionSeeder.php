@@ -17,60 +17,50 @@ class RolePermissionSeeder extends Seeder
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         // ========== 1. ĐỊNH NGHĨA CÁC QUYỀN (PERMISSIONS) ==========
-        // Quyền về đơn vị
-        Permission::create(['name' => 'view-unit']);
-        Permission::create(['name' => 'manage-unit']);
-        Permission::create(['name' => 'create-unit']);
-        Permission::create(['name' => 'delete-unit']);
+        $permissions = [
+            'view-unit', 'manage-unit', 'create-unit', 'delete-unit',
+            'view-report', 'create-report', 'approve-report', 'export-report',
+            'view-personnel', 'manage-personnel', 'assign-personnel',
+            'manage-roles', 'system-settings'
+        ];
 
-        // Quyền về báo cáo
-        Permission::create(['name' => 'view-report']);
-        Permission::create(['name' => 'create-report']);
-        Permission::create(['name' => 'approve-report']);
-        Permission::create(['name' => 'export-report']);
-
-        // Quyền về nhân sự
-        Permission::create(['name' => 'view-personnel']);
-        Permission::create(['name' => 'manage-personnel']);
-        Permission::create(['name' => 'assign-personnel']);
-
-        // Quyền hệ thống
-        Permission::create(['name' => 'manage-roles']);
-        Permission::create(['name' => 'system-settings']);
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission]);
+        }
 
         // ========== 2. TẠO CÁC ROLE (CẤP BẬC) ==========
         // Cấp Chỉ huy (cao nhất)
-        $roleChỉHuy = Role::create(['name' => 'chi-huy']);
+        $roleChỉHuy = Role::firstOrCreate(['name' => 'chi-huy']);
         // Toàn quyền: gán tất cả permissions
-        $roleChỉHuy->givePermissionTo(Permission::all());
+        $roleChỉHuy->syncPermissions(Permission::all());
 
         // Cấp Trung đoàn
-        $roleTrungDoan = Role::create(['name' => 'trung-doan']);
-        $roleTrungDoan->givePermissionTo([
+        $roleTrungDoan = Role::firstOrCreate(['name' => 'trung-doan']);
+        $roleTrungDoan->syncPermissions([
             'view-unit', 'manage-unit',
             'view-report', 'create-report', 'approve-report', 'export-report',
             'view-personnel', 'manage-personnel', 'assign-personnel',
         ]);
 
         // Cấp Tiểu đoàn
-        $roleTieuDoan = Role::create(['name' => 'tieu-doan']);
-        $roleTieuDoan->givePermissionTo([
+        $roleTieuDoan = Role::firstOrCreate(['name' => 'tieu-doan']);
+        $roleTieuDoan->syncPermissions([
             'view-unit', 'manage-unit',
             'view-report', 'create-report', 'export-report',
             'view-personnel', 'manage-personnel',
         ]);
 
         // Cấp Đại đội
-        $roleDaiDoi = Role::create(['name' => 'dai-doi']);
-        $roleDaiDoi->givePermissionTo([
+        $roleDaiDoi = Role::firstOrCreate(['name' => 'dai-doi']);
+        $roleDaiDoi->syncPermissions([
             'view-unit',
             'view-report', 'create-report', 'export-report',
             'view-personnel', 'manage-personnel',
         ]);
 
         // Cấp Trung đội
-        $roleTrungDoi = Role::create(['name' => 'trung-doi']);
-        $roleTrungDoi->givePermissionTo([
+        $roleTrungDoi = Role::firstOrCreate(['name' => 'trung-doi']);
+        $roleTrungDoi->syncPermissions([
             'view-unit',
             'view-report', 'create-report',
             'view-personnel',
@@ -87,49 +77,59 @@ class RolePermissionSeeder extends Seeder
         $unitTrungDoi = Unit::where('level', 'trung-doi')->first();
 
         // Chỉ huy (Không cần unit_id để xem tất cả)
-        $user = User::create([
-            'name' => 'Chỉ huy trưởng',
-            'email' => 'chihuy@example.com',
-            'password' => $defaultPassword,
-            'unit_id' => null,
-        ]);
-        $user->assignRole('chi-huy');
+        $user = User::updateOrCreate(
+            ['email' => 'chihuy@example.com'],
+            [
+                'name' => 'Chỉ huy trưởng',
+                'password' => $defaultPassword,
+                'unit_id' => null,
+            ]
+        );
+        $user->syncRoles(['chi-huy']);
 
         // Trung đoàn
-        $user = User::create([
-            'name' => 'Trung đoàn trưởng',
-            'email' => 'trungdoan@example.com',
-            'password' => $defaultPassword,
-            'unit_id' => $unitTrungDoan ? $unitTrungDoan->id : null,
-        ]);
-        $user->assignRole('trung-doan');
+        $user = User::updateOrCreate(
+            ['email' => 'trungdoan@example.com'],
+            [
+                'name' => 'Trung đoàn trưởng',
+                'password' => $defaultPassword,
+                'unit_id' => $unitTrungDoan ? $unitTrungDoan->id : null,
+            ]
+        );
+        $user->syncRoles(['trung-doan']);
 
         // Tiểu đoàn
-        $user = User::create([
-            'name' => 'Tiểu đoàn trưởng',
-            'email' => 'tieudoan@example.com',
-            'password' => $defaultPassword,
-            'unit_id' => $unitTieuDoan ? $unitTieuDoan->id : null,
-        ]);
-        $user->assignRole('tieu-doan');
+        $user = User::updateOrCreate(
+            ['email' => 'tieudoan@example.com'],
+            [
+                'name' => 'Tiểu đoàn trưởng',
+                'password' => $defaultPassword,
+                'unit_id' => $unitTieuDoan ? $unitTieuDoan->id : null,
+            ]
+        );
+        $user->syncRoles(['tieu-doan']);
 
         // Đại đội
-        $user = User::create([
-            'name' => 'Đại đội trưởng',
-            'email' => 'daidoi@example.com',
-            'password' => $defaultPassword,
-            'unit_id' => $unitDaiDoi ? $unitDaiDoi->id : null,
-        ]);
-        $user->assignRole('dai-doi');
+        $user = User::updateOrCreate(
+            ['email' => 'daidoi@example.com'],
+            [
+                'name' => 'Đại đội trưởng',
+                'password' => $defaultPassword,
+                'unit_id' => $unitDaiDoi ? $unitDaiDoi->id : null,
+            ]
+        );
+        $user->syncRoles(['dai-doi']);
 
         // Trung đội
-        $user = User::create([
-            'name' => 'Trung đội trưởng',
-            'email' => 'trungdoi@example.com',
-            'password' => $defaultPassword,
-            'unit_id' => $unitTrungDoi ? $unitTrungDoi->id : null,
-        ]);
-        $user->assignRole('trung-doi');
+        $user = User::updateOrCreate(
+            ['email' => 'trungdoi@example.com'],
+            [
+                'name' => 'Trung đội trưởng',
+                'password' => $defaultPassword,
+                'unit_id' => $unitTrungDoi ? $unitTrungDoi->id : null,
+            ]
+        );
+        $user->syncRoles(['trung-doi']);
 
         $this->command->info('Seeder roles & permissions hoàn tất!');
         $this->command->info('Tài khoản mẫu:');

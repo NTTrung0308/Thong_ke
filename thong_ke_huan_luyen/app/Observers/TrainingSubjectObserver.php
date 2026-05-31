@@ -11,6 +11,12 @@ class TrainingSubjectObserver
      */
     public function deleting(TrainingSubject $trainingSubject): void
     {
+        static $deletingIds = [];
+        if (in_array($trainingSubject->id, $deletingIds)) {
+            return;
+        }
+        $deletingIds[] = $trainingSubject->id;
+
         // Xóa mềm các môn học/nội dung con
         foreach ($trainingSubject->children as $child) {
             $child->delete();

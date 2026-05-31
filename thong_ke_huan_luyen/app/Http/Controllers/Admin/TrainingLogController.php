@@ -180,17 +180,56 @@ class TrainingLogController extends Controller
         $levels = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
 
         $levelOptions = [];
-        $roots = $user->getRootAccessibleUnits();
-        if ($roots->count() > 0) {
-            $firstRoot = $roots->first();
-            $rootLevelIndex = array_search($firstRoot->level, $levels);
-            if ($rootLevelIndex === false) {
-                $rootLevelIndex = 0;
-            }
-            $levelOptions[$rootLevelIndex] = $roots;
-        }
-
         $hierarchy = array_fill(0, count($levels), null);
+
+        if ($user->hasRole('chi-huy')) {
+            $levelOptions[0] = Unit::whereNull('parent_id')->get();
+        } else {
+            $userUnit = $user->unit;
+            if ($userUnit) {
+                // Lấy toàn bộ phân cấp từ đơn vị của user ngược lên gốc
+                $ancestors = $userUnit->getAncestors();
+                $fullPath = $ancestors->concat([$userUnit]);
+                
+                foreach ($fullPath as $unit) {
+                    $index = array_search($unit->level, $levels);
+                    if ($index !== false) {
+                        $hierarchy[$index] = $unit;
+                        // Options cho level này: các đơn vị cùng cấp có cùng cha
+                        if ($unit->parent_id) {
+                            $levelOptions[$index] = Unit::where('parent_id', $unit->parent_id)->get();
+                        } else {
+                            $levelOptions[$index] = Unit::whereNull('parent_id')->get();
+                        }
+                    }
+                }
+                
+                // Nếu đơn vị của user có con, load options cho level tiếp theo
+                $lastIndex = array_search($userUnit->level, $levels);
+                if ($lastIndex !== false && $lastIndex < count($levels) - 1) {
+                    $children = $userUnit->children;
+                    if ($children->count() > 0) {
+                        $levelOptions[$lastIndex + 1] = $children;
+                    }
+                }
+            } else {
+                // Fallback: Lấy các đơn vị gốc mà user có quyền truy cập
+                $roots = $user->getRootAccessibleUnits();
+                if ($roots->count() > 0) {
+                    $firstRoot = $roots->first();
+                    $rootLevelIndex = array_search($firstRoot->level, $levels);
+                    if ($rootLevelIndex !== false) {
+                        $levelOptions[$rootLevelIndex] = $roots;
+                        if ($roots->count() === 1) {
+                            $hierarchy[$rootLevelIndex] = $firstRoot;
+                            if ($rootLevelIndex < count($levels) - 1) {
+                                $levelOptions[$rootLevelIndex + 1] = $firstRoot->children;
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         // Lấy ngày hiện tại
         $today = Carbon::now();

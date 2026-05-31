@@ -29,8 +29,8 @@ class AuthorizationTest extends TestCase
             Schema::create('users', function (Blueprint $table) {
                 $table->id();
                 $table->string('name');
-                $table->string('email')->nullable();
-                $table->string('password')->nullable();
+                $table->string('email')->unique();
+                $table->string('password');
                 $table->unsignedBigInteger('unit_id')->nullable();
                 $table->timestamps();
             });
@@ -39,69 +39,45 @@ class AuthorizationTest extends TestCase
         if (! Schema::hasTable('soldiers')) {
             Schema::create('soldiers', function (Blueprint $table) {
                 $table->id();
+                $table->string('code')->unique();
                 $table->unsignedBigInteger('unit_id')->nullable();
                 $table->string('full_name')->nullable();
                 $table->timestamps();
             });
         }
+        
+        // Dọn dẹp Soldier trước để tránh lỗi khóa ngoại khi xóa User
+        Soldier::whereIn('code', ['B_TEST_001', 'C_TEST_001'])->forceDelete();
+        User::whereIn('email', ['usera_test@example.com', 'root_test@example.com'])->delete();
+    }
 
-        if (! Schema::hasTable('activity_log')) {
-            Schema::create('activity_log', function (Blueprint $table) {
-                $table->id();
-                $table->string('log_name')->nullable();
-                $table->text('description')->nullable();
-                $table->unsignedBigInteger('subject_id')->nullable();
-                $table->string('subject_type')->nullable();
-                $table->unsignedBigInteger('causer_id')->nullable();
-                $table->string('causer_type')->nullable();
-                $table->json('properties')->nullable();
-                $table->string('batch_uuid')->nullable();
-                $table->string('event')->nullable();
-                $table->timestamps();
-            });
-        }
+    private function createTestUser($name, $email, $unitId)
+    {
+        return User::create([
+            'name' => $name,
+            'email' => $email,
+            'password' => bcrypt('password'),
+            'unit_id' => $unitId
+        ]);
+    }
 
-        // Minimal spatie/permission tables to avoid queries in tests
-        if (! Schema::hasTable('roles')) {
-            Schema::create('roles', function (Blueprint $table) {
-                $table->id();
-                $table->string('name');
-                $table->string('guard_name')->nullable();
-                $table->timestamps();
-            });
-        }
-
-        if (! Schema::hasTable('permissions')) {
-            Schema::create('permissions', function (Blueprint $table) {
-                $table->id();
-                $table->string('name');
-                $table->string('guard_name')->nullable();
-                $table->timestamps();
-            });
-        }
-
-        if (! Schema::hasTable('model_has_roles')) {
-            Schema::create('model_has_roles', function (Blueprint $table) {
-                $table->unsignedBigInteger('role_id');
-                $table->unsignedBigInteger('model_id');
-                $table->string('model_type');
-            });
-        }
-
-        if (! Schema::hasTable('model_has_permissions')) {
-            Schema::create('model_has_permissions', function (Blueprint $table) {
-                $table->unsignedBigInteger('permission_id');
-                $table->unsignedBigInteger('model_id');
-                $table->string('model_type');
-            });
-        }
-
-        if (! Schema::hasTable('role_has_permissions')) {
-            Schema::create('role_has_permissions', function (Blueprint $table) {
-                $table->unsignedBigInteger('permission_id');
-                $table->unsignedBigInteger('role_id');
-            });
-        }
+    private function createTestSoldier($fullName, $code, $unitId, $creatorId)
+    {
+        return Soldier::create([
+            'full_name' => $fullName,
+            'code' => $code,
+            'unit_id' => $unitId,
+            'rank' => 'Binh nhì',
+            'position' => 'Chiến sỹ',
+            'birth_date' => '2000-01-01',
+            'enlistment_date' => '2024-01-01',
+            'education' => '12/12',
+            'permanent_residence' => 'N/A',
+            'emergency_contact_name' => 'N/A',
+            'emergency_contact_address' => 'N/A',
+            'created_by' => $creatorId,
+            'updated_by' => $creatorId,
+        ]);
     }
 
     public function test_user_from_unit_cannot_view_or_update_other_unit_soldier()
@@ -109,9 +85,10 @@ class AuthorizationTest extends TestCase
         $unitA = Unit::create(['name' => 'Unit A', 'level' => 'dai-doi', 'parent_id' => null]);
         $unitB = Unit::create(['name' => 'Unit B', 'level' => 'dai-doi', 'parent_id' => null]);
 
-        $userA = User::create(['name' => 'User A', 'unit_id' => $unitA->id]);
-        \Illuminate\Database\Eloquent\Model::withoutEvents(function () use ($unitB, &$soldierB) {
-            $soldierB = Soldier::create(['unit_id' => $unitB->id, 'full_name' => 'Soldier B']);
+        $userA = $this->createTestUser('User A', 'usera_test@example.com', $unitA->id);
+        
+        \Illuminate\Database\Eloquent\Model::withoutEvents(function () use ($unitB, $userA, &$soldierB) {
+            $soldierB = $this->createTestSoldier('Soldier B', 'B_TEST_001', $unitB->id, $userA->id);
         });
 
         $policy = new \App\Policies\SoldierPolicy();
@@ -125,9 +102,10 @@ class AuthorizationTest extends TestCase
         $root = Unit::create(['name' => 'Root', 'level' => 'chi-huy', 'parent_id' => null]);
         $child = Unit::create(['name' => 'Child', 'level' => 'dai-doi', 'parent_id' => $root->id]);
 
-        $userRoot = User::create(['name' => 'User Root', 'unit_id' => $root->id]);
-        \Illuminate\Database\Eloquent\Model::withoutEvents(function () use ($child, &$soldierChild) {
-            $soldierChild = Soldier::create(['unit_id' => $child->id, 'full_name' => 'Soldier Child']);
+        $userRoot = $this->createTestUser('User Root', 'root_test@example.com', $root->id);
+        
+        \Illuminate\Database\Eloquent\Model::withoutEvents(function () use ($child, $userRoot, &$soldierChild) {
+            $soldierChild = $this->createTestSoldier('Soldier Child', 'C_TEST_001', $child->id, $userRoot->id);
         });
 
         $policy = new \App\Policies\SoldierPolicy();

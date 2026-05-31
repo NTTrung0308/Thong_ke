@@ -47,16 +47,6 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    @if (session('success'))
-                        <div class="alert alert-success">
-                            {{ session('success') }}
-                        </div>
-                    @endif
-                    @if (session('error'))
-                        <div class="alert alert-danger">
-                            {!! session('error') !!}
-                        </div>
-                    @endif
                     <!-- Lọc theo đơn vị (Server-side trigger) -->
                     @if($units->count() > 1)
                     <form action="{{ route('soldiers.index') }}" method="GET" class="mb-4">
@@ -141,12 +131,15 @@
                                                 <a href="{{ route('soldiers.edit', $soldier->id) }}" class="btn btn-link btn-primary btn-lg" data-bs-toggle="tooltip" title="Sửa">
                                                     <i class="fa fa-edit"></i>
                                                 </a>
-                                                <form action="{{ route('soldiers.destroy', $soldier->id) }}" method="POST" style="display: inline-block">
+                                                <button type="button" class="btn btn-link btn-danger delete-soldier-btn" 
+                                                    data-id="{{ $soldier->id }}" 
+                                                    data-name="{{ $soldier->full_name }}"
+                                                    data-bs-toggle="tooltip" title="Xóa">
+                                                    <i class="fa fa-times"></i>
+                                                </button>
+                                                <form id="delete-form-{{ $soldier->id }}" action="{{ route('soldiers.destroy', $soldier->id) }}" method="POST" style="display: none">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-link btn-danger" data-bs-toggle="tooltip" title="Xóa" onclick="return confirm('Bạn có chắc chắn muốn xóa quân nhân này?')">
-                                                        <i class="fa fa-times"></i>
-                                                    </button>
                                                 </form>
                                             </div>
                                         </td>
@@ -275,20 +268,57 @@
             }
 
             window.bulkDelete = function() {
-                if (confirm('Bạn có chắc chắn muốn xóa ' + $('.row-checkbox:checked').length + ' quân nhân đã chọn?')) {
-                    submitBulkAction('delete');
-                }
+                var count = $('.row-checkbox:checked').length;
+                Swal.fire({
+                    title: 'Xác nhận xóa?',
+                    text: 'Bạn có chắc chắn muốn xóa ' + count + ' quân nhân đã chọn? Thao tác này không thể hoàn tác!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Đồng ý xóa',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        submitBulkAction('delete');
+                    }
+                });
             }
 
             window.executeBulkMove = function() {
                 var targetUnitId = $('#bulk-target-unit-select').val();
                 if (!targetUnitId) {
-                    alert('Vui lòng chọn đơn vị mới.');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Thiếu thông tin',
+                        text: 'Vui lòng chọn đơn vị mới.'
+                    });
                     return;
                 }
                 $('#bulk-target-unit-id').val(targetUnitId);
                 submitBulkAction('change_unit');
             }
+
+            // Xử lý xóa đơn lẻ
+            $(document).on('click', '.delete-soldier-btn', function() {
+                var id = $(this).data('id');
+                var name = $(this).data('name');
+                
+                Swal.fire({
+                    title: 'Xác nhận xóa?',
+                    text: 'Bạn có chắc chắn muốn xóa quân nhân: ' + name + '?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Đồng ý xóa',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('delete-form-' + id).submit();
+                    }
+                });
+            });
 
             function submitBulkAction(action) {
                 var form = $('#bulk-action-form');

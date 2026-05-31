@@ -29,6 +29,14 @@ class UnitObserver
      */
     public function deleting(Unit $unit): void
     {
+        // Sử dụng static variable để tránh vòng lặp vô hạn nếu có cycle
+        static $deletingIds = [];
+        
+        if (in_array($unit->id, $deletingIds)) {
+            return;
+        }
+        $deletingIds[] = $unit->id;
+
         // 1. Xóa mềm các đơn vị con
         foreach ($unit->children as $child) {
             $child->delete();

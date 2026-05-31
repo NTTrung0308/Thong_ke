@@ -19,16 +19,16 @@ class TrainingSubjectPolicy
 
     public function create(User $user)
     {
-        return $user->hasAnyRole(['chi-huy', 'trung-doan', 'tieu-doan']);
+        return $user->hasAnyRole(['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi']);
     }
 
     public function update(User $user, TrainingSubject $trainingSubject)
     {
-        return $user->hasAnyRole(['chi-huy', 'trung-doan', 'tieu-doan']);
+        return $user->hasAnyRole(['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi']);
     }
 
     public function delete(User $user, TrainingSubject $trainingSubject)
     {
-        return $user->hasAnyRole(['chi-huy', 'trung-doan', 'tieu-doan']);
+        return $user->hasAnyRole(['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi']);
     }
 }

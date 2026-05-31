@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('units', function (Blueprint $table) {
-            $table->enum('level', ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'])->change();
-        });
+        // Sử dụng Raw SQL vì Doctrine DBAL không hỗ trợ ENUM change()
+        DB::statement("ALTER TABLE units MODIFY COLUMN level ENUM('chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi')");
     }
 
     /**
@@ -21,8 +20,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('units', function (Blueprint $table) {
-            $table->enum('level', ['trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'])->change();
-        });
+        DB::statement("ALTER TABLE units MODIFY COLUMN level ENUM('trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi')");
     }
 };

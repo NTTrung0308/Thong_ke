@@ -66,7 +66,7 @@
                                             </div>
                                         @endforeach
                                     </div>
-                                    <input type="hidden" name="unit_id" id="final_unit_id" value="{{ old('unit_id') }}" required>
+                                    <input type="hidden" name="unit_id" id="final_unit_id" value="{{ old('unit_id', isset($hierarchy[count($hierarchy)-1]) ? $hierarchy[count($hierarchy)-1]->id : '') }}" required>
                                     <input type="hidden" name="training_subject_id" id="final_subject_id" value="{{ old('training_subject_id') }}">
                                     @error('unit_id')
                                         <div class="text-danger small mt-1">{{ $message }}</div>
@@ -138,6 +138,9 @@
                                             <div class="col-md-3 d-flex gap-1">
                                                 <button type="button" class="btn btn-primary btn-sm flex-fill" id="add_to_content">
                                                     <i class="fas fa-check"></i> Xác nhận chọn
+                                                </button>
+                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#addSubjectModal" title="Quản lý danh sách môn học">
+                                                    <i class="fas fa-cog"></i>
                                                 </button>
                                             </div>
                                         </div>
@@ -366,23 +369,33 @@ $(document).ready(function() {
         const unitDaiDoi = $('#unit_dai_doi').val();
         const unitTrungDoi = $('#unit_trung_doi').val();
 
-        let selectedLevel = '';
-        if (unitTrungDoi) {
-            selectedLevel = 'trung-doi';
-        } else if (unitDaiDoi) {
-            selectedLevel = 'dai-doi';
-        }
+        let selectedLevel = unitTrungDoi ? 'trung-doi' : (unitDaiDoi ? 'dai-doi' : 'dai-doi');
 
-        if (selectedLevel) {
+        // Luôn cho phép thêm môn học cấp Đại đội/Trung đội
+        $('.btn-quick-add[data-type="subject"]').prop('disabled', false);
+
+        if (unitTrungDoi || unitDaiDoi) {
             loadSubjects(selectedLevel);
-            $('.btn-quick-add[data-type="subject"]').prop('disabled', false);
         } else {
-            $('#subject_id').html('<option value="">-- Chọn môn học --</option>');
+            // Mặc định load môn học cấp Đại đội nếu chưa chọn đơn vị cụ thể
+            loadSubjects('dai-doi');
             $('#lesson_id').html('<option value="">-- Chọn bài --</option>').prop('disabled', true);
             $('#content_id').html('<option value="">-- Chọn nội dung --</option>').prop('disabled', true);
-            $('.btn-quick-add').prop('disabled', true);
+            $('.btn-quick-add[data-type="lesson"], .btn-quick-add[data-type="content"]').prop('disabled', true);
         }
     }
+
+    function updateFinalUnitId() {
+        let lastId = '';
+        levels.forEach(level => {
+            const val = $(`#unit_${level.replace('-', '_')}`).val();
+            if (val) lastId = val;
+        });
+        $('#final_unit_id').val(lastId);
+    }
+    
+    // Khởi tạo giá trị ban đầu cho final_unit_id (cho trường hợp đã được controller điền sẵn)
+    updateFinalUnitId();
     // Initial load
     updateSubjectsBySelectedUnit();
 
@@ -518,19 +531,18 @@ $(document).ready(function() {
                             $('#lesson_id').trigger('change');
                         }
                     }
+                }).fail(function(xhr) {
+                    let message = 'Đã xảy ra lỗi khi thêm dữ liệu.';
+                    if (xhr.status === 403) {
+                        message = 'Bạn không có quyền thực hiện thao tác này.';
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    Swal.fire('Lỗi', message, 'error');
                 });
             }
         });
     });
-
-    function updateFinalUnitId() {
-        let lastId = '';
-        levels.forEach(level => {
-            const val = $(`#unit_${level.replace('-', '_')}`).val();
-            if (val) lastId = val;
-        });
-        $('#final_unit_id').val(lastId);
-    }
 
     $('.unit-selector').on('change', function() {
         const parentId = $(this).val();
@@ -641,6 +653,14 @@ $(document).ready(function() {
                 $('#modal_subject_name').val('');
                 $('#modal_parent_id').val('');
             }
+        }).fail(function(xhr) {
+            let message = 'Đã xảy ra lỗi khi thêm dữ liệu.';
+            if (xhr.status === 403) {
+                message = 'Bạn không có quyền thực hiện thao tác này.';
+            } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                message = xhr.responseJSON.message;
+            }
+            Swal.fire('Lỗi', message, 'error');
         });
     });
 

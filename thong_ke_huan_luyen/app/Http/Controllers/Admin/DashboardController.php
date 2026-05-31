@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Discipline;
 use App\Models\Reward;
 use App\Models\Soldier;
+use App\Models\TrainingLog;
 use App\Models\TrainingResult;
 use App\Models\Unit;
 use App\Models\WeaponEquipment;
@@ -151,6 +152,7 @@ class DashboardController extends Controller
         $cacheKey = 'dashboard_stats_'.$user->id.'_'.$year.'_'.($unitId ?? 'all');
 
         $payload = Cache::remember($cacheKey, 60, function () use ($accessibleUnitIds, $year, $unitId) {
+            // Thử lấy từ TrainingResult trước (Kết quả chính thức)
             $query = TrainingResult::whereIn('unit_id', $accessibleUnitIds)
                 ->whereYear('training_date', $year);
 
@@ -159,6 +161,28 @@ class DashboardController extends Controller
             }
 
             $trainings = $query->get();
+
+            // Nếu không có TrainingResult, thử lấy từ TrainingLog (Nhật ký hàng ngày)
+            if ($trainings->count() === 0) {
+                $logQuery = TrainingLog::whereIn('unit_id', $accessibleUnitIds)
+                    ->whereYear('training_date', $year);
+                
+                if ($unitId) {
+                    $logQuery->where('unit_id', $unitId);
+                }
+                
+                $logs = $logQuery->get();
+                
+                // Map TrainingLog to a common structure for analysis
+                $trainings = $logs->map(function($log) {
+                    return (object)[
+                        'training_date' => $log->training_date,
+                        'result' => $log->rating, // Khớp với resultsKeys
+                        'duration_hours' => $log->actual_hours,
+                        'passing_rate' => $log->good_percent + $log->fair_percent + $log->pass_percent,
+                    ];
+                });
+            }
 
             $resultsKeys = ['xuất_sắc', 'giỏi', 'khá', 'trung_bình', 'yếu'];
             $statsByMonth = [];
