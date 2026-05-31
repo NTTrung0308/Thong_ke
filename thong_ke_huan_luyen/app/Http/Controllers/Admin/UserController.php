@@ -172,17 +172,12 @@ class UserController extends Controller
     private function getAccessibleUnits()
     {
         $user = Auth::user();
+        $unitIds = $user->getAccessibleUnitIds();
 
-        if ($user->hasRole('chi-huy')) {
-            return Unit::all();
+        if (empty($unitIds)) {
+            return collect();
         }
 
-        if ($user->unit) {
-            $unitIds = $user->unit->getAllDescendantIds();
-
-            return Unit::whereIn('id', $unitIds)->get();
-        }
-
-        return collect();
+        return Unit::whereIn('id', $unitIds)->get();
     }
 }

@@ -123,6 +123,7 @@ class WeaponEquipmentController extends Controller
                     'soldier_id' => $soldier->id,
                     'unit_id' => $soldier->unit_id,
                     'status' => 'dang-su-dung',
+                    'condition' => 'tot',
                     'receive_date' => now(),
                     'created_by' => $user->id,
                     'updated_by' => $user->id,
@@ -162,6 +163,7 @@ class WeaponEquipmentController extends Controller
             'unit_id' => 'required|exists:units,id',
             'receive_date' => 'nullable|date',
             'status' => 'required|string',
+            'condition' => 'required|string',
         ]);
 
         // Kiểm tra quyền đối với đơn vị đã chọn
@@ -250,21 +252,6 @@ class WeaponEquipmentController extends Controller
         $data['updated_by'] = Auth::id();
 
         $weaponEquipment->update($data);
-
-        // Gửi thông báo nếu vũ khí bị hỏng
-        if ($weaponEquipment->condition == 'hỏng') {
-            $chiHuys = User::role('chi-huy')->get();
-            $message = "Vũ khí của quân nhân {$weaponEquipment->soldier->full_name} ({$weaponEquipment->unit->name}) được báo hỏng.";
-            foreach ($chiHuys as $chiHuy) {
-                $chiHuy->notify(new SystemNotification(
-                    'Cảnh báo: Vũ khí hỏng',
-                    $message,
-                    'fa-exclamation-triangle',
-                    route('weapon-equipments.index'),
-                    'danger'
-                ));
-            }
-        }
 
         return redirect()->route('weapon-equipments.index')->with('success', 'Cập nhật thành công!');
     }

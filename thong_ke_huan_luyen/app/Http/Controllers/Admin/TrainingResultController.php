@@ -299,7 +299,20 @@ class TrainingResultController extends Controller
             }
         }
 
-        return view('backend.training_results.edit', compact('trainingResult', 'hierarchy', 'levelOptions'));
+        // Lấy danh sách môn học gốc
+        $rootSubjects = TrainingSubject::whereNull('parent_id')->orderBy('name')->get();
+
+        // Lấy hierarchy của subject hiện tại nếu có
+        $subjectHierarchy = [];
+        if ($trainingResult->training_subject_id) {
+            $curr = $trainingResult->trainingSubject;
+            while ($curr) {
+                array_unshift($subjectHierarchy, $curr);
+                $curr = $curr->parent;
+            }
+        }
+
+        return view('backend.training_results.edit', compact('trainingResult', 'hierarchy', 'levelOptions', 'rootSubjects', 'subjectHierarchy'));
     }
 
     // Cập nhật

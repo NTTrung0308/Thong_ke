@@ -401,7 +401,7 @@ class RewardController extends Controller
             'signer_name' => 'nullable|string|max:100',
             'signer_position' => 'nullable|string|max:100',
             'result' => 'nullable|string',
-            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:20480',
         ]);
 
         // Kiểm tra quyền đối với đơn vị đã chọn (nếu có thay đổi đơn vị)

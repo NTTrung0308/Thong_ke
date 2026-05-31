@@ -54,7 +54,31 @@
                                 </tr>
                                 <tr>
                                     <th>Trạng thái</th>
-                                    <td>{{ $weaponEquipment->status }}</td>
+                                    <td>
+                                        @php
+                                            $statusLabels = [
+                                                'dang-su-dung' => ['label' => 'Đang sử dụng', 'class' => 'badge-primary'],
+                                                'da-tra' => ['label' => 'Đã trả', 'class' => 'badge-secondary'],
+                                                'dang-bao-duong' => ['label' => 'Đang bảo dưỡng', 'class' => 'badge-info'],
+                                            ];
+                                            $currentStatus = $statusLabels[$weaponEquipment->status] ?? ['label' => $weaponEquipment->status, 'class' => 'badge-dark'];
+                                        @endphp
+                                        <span class="badge {{ $currentStatus['class'] }}">{{ $currentStatus['label'] }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Tình trạng kỹ thuật</th>
+                                    <td>
+                                        @php
+                                            $conditionLabels = [
+                                                'tot' => ['label' => 'Tốt', 'class' => 'badge-success'],
+                                                'hỏng' => ['label' => 'Hỏng', 'class' => 'badge-danger'],
+                                                'cần_bảo_dưỡng' => ['label' => 'Cần bảo dưỡng', 'class' => 'badge-warning'],
+                                            ];
+                                            $currentCondition = $conditionLabels[$weaponEquipment->condition] ?? ['label' => $weaponEquipment->condition, 'class' => 'badge-dark'];
+                                        @endphp
+                                        <span class="badge {{ $currentCondition['class'] }}">{{ $currentCondition['label'] }}</span>
+                                    </td>
                                 </tr>
                                 <tr>
                                     <th>Ghi chú</th>
@@ -63,29 +87,36 @@
                             </table>
                         </div>
                         <div class="col-md-6">
-                            <h5 class="fw-bold mb-3">Danh sách trang bị</h5>
-                            <ul class="list-group">
-                                @if($weaponEquipment->ak)
-                                    <li class="list-group-item">AK: {{ $weaponEquipment->ak }}</li>
-                                @endif
-                                @if($weaponEquipment->rpd)
-                                    <li class="list-group-item">RPD: {{ $weaponEquipment->rpd }}</li>
-                                @endif
-                                @if($weaponEquipment->b41)
-                                    <li class="list-group-item">B41: {{ $weaponEquipment->b41 }}</li>
-                                @endif
-                                @if($weaponEquipment->m79)
-                                    <li class="list-group-item">M79: {{ $weaponEquipment->m79 }}</li>
-                                @endif
-                                @if($weaponEquipment->grenade)
-                                    <li class="list-group-item">Lựu đạn: {{ $weaponEquipment->grenade }}</li>
-                                @endif
-                                @if(!$weaponEquipment->ak && !$weaponEquipment->rpd && !$weaponEquipment->b41 && !$weaponEquipment->m79 && !$weaponEquipment->grenade)
-                                    <li class="list-group-item text-muted">Không có trang bị cụ thể</li>
-                                @endif
-                            </ul>
+                            <h5 class="fw-bold mb-3">Danh sách trang bị cụ thể</h5>
+                            <div class="row">
+                                <div class="col-6">
+                                    <ul class="list-group list-group-bordered">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">AK <span>{{ $weaponEquipment->ak ?? '-' }}</span></li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">RPD <span>{{ $weaponEquipment->rpd ?? '-' }}</span></li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">B41 <span>{{ $weaponEquipment->b41 ?? '-' }}</span></li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">M79 <span>{{ $weaponEquipment->m79 ?? '-' }}</span></li>
+                                    </ul>
+                                </div>
+                                <div class="col-6">
+                                    <ul class="list-group list-group-bordered">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">Lựu đạn <span>{{ $weaponEquipment->grenade ?? '0' }}</span></li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">Thông nòng <span>{{ $weaponEquipment->cleaning_rod ?? '-' }}</span></li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">Phụ tùng <span>{{ $weaponEquipment->spare_parts ?? '-' }}</span></li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">Kính ngắm <span>{{ $weaponEquipment->sight ?? '-' }}</span></li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
+                    @if($weaponEquipment->history)
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <h5 class="fw-bold mb-2"><i class="fas fa-history me-1"></i> Lịch sử thay đổi</h5>
+                                <div class="bg-light p-3 rounded" style="white-space: pre-line; font-family: monospace; max-height: 200px; overflow-y: auto;">{{ $weaponEquipment->history }}</div>
+                            </div>
+                        </div>
+                    @endif
 
                     <div class="row mt-4">
                         <div class="col-md-12 text-end text-muted small">

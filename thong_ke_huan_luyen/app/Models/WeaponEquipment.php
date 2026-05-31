@@ -22,7 +22,7 @@ class WeaponEquipment extends Model
         'infantry_shovel', 'infantry_pickaxe',
         'receive_date', 'return_date',
         'received_by', 'returned_by',
-        'status', 'notes',
+        'status', 'condition', 'history', 'notes',
         'created_by', 'updated_by',
     ];
 

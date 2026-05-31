@@ -42,6 +42,8 @@ class WeaponEquipmentExport implements FromCollection, WithHeadings, WithMapping
             'Lựu đạn',
             'Xẻng BB',
             'Cuốc BB',
+            'Tình trạng',
+            'Trạng thái',
             'Ngày nhận',
             'Ghi chú',
         ];
@@ -51,6 +53,18 @@ class WeaponEquipmentExport implements FromCollection, WithHeadings, WithMapping
     {
         static $index = 0;
         $index++;
+
+        $statusLabels = [
+            'dang-su-dung' => 'Đang sử dụng',
+            'da-tra' => 'Đã trả',
+            'dang-bao-duong' => 'Đang bảo dưỡng',
+        ];
+
+        $conditionLabels = [
+            'tot' => 'Tốt',
+            'hỏng' => 'Hỏng',
+            'cần_bảo_dưỡng' => 'Cần bảo dưỡng',
+        ];
 
         return [
             $index,
@@ -72,6 +86,8 @@ class WeaponEquipmentExport implements FromCollection, WithHeadings, WithMapping
             $item->grenade,
             $item->infantry_shovel,
             $item->infantry_pickaxe,
+            $conditionLabels[$item->condition] ?? $item->condition,
+            $statusLabels[$item->status] ?? $item->status,
             $item->receive_date ? $item->receive_date->format('d/m/Y') : '',
             $item->notes,
         ];

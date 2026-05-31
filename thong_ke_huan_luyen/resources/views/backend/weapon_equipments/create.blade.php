@@ -83,8 +83,18 @@
                                     <label>Trạng thái <span class="text-danger">*</span></label>
                                     <select class="form-select" name="status" required>
                                         <option value="dang-su-dung" {{ old('status') == 'dang-su-dung' ? 'selected' : '' }}>Đang sử dụng</option>
-                                        <option value="da-thu-hoi" {{ old('status') == 'da-thu-hoi' ? 'selected' : '' }}>Đã thu hồi</option>
-                                        <option value="bao-quan" {{ old('status') == 'bao-quan' ? 'selected' : '' }}>Đang bảo quản</option>
+                                        <option value="da-tra" {{ old('status') == 'da-tra' ? 'selected' : '' }}>Đã trả</option>
+                                        <option value="dang-bao-duong" {{ old('status') == 'dang-bao-duong' ? 'selected' : '' }}>Đang bảo dưỡng</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Tình trạng kỹ thuật <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="condition" required>
+                                        <option value="tot" {{ old('condition') == 'tot' ? 'selected' : '' }}>Tốt</option>
+                                        <option value="hỏng" {{ old('condition') == 'hỏng' ? 'selected' : '' }}>Hỏng</option>
+                                        <option value="cần_bảo_dưỡng" {{ old('condition') == 'cần_bảo_dưỡng' ? 'selected' : '' }}>Cần bảo dưỡng</option>
                                     </select>
                                 </div>
                             </div>

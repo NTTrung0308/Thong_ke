@@ -83,8 +83,8 @@
                                     <label>Trạng thái <span class="text-danger">*</span></label>
                                     <select class="form-select" name="status" required>
                                         <option value="dang-su-dung" {{ (old('status', $weaponEquipment->status) == 'dang-su-dung') ? 'selected' : '' }}>Đang sử dụng</option>
-                                        <option value="da-thu-hoi" {{ (old('status', $weaponEquipment->status) == 'da-thu-hoi') ? 'selected' : '' }}>Đã thu hồi</option>
-                                        <option value="bao-quan" {{ (old('status', $weaponEquipment->status) == 'bao-quan') ? 'selected' : '' }}>Đang bảo quản</option>
+                                        <option value="da-tra" {{ (old('status', $weaponEquipment->status) == 'da-tra') ? 'selected' : '' }}>Đã trả</option>
+                                        <option value="dang-bao-duong" {{ (old('status', $weaponEquipment->status) == 'dang-bao-duong') ? 'selected' : '' }}>Đang bảo dưỡng</option>
                                     </select>
                                 </div>
                             </div>

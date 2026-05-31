@@ -14,7 +14,7 @@ class TrainingSubject extends Model
 
     public function parent()
     {
-        return $this->belongsTo(TrainingSubject::class, 'parent_id');
+        return $this->belongsTo(TrainingSubject::class, 'parent_id')->withTrashed();
     }
 
     public function children()

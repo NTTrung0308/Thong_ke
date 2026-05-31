@@ -199,7 +199,7 @@
         <div id="step-final" class="row justify-content-center g-4 d-none animate__animated">
             <div class="col-12 text-center mb-2">
                 <h4 class="fw-bold text-uppercase">
-                    <i class="fas fa-eye me-2 text-primary"></i> Bước 4: Chọn Hình Thức Hiển Thị - <span
+                    <i class="fas fa-eye me-2 text-primary"></i>Chọn Hình Thức Hiển Thị - <span
                         id="selected-module-label" class="text-primary"></span>
                 </h4>
             </div>

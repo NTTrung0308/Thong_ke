@@ -47,7 +47,17 @@ class RewardPolicy
         if ($user->unit) {
             $allowedUnitIds = $user->unit->getAllDescendantIds();
 
-            return in_array($reward->unit_id, $allowedUnitIds);
+            // Cho phép xem nếu có quyền đối với đơn vị khen thưởng
+            if (in_array($reward->unit_id, $allowedUnitIds)) {
+                return true;
+            }
+
+            // HOẶC cho phép xem nếu có quyền đối với đơn vị hiện tại của quân nhân
+            if ($reward->soldier_id && $reward->soldier) {
+                return in_array($reward->soldier->unit_id, $allowedUnitIds);
+            }
+
+            return false;
         }
 
         $levels = ['trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
@@ -55,10 +65,22 @@ class RewardPolicy
             if ($user->hasRole($l)) {
                 $levelsHierarchy = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
                 $userLevelIndex = array_search($l, $levelsHierarchy);
+                
+                // Kiểm tra đơn vị khen thưởng
                 $targetLevel = $reward->unit->level ?? 'trung-doi';
                 $targetLevelIndex = array_search($targetLevel, $levelsHierarchy);
+                if ($userLevelIndex !== false && $targetLevelIndex !== false && $userLevelIndex <= $targetLevelIndex) {
+                    return true;
+                }
 
-                return $userLevelIndex !== false && $targetLevelIndex !== false && $userLevelIndex <= $targetLevelIndex;
+                // Kiểm tra đơn vị hiện tại của quân nhân
+                if ($reward->soldier_id && $reward->soldier && $reward->soldier->unit) {
+                    $soldierLevel = $reward->soldier->unit->level ?? 'trung-doi';
+                    $soldierLevelIndex = array_search($soldierLevel, $levelsHierarchy);
+                    if ($userLevelIndex !== false && $soldierLevelIndex !== false && $userLevelIndex <= $soldierLevelIndex) {
+                        return true;
+                    }
+                }
             }
         }
 

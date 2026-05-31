@@ -26,7 +26,7 @@ class SoldierObserver
             'soldier_id' => $soldier->id,
             'unit_id' => $soldier->unit_id,
             'status' => 'dang-su-dung',
-            'condition' => 'tốt',
+            'condition' => 'tot',
             'receive_date' => now(),
             'created_by' => $creatorId,
             'updated_by' => $creatorId,
@@ -105,6 +105,25 @@ class SoldierObserver
         $soldier->rewards()->onlyTrashed()->where('deleted_at', '>=', $soldier->deleted_at)->restore();
         $soldier->disciplines()->onlyTrashed()->where('deleted_at', '>=', $soldier->deleted_at)->restore();
         $soldier->trainingLogs()->onlyTrashed()->where('deleted_at', '>=', $soldier->deleted_at)->restore();
+    }
+
+    /**
+     * Handle the Soldier "updated" event.
+     */
+    public function updated(Soldier $soldier): void
+    {
+        // Nếu thay đổi đơn vị, cập nhật lại đơn vị cho các bản ghi liên quan đang hoạt động
+        if ($soldier->wasChanged('unit_id')) {
+            // 1. Cập nhật đơn vị cho vũ khí đang sử dụng
+            $soldier->weapons()->update(['unit_id' => $soldier->unit_id]);
+            
+            // Lưu ý: Với khen thưởng, kỷ luật và nhật ký huấn luyện, 
+            // chúng ta thường giữ nguyên đơn vị tại thời điểm xảy ra sự kiện (historical data).
+            // Tuy nhiên, nếu muốn các bản ghi này đi theo quân nhân sang đơn vị mới để dễ quản lý:
+            // $soldier->rewards()->update(['unit_id' => $soldier->unit_id]);
+            // $soldier->disciplines()->update(['unit_id' => $soldier->unit_id]);
+            // $soldier->trainingLogs()->update(['unit_id' => $soldier->unit_id]);
+        }
     }
 
     private function getVietnameseDayOfWeek($date)

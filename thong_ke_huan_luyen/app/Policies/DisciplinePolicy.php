@@ -49,7 +49,17 @@ class DisciplinePolicy
         if ($user->unit) {
             $allowedUnitIds = $user->unit->getAllDescendantIds();
 
-            return in_array($discipline->unit_id, $allowedUnitIds);
+            // Cho phép xem nếu có quyền đối với đơn vị ra quyết định kỷ luật
+            if (in_array($discipline->unit_id, $allowedUnitIds)) {
+                return true;
+            }
+
+            // HOẶC cho phép xem nếu có quyền đối với đơn vị hiện tại của quân nhân
+            if ($discipline->soldier_id && $discipline->soldier) {
+                return in_array($discipline->soldier->unit_id, $allowedUnitIds);
+            }
+
+            return false;
         }
 
         // 2. Nếu user không có đơn vị (nhưng có Role), kiểm tra theo cấp bậc Role
@@ -58,10 +68,22 @@ class DisciplinePolicy
             if ($user->hasRole($l)) {
                 $levelsHierarchy = ['chi-huy', 'trung-doan', 'tieu-doan', 'dai-doi', 'trung-doi'];
                 $userLevelIndex = array_search($l, $levelsHierarchy);
+                
+                // Kiểm tra đơn vị ra quyết định kỷ luật
                 $targetLevel = $discipline->unit->level ?? 'trung-doi';
                 $targetLevelIndex = array_search($targetLevel, $levelsHierarchy);
+                if ($userLevelIndex !== false && $targetLevelIndex !== false && $userLevelIndex <= $targetLevelIndex) {
+                    return true;
+                }
 
-                return $userLevelIndex !== false && $targetLevelIndex !== false && $userLevelIndex <= $targetLevelIndex;
+                // Kiểm tra đơn vị hiện tại của quân nhân
+                if ($discipline->soldier_id && $discipline->soldier && $discipline->soldier->unit) {
+                    $soldierLevel = $discipline->soldier->unit->level ?? 'trung-doi';
+                    $soldierLevelIndex = array_search($soldierLevel, $levelsHierarchy);
+                    if ($userLevelIndex !== false && $soldierLevelIndex !== false && $userLevelIndex <= $soldierLevelIndex) {
+                        return true;
+                    }
+                }
             }
         }
 

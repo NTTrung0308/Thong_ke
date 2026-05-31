@@ -43,7 +43,7 @@ class TrainingResult extends Model
     // Relationships
     public function trainingSubject()
     {
-        return $this->belongsTo(TrainingSubject::class, 'training_subject_id');
+        return $this->belongsTo(TrainingSubject::class, 'training_subject_id')->withTrashed();
     }
 
     public function unit()

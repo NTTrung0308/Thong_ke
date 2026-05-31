@@ -384,7 +384,20 @@ class TrainingLogController extends Controller
             }
         }
 
-        return view('backend.training_logs.edit', compact('trainingLog', 'hierarchy', 'levelOptions'));
+        // Lấy danh sách môn học gốc
+        $rootSubjects = \App\Models\TrainingSubject::whereNull('parent_id')->orderBy('name')->get();
+
+        // Lấy hierarchy của subject hiện tại nếu có
+        $subjectHierarchy = [];
+        if ($trainingLog->training_subject_id) {
+            $curr = $trainingLog->trainingSubject;
+            while ($curr) {
+                array_unshift($subjectHierarchy, $curr);
+                $curr = $curr->parent;
+            }
+        }
+
+        return view('backend.training_logs.edit', compact('trainingLog', 'hierarchy', 'levelOptions', 'rootSubjects', 'subjectHierarchy'));
     }
 
     // Cập nhật

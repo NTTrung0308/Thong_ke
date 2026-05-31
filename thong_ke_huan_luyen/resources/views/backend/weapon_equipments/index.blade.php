@@ -297,9 +297,8 @@
                         <label>Chọn trạng thái:</label>
                         <select id="bulk-status-select" class="form-select">
                             <option value="dang-su-dung">Đang sử dụng</option>
-                            <option value="dang-bao-quan">Đang bảo quản</option>
+                            <option value="dang-bao-duong">Đang bảo dưỡng</option>
                             <option value="da-tra">Đã trả</option>
-                            <option value="da-mat">Đã mất</option>
                         </select>
                     </div>
                 </div>
