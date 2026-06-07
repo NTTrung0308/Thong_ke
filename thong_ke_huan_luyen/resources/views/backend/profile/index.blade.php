@@ -1,7 +1,7 @@
 @extends('backend.layouts.dashboard')
 
 @section('dashboard_content')
-    <div class="page-header">
+    <div class="page-header animate__animated animate__fadeInDown">
         <h3 class="fw-bold mb-3">Hồ sơ cá nhân</h3>
         <ul class="breadcrumbs mb-3">
             <li class="nav-home">
@@ -26,7 +26,7 @@
 
     <div class="row">
         <div class="col-md-8">
-            <div class="card">
+            <div class="card animate__animated animate__fadeInUp">
                 <div class="card-header">
                     <div class="card-title">Thông tin tài khoản</div>
                 </div>

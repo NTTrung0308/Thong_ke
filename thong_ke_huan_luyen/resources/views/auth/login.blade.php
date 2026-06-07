@@ -1,13 +1,16 @@
 @extends('auth.index')
 @section('content')
-    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-md w-full bg-white p-8 rounded-2xl shadow-lg ring-1 ring-gray-100">
-            {{-- <div class="flex justify-center mb-6">
-                <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-12 w-auto">
-            </div> --}}
-
-            <h2 class="text-3xl font-extrabold text-center text-gray-900 mb-2">Đăng nhập</h2>
-            <p class="text-sm text-center text-gray-500 mb-6">Nhập email và mật khẩu để tiếp tục</p>
+    <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full bg-white p-10 rounded-3xl shadow-2xl ring-1 ring-gray-100 animate__animated animate__zoomIn">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-600 rounded-2xl shadow-lg mb-4 animate__animated animate__bounceIn delay-1">
+                    <i class="fas fa-shield-alt text-white text-3xl"></i>
+                </div>
+                <h2 class="text-3xl font-black text-gray-900 tracking-tight">ĐĂNG NHẬP</h2>
+                <div class="h-1 w-20 bg-blue-600 mx-auto mt-2 rounded-full"></div>
+            </div>
+            
+            <p class="text-sm text-center text-gray-500 mb-8 font-medium">Hệ thống Thống kê Huấn luyện Chiến Đấu</p>
 
             @if (session('success'))
                 <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-md mb-4" role="alert">

@@ -20,7 +20,7 @@
     ];
 @endphp
 
-<ul class="breadcrumbs mb-3">
+<ul class="breadcrumbs mb-3 animate__animated animate__fadeInLeft delay-1">
     <li class="nav-home">
         <a href="{{ route('dashboard') }}">
             <i class="fas fa-home"></i>

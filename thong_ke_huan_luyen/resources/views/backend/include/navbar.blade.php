@@ -281,11 +281,10 @@
                             <img src="{{ asset('backend/assets/img/avatar-default.svg') }}" alt="..." class="avatar-img rounded-circle" />
                         </div>
                         <span class="profile-username">
-                            <span class="op-7">Hi,</span>
                             <span class="fw-bold">{{ auth()->user()->name }}</span>
                         </span>
                     </a>
-                    <ul class="dropdown-menu dropdown-user animated fadeIn">
+                    <ul class="dropdown-menu dropdown-user animated fadeIn">                 
                         <div class="dropdown-user-scroll scrollbar-outer">
                             <li>
                                 <div class="user-box">

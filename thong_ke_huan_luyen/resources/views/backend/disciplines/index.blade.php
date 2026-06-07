@@ -10,7 +10,7 @@
             user-select: none;
         }
     </style>
-    <div class="page-header">
+    <div class="page-header animate__animated animate__fadeInDown">
         <h3 class="fw-bold mb-3">Quản lý kỷ luật</h3>
         @include('backend.include.breadcrumbs', ['activeLabel' => 'Kỷ luật', 'activeRoute' => route('disciplines.index')])
         <div class="ms-md-auto py-2 py-md-0">
@@ -111,7 +111,7 @@
 
     <div class="row">
         <div class="col-md-12">
-            <div class="card">
+            <div class="card animate__animated animate__fadeInUp">
                 <div class="card-header">
                     <div class="card-title">DANH SÁCH THEO DÕI KỶ LUẬT</div>
                 </div>
@@ -268,12 +268,12 @@
                                                 <a href="{{ route('disciplines.show', $discipline->id) }}"
                                                     class="btn btn-link btn-info btn-lg" data-bs-toggle="tooltip"
                                                     title="Xem chi tiết">
-                                                    <i class="fa fa-eye"></i>
+                                                    <i class="fa fa-eye" style="color: white"></i>
                                                 </a>
                                                 <a href="{{ route('disciplines.edit', $discipline->id) }}"
                                                     class="btn btn-link btn-primary btn-lg" data-bs-toggle="tooltip"
                                                     title="Sửa">
-                                                    <i class="fa fa-edit"></i>
+                                                    <i class="fa fa-edit" style="color: white"></i>
                                                 </a>
                                                 <form action="{{ route('disciplines.destroy', $discipline->id) }}" method="POST"
                                                     id="delete-form-{{ $discipline->id }}" style="display:inline-block">
@@ -283,7 +283,7 @@
                                                 <button type="button" class="btn btn-link btn-danger"
                                                     data-bs-toggle="tooltip" title="Xóa"
                                                     onclick="confirmDelete({{ $discipline->id }})">
-                                                    <i class="fa fa-times"></i>
+                                                    <i class="fa fa-times" style="color: white"></i>
                                                 </button>
                                             </div>
                                         </td>

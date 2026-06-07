@@ -11,7 +11,7 @@
             user-select: none;
         }
     </style>
-    <div class="page-header">
+    <div class="page-header animate__animated animate__fadeInDown">
         <h3 class="fw-bold mb-3">Quản lý Vũ khí - Trang bị</h3>
         @include('backend.include.breadcrumbs', ['activeLabel' => 'Vũ khí trang bị', 'activeRoute' => route('weapon-equipments.index')])
         <div class="ms-md-auto py-2 py-md-0">
@@ -109,7 +109,7 @@
 
     <div class="row">
         <div class="col-md-12">
-            <div class="card">
+            <div class="card animate__animated animate__fadeInUp">
                 <div class="card-header d-flex align-items-center">
                     <div class="card-title">DANH SÁCH VŨ KHÍ, TRANG BỊ THEO QUÂN NHÂN</div>
                     <div class="ms-auto d-flex align-items-center">
@@ -235,7 +235,7 @@
                                                 <a href="{{ route('weapon-equipments.edit', $item->id) }}"
                                                     class="btn btn-link btn-primary" data-bs-toggle="tooltip"
                                                     title="Sửa">
-                                                    <i class="fa fa-edit"></i>
+                                                    <i class="fa fa-edit" style="color: white"></i>
                                                 </a>
                                                 <form action="{{ route('weapon-equipments.destroy', $item->id) }}"
                                                     method="POST" class="d-inline">
@@ -243,7 +243,7 @@
                                                     @method('DELETE')
                                                     <button type="button" class="btn btn-link btn-danger delete-btn"
                                                         data-bs-toggle="tooltip" title="Xóa">
-                                                        <i class="fa fa-times"></i>
+                                                        <i class="fa fa-times" style="color: white"></i>
                                                     </button>
                                                 </form>
                                             </div>

@@ -1,7 +1,7 @@
 @extends('backend.layouts.dashboard')
 
 @section('dashboard_content')
-    <div class="page-header">
+    <div class="page-header animate__animated animate__fadeInDown">
         <h3 class="fw-bold mb-3">Quản lý Quyền hạn (Permissions)</h3>
         <ul class="breadcrumbs mb-3">
             <li class="nav-home">
@@ -32,7 +32,7 @@
 
     <div class="row">
         <div class="col-md-4">
-            <div class="card">
+            <div class="card animate__animated animate__fadeInUp">
                 <div class="card-header">
                     <div class="card-title">Thêm quyền mới</div>
                 </div>

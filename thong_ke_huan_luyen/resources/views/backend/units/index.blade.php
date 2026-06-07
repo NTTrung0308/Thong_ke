@@ -1,7 +1,7 @@
 @extends('backend.layouts.dashboard')
 
 @section('dashboard_content')
-    <div class="page-header">
+    <div class="page-header animate__animated animate__fadeInDown">
         <h3 class="fw-bold mb-3">Quản lý Đơn vị</h3>
         <ul class="breadcrumbs mb-3">
             <li class="nav-home">
@@ -23,7 +23,7 @@
 
     <div class="row">
         <div class="col-md-12">
-            <div class="card">
+            <div class="card animate__animated animate__fadeInUp">
                 <div class="card-header">
                     <div class="card-title">Danh sách đơn vị</div>
                 </div>
@@ -49,13 +49,13 @@
                                         <td>
                                             <div class="form-button-action">
                                                 <a href="{{ route('units.edit', $unit->id) }}" class="btn btn-link btn-primary btn-lg" data-bs-toggle="tooltip" title="Sửa">
-                                                    <i class="fa fa-edit"></i>
+                                                    <i class="fa fa-edit" style="color: white"></i>
                                                 </a>
                                                 <form action="{{ route('units.destroy', $unit->id) }}" method="POST" class="d-inline delete-form">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="button" class="btn btn-link btn-danger delete-btn" data-bs-toggle="tooltip" title="Xóa">
-                                                        <i class="fa fa-times"></i>
+                                                        <i class="fa fa-times" style="color: white"></i>
                                                     </button>
                                                 </form>
                                             </div>

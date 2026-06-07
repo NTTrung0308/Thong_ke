@@ -93,11 +93,14 @@ class DashboardController extends Controller
             ];
         }
 
-        // 4. Nhật ký hoạt động gần đây (Activity Stream)
-        $activities = Activity::with(['causer', 'subject'])
-            ->latest()
-            ->take(10)
-            ->get();
+        // 4. Nhật ký hoạt động gần đây (Activity Stream) - Chỉ dành cho Chỉ huy
+        $activities = collect();
+        if ($user->hasRole('chi-huy')) {
+            $activities = Activity::with(['causer', 'subject'])
+                ->latest()
+                ->take(10)
+                ->get();
+        }
 
         return view('backend.dashboard', compact(
             'totalSoldiers', 'totalUnits', 'totalWeapons', 'totalRewards', 'totalDisciplines',

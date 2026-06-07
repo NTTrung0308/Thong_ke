@@ -58,7 +58,7 @@ use Illuminate\Support\Str;
             box-shadow: 0 6px 14px rgba(0,0,0,0.06);
         }
     </style>
-    <div class="page-header">
+    <div class="page-header animate__animated animate__fadeInDown">
         <h3 class="fw-bold mb-3">Tra cứu thông tin nâng cao</h3>
         <ul class="breadcrumbs mb-3">
             <li class="nav-home">
@@ -77,7 +77,7 @@ use Illuminate\Support\Str;
 
     <div class="row">
         <div class="col-md-12">
-            <div class="card">
+            <div class="card animate__animated animate__fadeInUp">
                 <div class="card-header">
                     <div class="d-flex align-items-center justify-content-between">
                         <h4 class="card-title">Bộ lọc tìm kiếm</h4>
@@ -89,17 +89,20 @@ use Illuminate\Support\Str;
                 <div class="card-body">
                     <div class="collapse show" id="filterCollapse">
                         <form action="{{ route('search.index') }}" method="GET" class="row g-3 mb-4">
-                                <input type="hidden" name="module" value="{{ request('module', 'soldiers') }}">
-                            @if(!in_array(request('module', 'soldiers'), ['soldiers']))
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Từ khóa</label>
-                                    <input type="text" name="q" class="form-control"
-                                        placeholder="Nhập từ khóa" value="{{ request('q') }}">
-                                </div>
-                            @endif
-                            <div class="col-md-3">
-                                <label class="form-label fw-bold">Đơn vị</label>
-                                <select name="unit_id" class="form-select">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Chọn phân hệ tra cứu</label>
+                                <select name="module" class="form-select" onchange="this.form.submit()">
+                                    <option value="soldiers" {{ request('module') == 'soldiers' ? 'selected' : '' }}>Quân nhân</option>
+                                    <option value="weapon_equipments" {{ request('module') == 'weapon_equipments' ? 'selected' : '' }}>Vũ khí trang bị</option>
+                                    <option value="training_results" {{ request('module') == 'training_results' ? 'selected' : '' }}>Kết quả tập huấn</option>
+                                    <option value="training_logs" {{ request('module') == 'training_logs' ? 'selected' : '' }}>Nhật ký huấn luyện</option>
+                                    <option value="rewards" {{ request('module') == 'rewards' ? 'selected' : '' }}>Khen thưởng</option>
+                                    <option value="disciplines" {{ request('module') == 'disciplines' ? 'selected' : '' }}>Kỷ luật</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Lọc theo Đơn vị</label>
+                                <select name="unit_id" class="form-select" onchange="this.form.submit()">
                                     <option value="">-- Tất cả đơn vị --</option>
                                     @foreach ($units as $unit)
                                         <option value="{{ $unit->id }}"
@@ -109,160 +112,19 @@ use Illuminate\Support\Str;
                                     @endforeach
                                 </select>
                             </div>
-
-                            {{-- Module-specific filters --}}
-                            @if(request('module') == 'rewards')
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Hình thức khen thưởng</label>
-                                    <select name="reward_form" class="form-select">
-                                        <option value="">-- Tất cả hình thức --</option>
-                                        @foreach($rewardForms ?? [] as $form)
-                                            <option value="{{ $form }}" {{ request('reward_form') == $form ? 'selected' : '' }}>
-                                                {{ $form }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label fw-bold">Từ ngày</label>
-                                    <input type="date" name="from_date" class="form-control" value="{{ request('from_date') }}">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label fw-bold">Đến ngày</label>
-                                    <input type="date" name="to_date" class="form-control" value="{{ request('to_date') }}">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label fw-bold">Năm quyết định</label>
-                                    <input type="number" name="year" class="form-control" value="{{ request('year') }}" placeholder="YYYY">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Cấp quyết định</label>
-                                    <input type="text" name="decision_level" class="form-control" value="{{ request('decision_level') }}">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label fw-bold">Loại</label>
-                                    <select name="type" class="form-select">
-                                        <option value="">-- Tất cả --</option>
-                                        <option value="unit" {{ request('type')=='unit' ? 'selected' : '' }}>Khen thưởng đơn vị</option>
-                                        <option value="superior" {{ request('type')=='superior' ? 'selected' : '' }}>Khen thưởng cấp trên</option>
-                                    </select>
-                                </div>
-                            @elseif(request('module') == 'disciplines')
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Hình thức kỷ luật</label>
-                                    <select name="discipline_form" class="form-select">
-                                        <option value="">-- Tất cả hình thức --</option>
-                                        @foreach($disciplineForms ?? [] as $form)
-                                            <option value="{{ $form }}" {{ request('discipline_form') == $form ? 'selected' : '' }}>
-                                                {{ $form }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Trạng thái</label>
-                                    <select name="status" class="form-select">
-                                        <option value="">-- Tất cả trạng thái --</option>
-                                        @foreach($statuses ?? [] as $val => $lbl)
-                                            <option value="{{ $val }}" {{ request('status')==$val ? 'selected' : '' }}>{{ $lbl }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label fw-bold">Từ ngày</label>
-                                    <input type="date" name="from_date" class="form-control" value="{{ request('from_date') }}">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label fw-bold">Đến ngày</label>
-                                    <input type="date" name="to_date" class="form-control" value="{{ request('to_date') }}">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label fw-bold">Năm quyết định</label>
-                                    <input type="number" name="year" class="form-control" value="{{ request('year') }}" placeholder="YYYY">
-                                </div>
-                            @elseif(request('module') == 'training_results')
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Năm</label>
-                                    <input type="number" name="year" class="form-control" value="{{ request('year') }}" placeholder="YYYY">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Tháng</label>
-                                    <input type="number" name="month" class="form-control" value="{{ request('month') }}" placeholder="MM">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label fw-bold">Kết quả</label>
-                                    <select name="result" class="form-select">
-                                        <option value="">-- Tất cả --</option>
-                                        <option value="xuất_sắc" {{ request('result')=='xuất_sắc' ? 'selected' : '' }}>Xuất sắc</option>
-                                        <option value="giỏi" {{ request('result')=='giỏi' ? 'selected' : '' }}>Giỏi</option>
-                                        <option value="khá" {{ request('result')=='khá' ? 'selected' : '' }}>Khá</option>
-                                        <option value="trung_bình" {{ request('result')=='trung_bình' ? 'selected' : '' }}>Trung bình</option>
-                                    </select>
-                                </div>
-                            @elseif(request('module') == 'training_logs')
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Từ ngày</label>
-                                    <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Đến ngày</label>
-                                    <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Xếp loại</label>
-                                    <select name="rating" class="form-select">
-                                        <option value="">-- Tất cả --</option>
-                                        <option value="xuất_sắc" {{ request('rating')=='xuất_sắc' ? 'selected' : '' }}>Xuất sắc</option>
-                                        <option value="giỏi" {{ request('rating')=='giỏi' ? 'selected' : '' }}>Giỏi</option>
-                                        <option value="khá" {{ request('rating')=='khá' ? 'selected' : '' }}>Khá</option>
-                                        <option value="trung_bình" {{ request('rating')=='trung_bình' ? 'selected' : '' }}>Trung bình</option>
-                                        <option value="yếu" {{ request('rating')=='yếu' ? 'selected' : '' }}>Yếu</option>
-                                    </select>
-                                </div>
-                            @elseif(request('module') == 'weapon_equipments')
-                                <div class="col-md-4">
-                                    <label class="form-label fw-bold">Loại vũ khí biên chế</label>
-                                    <select name="weapon_type" class="form-select">
-                                        <option value="">-- Tất cả --</option>
-                                        <option value="ak" {{ request('weapon_type') == 'ak' ? 'selected' : '' }}>Súng tiểu liên AK</option>
-                                        <option value="rpd" {{ request('weapon_type') == 'rpd' ? 'selected' : '' }}>Súng trung liên RPD</option>
-                                        <option value="b41" {{ request('weapon_type') == 'b41' ? 'selected' : '' }}>Súng diệt tăng B41</option>
-                                        <option value="m79" {{ request('weapon_type') == 'm79' ? 'selected' : '' }}>Súng phóng lựu M79</option>
-                                    </select>
-                                </div>
-                            @else
-                                <div class="col-md-5">
-                                    <label class="form-label fw-bold">Tìm kiếm tổng hợp</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-white"><i class="fa fa-search"></i></span>
-                                        <input type="text" name="q" class="form-control border-start-0" 
-                                            placeholder="Nhập tên, số hiệu, học vấn, trình độ, ngày sinh (dd/mm/yyyy)..." 
-                                            value="{{ request('q') }}">
-                                    </div>
-                                    <small class="text-muted">Ví dụ: "Đại học", "Binh nhất", "20/05/2000", "Súng AK"...</small>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label fw-bold">Năm nhập ngũ</label>
-                                    <select name="enlistment_year" class="form-select">
-                                        <option value="">-- Tất cả --</option>
-                                        @foreach ($enlistmentYears as $year)
-                                            <option value="{{ $year }}" {{ request('enlistment_year') == $year ? 'selected' : '' }}>
-                                                {{ $year }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            @endif
-
-                            <div class="col-md-2 d-flex align-items-end gap-2">
+                            <div class="col-md-4 d-flex align-items-end gap-2">
                                 <button type="submit" class="btn btn-primary flex-grow-1">
-                                    <i class="fas fa-search me-1"></i> Tìm
+                                    <i class="fas fa-sync-alt me-1"></i> Làm mới dữ liệu
                                 </button>
                                 <a href="{{ route('search.index', ['module' => request('module')]) }}" class="btn btn-secondary">
                                     <i class="fas fa-undo"></i>
                                 </a>
                             </div>
                         </form>
+                    </div>
+
+                    <div class="alert alert-info py-2">
+                        <i class="fas fa-info-circle me-1"></i> <strong>Mẹo:</strong> Sử dụng ô <strong>"Search"</strong> phía trên bên phải mỗi bảng để tìm kiếm nhanh theo bất kỳ thông tin nào (Tên, số hiệu, ngày tháng, nội dung...).
                     </div>
 
                     <hr>
@@ -282,7 +144,7 @@ use Illuminate\Support\Str;
                                 <tbody>
                                     @forelse($rewards as $reward)
                                         <tr>
-                                            <td class="text-center">{{ $loop->iteration + ($rewards->currentPage()-1)*$rewards->perPage() }}</td>
+                                            <td class="text-center">{{ $loop->iteration }}</td>
                                             <td>
                                                 @if($reward->soldier)
                                                     <strong>{{ $reward->soldier->full_name }}</strong><br>
@@ -325,7 +187,7 @@ use Illuminate\Support\Str;
                                 </tbody>
                             </table>
                         </div>
-                        <div class="mt-3">{{ $rewards->appends(request()->all())->links() }}</div>
+
 
                     @elseif(request('module') == 'disciplines')
                         <div class="table-responsive">
@@ -343,7 +205,7 @@ use Illuminate\Support\Str;
                                 <tbody>
                                     @forelse($disciplines as $discipline)
                                         <tr>
-                                            <td class="text-center">{{ $loop->iteration + ($disciplines->currentPage()-1)*$disciplines->perPage() }}</td>
+                                            <td class="text-center">{{ $loop->iteration }}</td>
                                             <td>
                                                 @if($discipline->soldier)
                                                     <strong>{{ $discipline->soldier->full_name }}</strong><br>
@@ -395,7 +257,7 @@ use Illuminate\Support\Str;
                                 </tbody>
                             </table>
                         </div>
-                        <div class="mt-3">{{ $disciplines->appends(request()->all())->links() }}</div>
+
 
                     @elseif(request('module') == 'training_results')
                         <div class="table-responsive">
@@ -419,7 +281,7 @@ use Illuminate\Support\Str;
                                 <tbody>
                                     @forelse($trainingResults as $tr)
                                         <tr>
-                                            <td class="text-center">{{ $loop->iteration + ($trainingResults->currentPage()-1)*$trainingResults->perPage() }}</td>
+                                            <td class="text-center">{{ $loop->iteration }}</td>
                                             <td>
                                                 <strong>{{ $tr->unit->name ?? $tr->unit_name_at_time }}</strong><br>
                                                 <small class="text-muted">{{ $tr->unit ? $tr->unit->getFullHierarchyName() : 'N/A' }}</small>
@@ -455,7 +317,7 @@ use Illuminate\Support\Str;
                                 </tbody>
                             </table>
                         </div>
-                        <div class="mt-3">{{ $trainingResults->appends(request()->all())->links() }}</div>
+
 
                     @elseif(request('module') == 'training_logs')
                         <div class="table-responsive">
@@ -505,7 +367,7 @@ use Illuminate\Support\Str;
                                 <tbody>
                                     @forelse($trainingLogs as $log)
                                         <tr>
-                                            <td class="text-center">{{ $loop->iteration + ($trainingLogs->currentPage()-1)*$trainingLogs->perPage() }}</td>
+                                            <td class="text-center">{{ $loop->iteration }}</td>
                                             <td>
                                                 @if ($log->soldier)
                                                     <strong>{{ $log->soldier->full_name }}</strong><br>
@@ -575,7 +437,7 @@ use Illuminate\Support\Str;
                                 </tbody>
                             </table>
                         </div>
-                        <div class="mt-3">{{ $trainingLogs->appends(request()->all())->links() }}</div>
+                        
 
                     @elseif(request('module') == 'weapon_equipments')
                         <div class="table-responsive">
@@ -610,7 +472,7 @@ use Illuminate\Support\Str;
                                 <tbody>
                                     @forelse($equipments as $item)
                                         <tr>
-                                            <td class="text-center">{{ $loop->iteration + ($equipments->currentPage()-1)*$equipments->perPage() }}</td>
+                                            <td class="text-center">{{ $loop->iteration }}</td>
                                             <td class="fw-bold">
                                                 {{ $item->soldier ? $item->soldier->full_name : 'N/A' }}
                                             </td>
@@ -669,7 +531,7 @@ use Illuminate\Support\Str;
                                 </tbody>
                             </table>
                         </div>
-                        <div class="mt-3">{{ $equipments->appends(request()->all())->links() }}</div>
+                        
 
                     @else
                         @if(isset($soldiers) && $soldiers->count() > 0)
@@ -697,7 +559,7 @@ use Illuminate\Support\Str;
                                     <tbody>
                                         @foreach($soldiers as $index => $soldier)
                                             <tr>
-                                                <td class="text-center">{{ $loop->iteration + ($soldiers->currentPage()-1)*$soldiers->perPage() }}</td>
+                                                <td class="text-center">{{ $loop->iteration }}</td>
                                                 <td class="fw-bold">{{ $soldier->full_name }}</td>
                                                 <td class="text-center">{{ $soldier->rank }}</td>
                                                 <td>{{ $soldier->position }}</td>
@@ -731,9 +593,7 @@ use Illuminate\Support\Str;
                                     </tbody>
                                 </table>
                             </div>
-                            <div class="mt-3">
-                                {{ $soldiers->appends(request()->all())->links() }}
-                            </div>
+
                         @else
                             <div class="text-center py-5">
                                 <div class="mb-3">
@@ -771,6 +631,25 @@ use Illuminate\Support\Str;
 @section('scripts')
 <script>
     $(document).ready(function() {
+        // Khởi tạo DataTables cho các bảng kết quả
+        const datatableConfigs = {
+            "pageLength": 20,
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Vietnamese.json"
+            },
+            "ordering": true,
+            "searching": true, // Cho phép tìm kiếm javascript tại chỗ
+            "info": true,
+            "lengthChange": false
+        };
+
+        $('#soldiers-search-datatables').DataTable(datatableConfigs);
+        $('#weapon-search-datatables').DataTable(datatableConfigs);
+        $('#rewards-search-datatables').DataTable(datatableConfigs);
+        $('#disciplines-search-datatables').DataTable(datatableConfigs);
+        $('#training-results-search-datatables').DataTable(datatableConfigs);
+        $('#training-logs-search-datatables').DataTable(datatableConfigs);
+
         // Sử dụng event delegation để bắt sự kiện click cho cả các phần tử được load sau (nếu có)
         $(document).on('click', '.btn-quick-view', function() {
             const soldierId = $(this).data('id');

@@ -35,6 +35,7 @@
     <link rel="stylesheet" href="{{ asset('backend/assets/css/plugins.min.css') }}" />
     <link rel="stylesheet" href="{{ asset('backend/assets/css/kaiadmin.min.css') }}" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
     <style>
         /* Modern UI Tweaks */
@@ -47,16 +48,27 @@
             --info-gradient: linear-gradient(135deg, #48abf7 0%, #1a91da 100%);
         }
 
+        /* Page Loading Animation */
+        .page-inner {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         /* Elevated Cards */
         .card {
             border: none;
-            border-radius: 12px !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+            border-radius: 15px !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            overflow: hidden;
         }
         .card:hover {
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+            transform: translateY(-5px);
         }
 
         /* Floating & Gradient Buttons */
@@ -68,98 +80,111 @@
         .btn-info { background: var(--info-gradient) !important; border: none !important; }
 
         .btn {
-            border-radius: 8px !important;
-            padding: 8px 18px !important;
+            border-radius: 10px !important;
+            padding: 10px 22px !important;
             font-weight: 600 !important;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .btn:hover {
-            box-shadow: 0 7px 14px rgba(0,0,0,0.15);
-            transform: translateY(-1px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+            transform: translateY(-2px) scale(1.02);
         }
         .btn:active {
-            transform: translateY(1px);
+            transform: translateY(0) scale(0.98);
         }
 
-        /* Floating Action Buttons (FAB) Style for icons */
-        .btn-round {
-            border-radius: 50px !important;
+        /* Sidebar Item Hover Animation */
+        .sidebar .nav > .nav-item a {
+            transition: all 0.3s ease;
         }
-
-        /* DataTables Styling */
-        table.dataTable thead th {
-            background-color: #f8f9fa;
-            color: #495057;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.5px;
-            border-bottom: 2px solid #ebedef !important;
-        }
-        .table-striped tbody tr:nth-of-type(odd) {
-            background-color: rgba(0,0,0,0.01);
-        }
-        .table-hover tbody tr:hover {
-            background-color: rgba(21, 114, 232, 0.04) !important;
-        }
-
-        /* Custom Badge */
-        .badge {
-            padding: 5px 10px !important;
-            font-weight: 600 !important;
-            border-radius: 6px !important;
-        }
-
-        /* Sidebar Styling */
-        .sidebar {
-            box-shadow: 4px 0 15px rgba(0,0,0,0.05);
+        .sidebar .nav > .nav-item a:hover {
+            background: rgba(255, 255, 255, 0.05) !important;
+            padding-left: 30px !important;
         }
         .sidebar .nav > .nav-item.active > a {
-            background: rgba(21, 114, 232, 0.08) !important;
-            border-radius: 8px;
+            background: var(--primary-gradient) !important;
+            box-shadow: 0 4px 15px rgba(21, 114, 232, 0.4);
+            border-radius: 10px;
             margin: 5px 15px;
         }
 
-        /* Page Header */
-        .page-header {
-            margin-bottom: 25px !important;
+        /* Table Row Hover Animation */
+        .table-hover tbody tr {
+            transition: all 0.2s ease;
         }
-        .page-title {
-            font-weight: 800 !important;
-            color: #1a2035;
+        .table-hover tbody tr:hover {
+            background-color: rgba(21, 114, 232, 0.06) !important;
+            transform: scale(1.005);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            z-index: 1;
+            position: relative;
         }
 
-        /* Action icons visibility (View / Edit / Delete buttons) */
-        .form-button-action .btn-link {
-            color: rgba(58, 66, 86, 0.95) !important;
-            opacity: 1 !important;
-            padding: 6px !important;
-            border-radius: 6px !important;
-            transition: all 0.12s ease;
+        /* Icon Spin on Hover */
+        .btn:hover i {
+            animation: fa-spin 2s infinite linear;
         }
-        .form-button-action .btn-link .fa, .form-button-action .btn-link .fas, .form-button-action .btn-link .far {
-            font-size: 1.05rem !important;
+        .btn-no-spin:hover i {
+            animation: none;
         }
-        .form-button-action .btn-link.btn-info {
-            color: #0d6efd !important; /* clearer blue for View */
-            background: rgba(13,110,253,0.08) !important;
+
+        /* Animation Delays */
+        .delay-1 { animation-delay: 0.1s !important; }
+        .delay-2 { animation-delay: 0.2s !important; }
+        .delay-3 { animation-delay: 0.3s !important; }
+        .delay-4 { animation-delay: 0.4s !important; }
+        .delay-5 { animation-delay: 0.5s !important; }
+        .delay-6 { animation-delay: 0.6s !important; }
+
+        /* Custom Floating Nav Buttons (Dashboard) */
+        .btn-floating-nav {
+            border: none;
+            border-radius: 20px;
+            color: white;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
-        .form-button-action .btn-link.btn-primary {
-            color: #1572E8 !important; /* Edit */
-            background: rgba(21,114,232,0.08) !important;
+        .btn-floating-nav:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 20px 30px rgba(0,0,0,0.2);
         }
-        .form-button-action .btn-link.btn-success {
-            color: #198754 !important;
-            background: rgba(25,135,84,0.08) !important;
+        .btn-floating-nav .icon-wrap {
+            width: 60px;
+            height: 60px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
         }
-        .form-button-action .btn-link.btn-danger {
-            color: #dc3545 !important; /* Delete */
-            background: rgba(220,53,69,0.08) !important;
+        .btn-floating-nav:hover .icon-wrap {
+            background: rgba(255,255,255,0.4);
+            transform: rotate(15deg);
         }
-        .form-button-action .btn-link:hover {
-            text-decoration: none !important;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+
+        /* Custom Scrollbar for Smoothness */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #aaa;
         }
     </style>
 </head>

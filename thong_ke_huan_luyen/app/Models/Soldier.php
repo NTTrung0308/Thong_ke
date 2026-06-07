@@ -121,6 +121,8 @@ class Soldier extends Model
                 ->orWhere('rank', 'like', "%$q%")
                 ->orWhere('education', 'like', "%$q%")
                 ->orWhere('professional_level', 'like', "%$q%")
+                ->orWhere('emergency_contact_name', 'like', "%$q%")
+                ->orWhere('emergency_contact_address', 'like', "%$q%")
                 ->orWhereRaw("DATE_FORMAT(birth_date, '%d/%m/%Y') like ?", ["%$q%"])
                 ->orWhere('birth_date', 'like', "%$q%")
                 ->orWhere('permanent_residence', 'like', "%$q%")

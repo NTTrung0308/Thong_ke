@@ -14,13 +14,13 @@
             text-align: center;
         }
     </style>
-    <div class="page-header">
+    <div class="page-header animate__animated animate__fadeInDown">
         <h3 class="fw-bold mb-3">Quản lý kết quả tập huấn</h3>
         @include('backend.include.breadcrumbs', ['activeLabel' => 'Kết quả tập huấn', 'activeRoute' => route('training-results.index')])
     </div>
     <div class="row">
         <div class="col-md-12">
-            <div class="card">
+            <div class="card animate__animated animate__fadeInUp">
                 <div class="card-header">
                     <div class="d-flex align-items-center">
                         <h4 class="card-title">Danh sách kết quả tập huấn</h4>
@@ -93,7 +93,7 @@
                                         <td class="text-center">{{ $index + 1 }}</td>
                                         <td>
                                             <strong>{{ $result->unit->name }}</strong><br>
-                                            <small class="text-muted">{{ $result->unit->getFullHierarchyName() }}</small>
+                                            {{-- <small class="text-muted">{{ $result->unit->getFullHierarchyName() }}</small> --}}
                                         </td>
                                         <td class="text-center">{{ $result->formatted_training_date }}</td>
                                         <td>{{ Str::limit(strip_tags($result->content), 100) }}</td>
@@ -110,12 +110,12 @@
                                                 <a href="{{ route('training-results.show', $result->id) }}"
                                                     class="btn btn-link btn-info btn-lg" data-bs-toggle="tooltip"
                                                     title="Xem chi tiết">
-                                                    <i class="fa fa-eye"></i>
+                                                    <i class="fa fa-eye" style="color: white"></i>
                                                 </a>
                                                 <a href="{{ route('training-results.edit', $result->id) }}"
                                                     class="btn btn-link btn-primary btn-lg" data-bs-toggle="tooltip"
                                                     title="Sửa">
-                                                    <i class="fa fa-edit"></i>
+                                                    <i class="fa fa-edit" style="color: white"></i>
                                                 </a>
                                                 <form action="{{ route('training-results.destroy', $result->id) }}" method="POST"
                                                     id="delete-form-{{ $result->id }}" style="display:inline-block">
@@ -124,7 +124,7 @@
                                                     <button type="button" class="btn btn-link btn-danger"
                                                         data-bs-toggle="tooltip" title="Xóa"
                                                         onclick="confirmDelete({{ $result->id }})">
-                                                        <i class="fa fa-times"></i>
+                                                        <i class="fa fa-times" style="color: white"></i>
                                                     </button>
                                                 </form>
                                             </div>

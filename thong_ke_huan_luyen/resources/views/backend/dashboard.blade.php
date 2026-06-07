@@ -2,21 +2,24 @@
 
 @section('dashboard_content')
     <div class="row mt-4 mb-3">
-        <div class="col-md-8">
-            <div class="animate__animated animate__fadeInDown">
-                <h1 class="fw-extrabold mb-1" style="color: #1a2035; letter-spacing: -1px;">HỆ THỐNG THỐNG KÊ HUẤN LUYỆN</h1>
-            </div>
-        </div>
-        <div class="col-md-4 text-md-end d-flex align-items-center justify-content-md-end mt-3 mt-md-0">
-            <div class="quick-actions animate__animated animate__fadeInRight">
-                <a href="{{ route('soldiers.index') }}" class="btn btn-primary btn-round shadow-sm me-2">
-                    <i class="fas fa-plus me-1"></i> Thêm hồ sơ
-                </a>
+        <div class="col-md-12">
+            <div class="animate__animated animate__fadeInDown text-center">
+                <h1 class="fw-extrabold mb-1" style="color: #1a2035; letter-spacing: -1px;">
+                    HỆ THỐNG THỐNG KÊ HUẤN LUYỆN
+                </h1>
                 <button class="btn btn-white btn-round shadow-sm border" id="btn-refresh-dashboard">
                     <i class="fas fa-sync-alt"></i>
                 </button>
             </div>
         </div>
+        {{-- <div class="col-md-4 text-md-end d-flex align-items-center justify-content-md-end mt-3 mt-md-0">
+            <div class="quick-actions animate__animated animate__fadeInRight">
+                <a href="{{ route('soldiers.index') }}" class="btn btn-primary btn-round shadow-sm me-2">
+                    <i class="fas fa-plus me-1"></i> Thêm hồ sơ
+                </a>
+
+            </div>
+        </div> --}}
     </div>
 
 
@@ -26,7 +29,8 @@
             <div class="d-flex align-items-center justify-content-between">
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb breadcrumb-style1 shadow-sm px-4 py-2 bg-white rounded-pill mb-0">
-                        <li class="breadcrumb-item"><a href="#" id="breadcrumb-home"><i class="fas fa-home"></i> Cấp</a></li>
+                        <li class="breadcrumb-item"><a href="#" id="breadcrumb-home"><i class="fas fa-home"></i>
+                                Cấp</a></li>
                         <li class="breadcrumb-item d-none" id="breadcrumb-level"></li>
                         <li class="breadcrumb-item d-none" id="breadcrumb-unit"></li>
                         <li class="breadcrumb-item d-none" id="breadcrumb-module"></li>
@@ -93,8 +97,8 @@
                 $visibleLevels = array_slice($maxLevelOrder, $startIndex);
             @endphp
 
-            @foreach ($visibleLevels as $levelKey)
-                <div class="col-md-4 col-lg-2">
+            @foreach ($visibleLevels as $index => $levelKey)
+                <div class="col-md-4 col-lg-2 animate__animated animate__backInUp delay-{{ $index + 1 }}">
                     <button class="btn-floating-nav level-btn w-100 h-100" data-level="{{ $levelKey }}"
                         style="background: {{ $levels[$levelKey]['color'] }}">
                         <div class="icon-wrap">
@@ -110,8 +114,8 @@
         <div id="step-units" class="row justify-content-center g-4 d-none animate__animated">
             <div class="col-12 text-center mb-2">
                 <h4 class="fw-bold text-uppercase">
-                    <i class="fas fa-sitemap me-2 text-primary"></i>Chọn Đơn Vị - <span
-                        id="selected-level-label-units" class="text-primary"></span>
+                    <i class="fas fa-sitemap me-2 text-primary"></i>Chọn Đơn Vị - <span id="selected-level-label-units"
+                        class="text-primary"></span>
                 </h4>
             </div>
             <div id="units-container" class="row justify-content-center g-3 w-100 px-4 mt-2">
@@ -123,8 +127,8 @@
         <div id="step-modules" class="row justify-content-center g-4 d-none animate__animated">
             <div class="col-12 text-center mb-2">
                 <h4 class="fw-bold text-uppercase">
-                    <i class="fas fa-th-large me-2 text-primary"></i>Chọn Chức Năng - <span
-                        id="selected-unit-label" class="text-primary"></span>
+                    <i class="fas fa-th-large me-2 text-primary"></i>Chọn Chức Năng - <span id="selected-unit-label"
+                        class="text-primary"></span>
                 </h4>
             </div>
 
@@ -181,8 +185,8 @@
                 ];
             @endphp
 
-            @foreach ($modules as $module)
-                <div class="col-md-4 col-lg-2">
+            @foreach ($modules as $index => $module)
+                <div class="col-md-4 col-lg-2 animate__animated animate__zoomIn delay-{{ $index + 1 }}">
                     <button class="btn-floating-nav module-btn w-100" data-id="{{ $module['id'] }}"
                         data-route="{{ route($module['route']) }}" data-label="{{ $module['label'] }}"
                         style="background: {{ $module['color'] }}; height: 200px;">
@@ -200,12 +204,12 @@
         <div id="step-final" class="row justify-content-center g-4 d-none animate__animated">
             <div class="col-12 text-center mb-2">
                 <h4 class="fw-bold text-uppercase">
-                    <i class="fas fa-eye me-2 text-primary"></i>Chọn Hình Thức Hiển Thị - <span
-                        id="selected-module-label" class="text-primary"></span>
+                    <i class="fas fa-eye me-2 text-primary"></i>Chọn Hình Thức Hiển Thị - <span id="selected-module-label"
+                        class="text-primary"></span>
                 </h4>
             </div>
 
-            <div class="col-md-4">
+            <div class="col-md-4 animate__animated animate__fadeInLeft">
                 <a href="#" class="final-option-link w-100" id="final-all-link">
                     <div class="btn-floating-nav w-100" id="final-all-card" style="height: 240px;">
                         <div class="icon-wrap">
@@ -218,7 +222,7 @@
                 </a>
             </div>
 
-            <div class="col-md-4">
+            <div class="col-md-4 animate__animated animate__fadeInRight">
                 <a href="#" class="final-option-link w-100" id="final-search-link">
                     <div class="btn-floating-nav w-100" id="final-search-card"
                         style="background: var(--info-gradient); height: 240px;">
@@ -236,7 +240,7 @@
 
     <!-- Dữ liệu Biểu đồ & Hoạt động -->
     <div class="row mt-5 px-3 animate__animated animate__fadeInUp">
-        <div class="col-md-8">
+        <div class="{{ auth()->user()->hasRole('chi-huy') ? 'col-md-8' : 'col-md-12' }}">
             <div class="card card-round">
                 <div class="card-header">
                     <div class="card-head-row">
@@ -246,8 +250,10 @@
                 </div>
                 <div class="card-body">
                     <div class="chart-container" id="statisticsChartWrap" style="min-height: 375px; position: relative;">
-                        <div id="statisticsSpinner" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.7);z-index:10;display:flex;align-items:center;justify-content:center;">
-                            <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+                        <div id="statisticsSpinner"
+                            style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.7);z-index:10;display:flex;align-items:center;justify-content:center;">
+                            <div class="spinner-border text-primary" role="status"><span
+                                    class="visually-hidden">Loading...</span></div>
                         </div>
                         <canvas id="statisticsChart"></canvas>
                     </div>
@@ -266,13 +272,16 @@
                                 </tr>
                             </thead>
                             <tbody id="training-summary-body">
-                                <tr><td colspan="6">Đang tải dữ liệu...</td></tr>
+                                <tr>
+                                    <td colspan="6">Đang tải dữ liệu...</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
+        @if(auth()->user()->hasRole('chi-huy'))
         <div class="col-md-4">
             <div class="card card-round">
                 <div class="card-header">
@@ -280,8 +289,8 @@
                 </div>
                 <div class="card-body">
                     <ol class="activity-feed">
-                        @forelse($activities as $activity)
-                            <li class="feed-item">
+                        @forelse($activities as $index => $activity)
+                            <li class="feed-item animate__animated animate__fadeInRight delay-{{ ($index % 5) + 1 }}">
                                 @php
                                     $desc = $activity->description;
                                     $icon = 'fa-info-circle';
@@ -335,8 +344,8 @@
                 </div>
             </div>
         </div>
+        @endif
     </div>
-
 @endsection
 
 @section('scripts')
@@ -390,7 +399,7 @@
                     $('#navigation-breadcrumb').removeClass('d-none');
                     $('#breadcrumb-level').removeClass('d-none').html(
                         `<a href="#" class="breadcrumb-back" data-target="#step-levels">${state.levelLabel}</a>`
-                        );
+                    );
                 } else {
                     $('#navigation-breadcrumb').addClass('d-none');
                     $('#breadcrumb-level').addClass('d-none');
@@ -399,12 +408,14 @@
                 if (state.unitPath.length > 0) {
                     let pathHtml = '';
                     state.unitPath.forEach((unit, index) => {
-                        pathHtml += `<li class="breadcrumb-item"><a href="#" class="breadcrumb-unit-path" data-index="${index}">${unit.name}</a></li>`;
+                        pathHtml +=
+                            `<li class="breadcrumb-item"><a href="#" class="breadcrumb-unit-path" data-index="${index}">${unit.name}</a></li>`;
                     });
                     $('#breadcrumb-unit').removeClass('d-none').html(pathHtml);
                     $('#breadcrumb-unit').addClass('p-0 border-0 bg-transparent').css('display', 'contents');
                 } else {
-                    $('#breadcrumb-unit').addClass('d-none').removeClass('p-0 border-0 bg-transparent').css('display', '');
+                    $('#breadcrumb-unit').addClass('d-none').removeClass('p-0 border-0 bg-transparent').css(
+                        'display', '');
                 }
 
                 if (state.moduleId) {
@@ -415,15 +426,21 @@
             }
 
             function loadUnits(parentId = null) {
-                $('#units-container').html('<div class="col-12 text-center py-5"><i class="fas fa-spinner fa-spin fa-2x text-primary"></i><p class="mt-2 fw-bold">Đang truy vấn dữ liệu đơn vị...</p></div>');
+                $('#units-container').html(
+                    '<div class="col-12 text-center py-5"><i class="fas fa-spinner fa-spin fa-2x text-primary"></i><p class="mt-2 fw-bold">Đang truy vấn dữ liệu đơn vị...</p></div>'
+                );
 
-                const params = parentId ? { parent_id: parentId } : { level: state.level };
+                const params = parentId ? {
+                    parent_id: parentId
+                } : {
+                    level: state.level
+                };
 
-                $.get('{{ route("api.units-by-level") }}', params)
-                .done(function(units) {
-                    let html = '';
-                    if (!units || units.length === 0) {
-                        html = `
+                $.get('{{ route('api.units-by-level') }}', params)
+                    .done(function(units) {
+                        let html = '';
+                        if (!units || units.length === 0) {
+                            html = `
                             <div class="col-12 text-center text-muted py-5 animate__animated animate__fadeIn">
                                 <i class="fas fa-folder-open fa-4x mb-3 opacity-25"></i>
                                 <h5 class="fw-bold">Không còn đơn vị trực thuộc nào</h5>
@@ -432,10 +449,10 @@
                                     <i class="fas fa-check me-2"></i> Xác nhận chọn đơn vị này
                                 </button>
                             </div>`;
-                    } else {
-                        units.forEach(unit => {
-                            const hasChildren = unit.children_count > 0;
-                            html += `
+                        } else {
+                            units.forEach(unit => {
+                                const hasChildren = unit.children_count > 0;
+                                html += `
                                 <div class="col-6 col-md-4 col-lg-3">
                                     <div class="unit-card-wrapper animate__animated animate__zoomIn">
                                         <div class="unit-card shadow-sm border-0 mb-3 overflow-hidden" data-id="${unit.id}" data-name="${unit.name}">
@@ -452,10 +469,10 @@
                                                             CHỌN
                                                         </button>
                                                         ${hasChildren ? `
-                                                            <button class="btn btn-outline-info btn-sm flex-fill btn-drill-unit" data-id="${unit.id}" data-name="${unit.name}" title="Xem đơn vị trực thuộc">
-                                                                <i class="fas fa-chevron-right"></i>
-                                                            </button>
-                                                        ` : ''}
+                                                                        <button class="btn btn-outline-info btn-sm flex-fill btn-drill-unit" data-id="${unit.id}" data-name="${unit.name}" title="Xem đơn vị trực thuộc">
+                                                                            <i class="fas fa-chevron-right"></i>
+                                                                        </button>
+                                                                    ` : ''}
                                                     </div>
                                                 </div>
                                                 ${hasChildren ? `<div class="unit-badge-children small">${unit.children_count} Đơn vị trực thuộc</div>` : ''}
@@ -464,13 +481,15 @@
                                     </div>
                                 </div>
                             `;
-                        });
-                    }
-                    $('#units-container').html(html);
-                })
-                .fail(function() {
-                    $('#units-container').html('<div class="col-12 text-center text-danger py-5"><i class="fas fa-exclamation-triangle fa-2x mb-3"></i><br>Lỗi kết nối máy chủ. Vui lòng thử lại.</div>');
-                });
+                            });
+                        }
+                        $('#units-container').html(html);
+                    })
+                    .fail(function() {
+                        $('#units-container').html(
+                            '<div class="col-12 text-center text-danger py-5"><i class="fas fa-exclamation-triangle fa-2x mb-3"></i><br>Lỗi kết nối máy chủ. Vui lòng thử lại.</div>'
+                        );
+                    });
             }
 
             // --- Event Handlers ---
@@ -491,7 +510,10 @@
                 e.stopPropagation();
                 const id = $(this).data('id');
                 const name = $(this).data('name');
-                state.unitPath.push({ id, name });
+                state.unitPath.push({
+                    id,
+                    name
+                });
                 updateBreadcrumb();
                 loadUnits(id);
             });
@@ -526,9 +548,14 @@
                 const target = $(this).data('target') || '#step-levels';
 
                 if (target === '#step-levels') {
-                    state.level = ''; state.unitPath = []; state.unitId = ''; state.moduleId = '';
+                    state.level = '';
+                    state.unitPath = [];
+                    state.unitId = '';
+                    state.moduleId = '';
                 } else if (target === '#step-units') {
-                    state.unitPath = []; state.unitId = ''; state.moduleId = '';
+                    state.unitPath = [];
+                    state.unitId = '';
+                    state.moduleId = '';
                     loadUnits();
                 }
 
@@ -602,12 +629,13 @@
             let statisticsChartInstance = null;
 
             function showStatisticsLoading(show) {
-                if (show) $('#statisticsSpinner').show(); else $('#statisticsSpinner').hide();
+                if (show) $('#statisticsSpinner').show();
+                else $('#statisticsSpinner').hide();
             }
 
             function renderStatisticsChart(payload) {
-                const labels = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
-                const resultKeys = ['xuất_sắc','giỏi','khá','trung_bình','yếu'];
+                const labels = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+                const resultKeys = ['xuất_sắc', 'giỏi', 'khá', 'trung_bình', 'yếu'];
                 const colors = {
                     'xuất_sắc': '#28a745',
                     'giỏi': '#007bff',
@@ -618,7 +646,7 @@
 
                 const datasets = resultKeys.map(k => ({
                     label: k.charAt(0).toUpperCase() + k.slice(1).replace('_', ' '),
-                    data: labels.map((l, idx) => payload.statsByMonth[idx+1].by_result[k] || 0),
+                    data: labels.map((l, idx) => payload.statsByMonth[idx + 1].by_result[k] || 0),
                     backgroundColor: colors[k]
                 }));
 
@@ -626,7 +654,8 @@
                 datasets.push({
                     label: 'Tỉ lệ đạt TB (%)',
                     type: 'line',
-                    data: labels.map((l, idx) => Number((payload.statsByMonth[idx+1].avg_passing_rate || 0).toFixed(1))),
+                    data: labels.map((l, idx) => Number((payload.statsByMonth[idx + 1].avg_passing_rate ||
+                        0).toFixed(1))),
                     borderColor: '#343a40',
                     backgroundColor: '#343a40',
                     fill: false,
@@ -641,25 +670,53 @@
 
                 statisticsChartInstance = new Chart(ctx, {
                     type: 'bar',
-                    data: { labels, datasets },
+                    data: {
+                        labels,
+                        datasets
+                    },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        animation: { duration: 500 },
-                        tooltips: { mode: 'index', intersect: false },
-                        legend: { position: 'bottom' },
+                        animation: {
+                            duration: 500
+                        },
+                        tooltips: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        legend: {
+                            position: 'bottom'
+                        },
                         scales: {
-                            xAxes: [{ stacked: true }],
+                            xAxes: [{
+                                stacked: true
+                            }],
                             yAxes: [{
                                 stacked: true,
-                                ticks: { beginAtZero: true },
-                                scaleLabel: { display: true, labelString: 'Số buổi' }
+                                ticks: {
+                                    beginAtZero: true
+                                },
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: 'Số buổi'
+                                }
                             }, {
                                 id: 'y1',
                                 position: 'right',
-                                ticks: { callback: function(v){ return v + '%'; }, beginAtZero: true, max: 100 },
-                                gridLines: { display: false },
-                                scaleLabel: { display: true, labelString: 'Tỉ lệ đạt' }
+                                ticks: {
+                                    callback: function(v) {
+                                        return v + '%';
+                                    },
+                                    beginAtZero: true,
+                                    max: 100
+                                },
+                                gridLines: {
+                                    display: false
+                                },
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: 'Tỉ lệ đạt'
+                                }
                             }]
                         }
                     }
@@ -668,7 +725,7 @@
                 // Populate Table
                 let tableHtml = '';
                 let hasData = false;
-                for(let i=1; i<=12; i++) {
+                for (let i = 1; i <= 12; i++) {
                     const stat = payload.statsByMonth[i];
                     if (stat.total > 0) {
                         hasData = true;
@@ -686,21 +743,24 @@
                     }
                 }
                 if (!hasData) {
-                    tableHtml = '<tr><td colspan="6" class="text-muted py-3">Chưa có dữ liệu huấn luyện trong năm nay</td></tr>';
+                    tableHtml =
+                        '<tr><td colspan="6" class="text-muted py-3">Chưa có dữ liệu huấn luyện trong năm nay</td></tr>';
                 }
                 $('#training-summary-body').html(tableHtml);
             }
 
             function loadStatisticsChart(unitId = null, year = new Date().getFullYear()) {
                 showStatisticsLoading(true);
-                const url = '{{ route('api.dashboard-stats') }}' + '?year=' + year + (unitId ? '&unit_id=' + unitId : '');
+                const url = '{{ route('api.dashboard-stats') }}' + '?year=' + year + (unitId ? '&unit_id=' +
+                    unitId : '');
                 $.get(url)
                     .done(function(res) {
                         renderStatisticsChart(res);
                     })
                     .fail(function(err) {
                         console.error('Failed to load dashboard stats', err);
-                        $('#training-summary-body').html('<tr><td colspan="6" class="text-danger">Lỗi khi tải dữ liệu</td></tr>');
+                        $('#training-summary-body').html(
+                            '<tr><td colspan="6" class="text-danger">Lỗi khi tải dữ liệu</td></tr>');
                     })
                     .always(function() {
                         setTimeout(() => showStatisticsLoading(false), 300);
@@ -726,9 +786,13 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        legend: { display: false },
+                        legend: {
+                            display: false
+                        },
                         cutoutPercentage: 70,
-                        animation: { duration: 500 }
+                        animation: {
+                            duration: 500
+                        }
                     }
                 });
             }
@@ -736,10 +800,22 @@
     </script>
 
     <style>
+        /* Custom Staggered Animations */
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+        .delay-5 { animation-delay: 0.5s; }
+        .delay-6 { animation-delay: 0.6s; }
+
         .breadcrumb-style1 {
             background: white;
             border-radius: 50px;
             font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .breadcrumb-style1:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08) !important;
         }
 
         .breadcrumb-item+.breadcrumb-item::before {
@@ -747,6 +823,24 @@
             font-family: "Font Awesome 5 Free";
             font-weight: 900;
             color: #b9bbbe;
+        }
+
+        .card-round {
+            border-radius: 20px !important;
+            border: none !important;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card-round:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1) !important;
+        }
+
+        #training-summary-table tbody tr {
+            transition: all 0.2s ease;
+        }
+        #training-summary-table tbody tr:hover {
+            background-color: rgba(21, 114, 232, 0.05);
+            transform: scale(1.01);
         }
 
         .unit-card {
